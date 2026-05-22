@@ -14,8 +14,10 @@
 
 ```bash
 pkg update && pkg upgrade -y
-pkg install -y git python
+pkg install -y git python clang libffi openssl python-cryptography
 ```
+
+> `clang` нужен для компиляции `bcrypt`, `python-cryptography` — готовая сборка криптобиблиотеки (без Rust).
 
 ### 2. Клонируйте репозиторий
 
