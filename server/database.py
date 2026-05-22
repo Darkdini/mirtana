@@ -26,7 +26,8 @@ async def init_db():
                 map_y INTEGER DEFAULT 0,
                 castle_name TEXT DEFAULT 'Мой замок',
                 score INTEGER DEFAULT 0,
-                alliance_id INTEGER DEFAULT NULL
+                alliance_id INTEGER DEFAULT NULL,
+                race TEXT DEFAULT 'humans'
             );
 
             CREATE TABLE IF NOT EXISTS resources (
@@ -126,3 +127,10 @@ async def init_db():
             );
         """)
         await db.commit()
+
+        # Migration: add race column to existing databases
+        try:
+            await db.execute("ALTER TABLE players ADD COLUMN race TEXT DEFAULT 'humans'")
+            await db.commit()
+        except Exception:
+            pass  # Column already exists
