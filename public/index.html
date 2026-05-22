@@ -683,7 +683,8 @@ function gi(k){
 }
 function preload(){
   const keys=['ground/grass.png','ground/ground.png','ground/stone1.png',
-    'ground/lumber.png','ground/mount.png','ground/castle_small.png','ground/bandit_camp.png'];
+    'ground/lumber.png','ground/mount.png','ground/castle_small.png','ground/bandit_camp.png',
+    'ground/grass_texture.jpg'];
   for(const b of Object.values({...BUILDINGS,...LAND_BUILDINGS})){
     keys.push(b.img);
     if(b.lvlImg)b.lvlImg.forEach(i=>keys.push(i));
@@ -801,6 +802,7 @@ function renderTopbar(){
 // ══════════════════════════════════════════════════════
 let hexSize = 52;  // радиус описанной окружности (размер гекса)
 let vpX=0,vpY=0;
+let selectedWorldHex=null; // подсвеченная сота на карте мира
 
 function hexW(R){return R*2;}
 function hexH(R){return Math.round(R*Math.sqrt(3));}
@@ -819,6 +821,17 @@ function hexPoints(cx,cy,R){
     pts.push({x:cx+R*Math.cos(a),y:cy+R*Math.sin(a)});
   }
   return pts;
+}
+
+// Полупрозрачная заливка для карты мира (трава просвечивает)
+function worldHexFill(c){
+  if(c.type==='forest') return 'rgba(30,70,15,0.52)';
+  if(c.type==='stone')  return 'rgba(80,74,66,0.50)';
+  if(c.type==='player') return 'rgba(50,65,110,0.58)';
+  if(c.type==='bandit') return 'rgba(80,42,15,0.55)';
+  if(c.type==='oasis')  return 'rgba(30,90,130,0.52)';
+  if(c.type==='caravan')return 'rgba(100,80,20,0.50)';
+  return 'rgba(60,100,30,0.38)'; // grass — почти прозрачная
 }
 
 // Цвет заливки гекса по типу
@@ -1036,14 +1049,23 @@ function drawWorldHex(){
   const ctx=canvas.getContext('2d');
   ctx.scale(dpr,dpr);
 
-  const R=calcHexSize(WORLD_COLS,WORLD_ROWS,mw,mh);
+  // Крупнее чем auto-fit — чтобы замки были видны, карта листается
+  const R=40;
   const W=hexW(R),H=hexH(R);
   const gridW=WORLD_COLS*(R*1.5)+R*0.5;
   const gridH=WORLD_ROWS*H+H*0.5;
   const ox=(mw-gridW)/2+vpX;
   const oy=(mh-gridH)/2+vpY;
 
-  ctx.fillStyle='#2a4a18';ctx.fillRect(0,0,mw,mh);
+  // Фон — текстура травы
+  const grassTex=gi('ground/grass_texture.jpg');
+  if(grassTex?.complete&&grassTex.naturalWidth){
+    const pat=ctx.createPattern(grassTex,'repeat');
+    ctx.fillStyle=pat;
+  } else {
+    ctx.fillStyle='#3a6820';
+  }
+  ctx.fillRect(0,0,mw,mh);
 
   hitHexes=[];
   const myName=S.player.username;
@@ -1055,13 +1077,40 @@ function drawWorldHex(){
     const {x:hx,y:hy}=hexCenter(c.col,c.row,R);
     const cx2=ox+hx+R,cy2=oy+hy+H/2;
     const pts=hexPoints(cx2,cy2,R);
+    const isSel=selectedWorldHex&&selectedWorldHex.col===c.col&&selectedWorldHex.row===c.row;
 
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x,pts[0].y);
-    for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
-    ctx.closePath();
-    ctx.fillStyle=hexFill(c,'world');ctx.fill();
-    ctx.strokeStyle='rgba(0,0,0,.3)';ctx.lineWidth=1;ctx.stroke();
+    const hexPath=()=>{
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x,pts[0].y);
+      for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
+      ctx.closePath();
+    };
+
+    // Полупрозрачная заливка
+    hexPath();
+    const fill=worldHexFill(c);
+    ctx.fillStyle=fill;
+    ctx.fill();
+
+    // Обычная граница
+    hexPath();
+    ctx.strokeStyle='rgba(0,0,0,.22)';ctx.lineWidth=1;ctx.stroke();
+
+    // Подсветка выбранной соты — свечение по краям
+    if(isSel){
+      ctx.save();
+      for(let glow=3;glow>=1;glow--){
+        hexPath();
+        ctx.strokeStyle=`rgba(255,215,60,${0.25*glow})`;
+        ctx.lineWidth=glow*3;
+        ctx.stroke();
+      }
+      hexPath();
+      ctx.strokeStyle='rgba(255,230,80,0.95)';
+      ctx.lineWidth=2;
+      ctx.stroke();
+      ctx.restore();
+    }
 
     if(c.type==='player'){
       const isMe=c.player===myName;
@@ -1154,7 +1203,11 @@ function onCanvasClick(px,py){
   for(let i=hitHexes.length-1;i>=0;i--){
     const h=hitHexes[i];
     if(hitTestHex(px,py,h.cx,h.cy,h.R)){
-      if(LOC==='world'){showWorldModal(h.data||{col:h.col,row:h.row,type:h.type});}
+      if(LOC==='world'){
+        selectedWorldHex={col:h.col,row:h.row};
+        renderMap();
+        showWorldModal(h.data||{col:h.col,row:h.row,type:h.type});
+      }
       else{
         const cells=LOC==='castle'?S.player.castle:S.player.lands;
         const cell=cells.find(c=>c.col===h.col&&c.row===h.row);
@@ -2157,7 +2210,7 @@ async function enterGame(){
     if(loc==='menu'){showMenu();return;}
     if(loc==='army'){showArmyModal();return;}
     $$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
-    LOC=loc;vpX=0;vpY=0;renderMap();
+    LOC=loc;vpX=0;vpY=0;selectedWorldHex=null;renderMap();
   }));
 
   // Боковая панель — теперь плавная
