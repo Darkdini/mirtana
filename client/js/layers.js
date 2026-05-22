@@ -104,6 +104,8 @@ const Layers = {
       type: 'building', building_type: 'castle',
       built: true,
       level: bldMap['castle'] ? bldMap['castle'].level : 1,
+      upgrading: bldMap['castle'] ? !!bldMap['castle'].upgrade_finish : false,
+      upgrade_finish: bldMap['castle'] ? (bldMap['castle'].upgrade_finish || null) : null,
       desc: 'Главное здание замка. Определяет уровень развития.',
     });
 
@@ -127,6 +129,8 @@ const Layers = {
         type:  'building', building_type: h.type,
         level: bld ? bld.level : 0,
         built: !!bld,
+        upgrading: bld ? !!bld.upgrade_finish : false,
+        upgrade_finish: bld ? (bld.upgrade_finish || null) : null,
         desc:  bld ? `Уровень ${bld.level}` : 'Пустой участок',
       });
     }
@@ -158,6 +162,8 @@ const Layers = {
         building_type: h.type,
         level: bld ? bld.level : 0,
         built: !!bld,
+        upgrading: bld ? !!bld.upgrade_finish : false,
+        upgrade_finish: bld ? (bld.upgrade_finish || null) : null,
         desc:  bld ? `Уровень ${bld.level}` : 'Пустой участок',
       });
     }

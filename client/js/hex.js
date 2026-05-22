@@ -268,6 +268,12 @@ class HexGrid {
     ctx.lineWidth   = strokeWidth / this.zoom;
     ctx.stroke();
 
+    // ── Construction animation ────────────────────────────────────────────────
+    if (hex.upgrading) {
+      this._drawConstructionAnim(x, y, s, hex);
+      return; // skip normal label/level rendering — construction anim handles it
+    }
+
     // ── 6. Label ──────────────────────────────────────────────────────────────
     if (hex.label && effectivePx >= 28) {
       const labelSize = Math.max(8, s * 0.20);
@@ -296,6 +302,99 @@ class HexGrid {
       ctx.shadowColor  = 'rgba(0,0,0,0.9)';
       ctx.shadowBlur   = 2;
       ctx.fillText(`${hex.level}`, x + s * 0.55, y - s * 0.58);
+      ctx.shadowBlur   = 0;
+    }
+  }
+
+  _drawConstructionAnim(x, y, s, hex) {
+    const ctx  = this.ctx;
+    const t    = this._pulseT;
+
+    // ── Semi-transparent overlay on building image ────────────────────────────
+    this._hexPath(x, y, s);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.fill();
+
+    // ── Spinning gradient arc ─────────────────────────────────────────────────
+    const startA  = (t * 1.8) % (Math.PI * 2);
+    const arcLen  = Math.PI * 1.5;   // 270° arc
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, s * 1.04, startA, startA + arcLen);
+    const grd = ctx.createLinearGradient(x - s, y, x + s, y);
+    grd.addColorStop(0,   'rgba(255, 200, 50, 0)');
+    grd.addColorStop(0.4, 'rgba(255, 200, 50, 0.9)');
+    grd.addColorStop(1,   'rgba(255, 120, 0,  0.5)');
+    ctx.strokeStyle = grd;
+    ctx.lineWidth   = Math.max(2, 3.5 / this.zoom);
+    ctx.lineCap     = 'round';
+    ctx.stroke();
+    ctx.restore();
+
+    // ── Secondary slower arc (counter-spin) ──────────────────────────────────
+    const startB = (-(t * 0.9)) % (Math.PI * 2);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, s * 0.94, startB, startB + Math.PI * 0.8);
+    ctx.strokeStyle = 'rgba(255, 220, 100, 0.4)';
+    ctx.lineWidth   = Math.max(1, 2 / this.zoom);
+    ctx.lineCap     = 'round';
+    ctx.stroke();
+    ctx.restore();
+
+    // ── 🏗️ icon center (bobbing) ─────────────────────────────────────────────
+    const bob      = Math.sin(t * 2.5) * 3;
+    const iconSize = Math.max(12, s * 0.52);
+    ctx.save();
+    ctx.font          = `${iconSize}px serif`;
+    ctx.textAlign     = 'center';
+    ctx.textBaseline  = 'middle';
+    ctx.shadowColor   = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur    = 5;
+    ctx.fillStyle     = 'rgba(255,255,255,0.95)';
+    ctx.fillText('🏗️', x, y + bob);
+    ctx.shadowBlur    = 0;
+    ctx.restore();
+
+    // ── Floating ember sparks ─────────────────────────────────────────────────
+    // Use deterministic per-hex sparks based on pulseT
+    const NUM_SPARKS = 5;
+    for (let i = 0; i < NUM_SPARKS; i++) {
+      // Each spark has its own phase offset
+      const phase  = (t * 0.6 + i * (1 / NUM_SPARKS)) % 1;
+      const seed   = i * 2.39996; // golden angle distribution
+      const angle  = seed + t * 0.15;
+      const radius = s * (0.15 + (i % 3) * 0.15);
+
+      // Position: spiral outward and upward as phase goes 0→1
+      const px   = x + Math.cos(angle) * radius * (0.4 + phase * 0.6);
+      const py   = y - phase * s * 1.1 + Math.sin(angle * 2) * s * 0.1;
+
+      // Fade in then out
+      const alpha = phase < 0.3 ? phase / 0.3 : (1 - phase) / 0.7;
+      const sz    = (1 - phase) * Math.max(1.5, s * 0.12);
+
+      // Colour cycles warm: yellow → orange → red
+      const hue   = 50 - phase * 40; // 50° yellow → 10° red
+      ctx.beginPath();
+      ctx.arc(px, py, sz, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${hue}, 100%, 65%, ${Math.max(0, alpha) * 0.85})`;
+      ctx.fill();
+    }
+
+    // ── "Строится" label ──────────────────────────────────────────────────────
+    const effectivePx = s * this.zoom;
+    if (effectivePx >= 30) {
+      const pulse      = 0.6 + 0.4 * Math.sin(t * 2);
+      const labelSize  = Math.max(7, s * 0.18);
+      ctx.font         = `700 ${labelSize}px 'Cinzel', serif`;
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle    = `rgba(255, 220, 80, ${pulse})`;
+      ctx.shadowColor  = 'rgba(0,0,0,0.95)';
+      ctx.shadowBlur   = 3;
+      ctx.fillText('Строится', x, y + s * 0.52);
       ctx.shadowBlur   = 0;
     }
   }
