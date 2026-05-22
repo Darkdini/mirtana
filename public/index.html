@@ -826,13 +826,13 @@ function hexPoints(cx,cy,R){
 
 // Полупрозрачная заливка для карты мира (трава просвечивает)
 function worldHexFill(c){
-  if(c.type==='forest') return 'rgba(30,70,15,0.52)';
-  if(c.type==='stone')  return 'rgba(80,74,66,0.50)';
-  if(c.type==='player') return 'rgba(50,65,110,0.58)';
-  if(c.type==='bandit') return 'rgba(80,42,15,0.55)';
-  if(c.type==='oasis')  return 'rgba(30,90,130,0.52)';
-  if(c.type==='caravan')return 'rgba(100,80,20,0.50)';
-  return 'rgba(60,100,30,0.38)'; // grass — почти прозрачная
+  if(c.type==='forest') return 'rgba(30,70,15,0.38)';
+  if(c.type==='stone')  return 'rgba(80,74,66,0.36)';
+  if(c.type==='player') return 'rgba(50,65,110,0.42)';
+  if(c.type==='bandit') return 'rgba(80,42,15,0.40)';
+  if(c.type==='oasis')  return 'rgba(30,90,130,0.38)';
+  if(c.type==='caravan')return 'rgba(100,80,20,0.36)';
+  return 'rgba(60,100,30,0.22)'; // grass — почти прозрачная
 }
 
 // Цвет заливки гекса по типу
