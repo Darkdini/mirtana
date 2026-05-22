@@ -58,11 +58,14 @@ const UI = {
   },
 
   setRightPanel(html) {
-    document.getElementById('right-panel-content').innerHTML = html;
+    const el = document.getElementById('right-panel-content');
+    if (el) el.innerHTML = html;
   },
 };
 
-document.getElementById('modal-close').addEventListener('click', () => UI.hideModal());
-document.getElementById('modal-overlay').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('modal-overlay')) UI.hideModal();
+const _modalClose   = document.getElementById('modal-close');
+const _modalOverlay = document.getElementById('modal-overlay');
+if (_modalClose)   _modalClose.addEventListener('click', () => UI.hideModal());
+if (_modalOverlay) _modalOverlay.addEventListener('click', (e) => {
+  if (e.target === _modalOverlay) UI.hideModal();
 });

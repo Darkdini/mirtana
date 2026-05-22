@@ -3,139 +3,380 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>СРЕДНЕВЕКОВЬЕ</title>
+<title>СРЕДНЕВЕКОВЬЕ — Вход</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/main.css">
 </head>
-<body class="auth-page">
-  <div class="auth-bg">
-    <div class="auth-container">
-      <div class="auth-logo">
-        <div class="logo-emblem">⚔️</div>
-        <h1>СРЕДНЕВЕКОВЬЕ</h1>
-        <p class="logo-sub">Стратегическая онлайн-игра</p>
-      </div>
+<body>
 
-      <div class="auth-tabs">
-        <button class="tab-btn active" data-tab="login">Войти</button>
-        <button class="tab-btn" data-tab="register">Создать аккаунт</button>
-      </div>
+  <!-- ═══════════ SPLASH SCREEN ═══════════ -->
+  <div id="splash">
+    <canvas id="splash-canvas"></canvas>
+    <div class="splash-stars" id="splash-stars"></div>
 
-      <form id="loginForm" class="auth-form">
-        <div class="form-group">
-          <label>Имя игрока</label>
-          <input type="text" id="loginUsername" placeholder="Введите имя" autocomplete="username" required>
-        </div>
-        <div class="form-group">
-          <label>Пароль</label>
-          <input type="password" id="loginPassword" placeholder="Введите пароль" autocomplete="current-password" required>
-        </div>
-        <button type="submit" class="btn-primary btn-full">⚔️ В БОЙ!</button>
-        <div id="loginError" class="form-error"></div>
-      </form>
+    <div class="splash-content">
+      <div class="splash-castle">🏰</div>
+      <h1 class="splash-title">СРЕДНЕВЕКОВЬЕ</h1>
+      <p class="splash-subtitle">Войди в мир войн и завоеваний</p>
+      <button class="splash-btn" id="splash-enter-btn">⚔️ ВОЙТИ В МИР</button>
+    </div>
+  </div>
 
-      <form id="registerForm" class="auth-form hidden">
-        <div class="form-group">
-          <label>Имя игрока <span class="hint">(3-20 символов)</span></label>
-          <input type="text" id="regUsername" placeholder="Введите имя" minlength="3" maxlength="20" required>
-        </div>
-        <div class="form-group">
-          <label>Название замка</label>
-          <input type="text" id="regCastle" placeholder="Мой замок" maxlength="30">
-        </div>
-        <div class="form-group">
-          <label>Пароль <span class="hint">(минимум 6 символов)</span></label>
-          <input type="password" id="regPassword" placeholder="Придумайте пароль" minlength="6" required>
-        </div>
-        <div class="form-group">
-          <label>Повторите пароль</label>
-          <input type="password" id="regConfirm" placeholder="Повторите пароль" required>
-        </div>
-        <button type="submit" class="btn-primary btn-full">🏰 Основать замок!</button>
-        <div id="registerError" class="form-error"></div>
-      </form>
+  <!-- ═══════════ AUTH SCREEN ═══════════ -->
+  <div id="auth-screen">
 
-      <div class="auth-footer">
-        <p>Мир разделён на королевства. Построй свою империю, собери армию и завоюй мир!</p>
+    <!-- Left decorative column -->
+    <div class="auth-deco">
+      <div class="auth-deco-castle">🏰</div>
+      <div class="auth-deco-title">СРЕДНЕВЕКОВЬЕ</div>
+      <div class="auth-deco-tagline">Построй империю. Собери армию.<br>Завоюй мир.</div>
+    </div>
+
+    <!-- Right form panel -->
+    <div class="auth-panel">
+      <div class="auth-box">
+
+        <div class="auth-logo">
+          <span class="auth-logo-icon">⚔️</span>
+          <h1>СРЕДНЕВЕКОВЬЕ</h1>
+          <p>Стратегическая онлайн-игра</p>
+        </div>
+
+        <!-- Mode toggle -->
+        <div class="auth-toggle">
+          <button class="auth-toggle-btn active" id="toggle-login">Войти</button>
+          <button class="auth-toggle-btn" id="toggle-register">Зарегистрироваться</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form class="auth-form active" id="loginForm">
+          <div class="form-group">
+            <label>Имя игрока</label>
+            <input type="text" id="loginUsername" placeholder="Введите имя" autocomplete="username" required>
+          </div>
+          <div class="form-group">
+            <label>Пароль</label>
+            <input type="password" id="loginPassword" placeholder="Введите пароль" autocomplete="current-password" required>
+          </div>
+          <button type="submit" class="btn-primary">⚔️ Войти</button>
+          <div id="loginError" class="form-error"></div>
+          <p class="auth-switch">Нет аккаунта? <a id="go-register">Зарегистрироваться</a></p>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form class="auth-form" id="registerForm">
+          <div class="form-group">
+            <label>Имя игрока <span class="form-hint">(3–20 символов)</span></label>
+            <input type="text" id="regUsername" placeholder="Придумайте имя" minlength="3" maxlength="20" required>
+          </div>
+          <div class="form-group">
+            <label>Название замка</label>
+            <input type="text" id="regCastle" placeholder="Мой замок" maxlength="30">
+          </div>
+          <div class="form-group">
+            <label>Пароль <span class="form-hint">(от 6 символов)</span></label>
+            <input type="password" id="regPassword" placeholder="Придумайте пароль" minlength="6" required>
+          </div>
+          <div class="form-group">
+            <label>Повторите пароль</label>
+            <input type="password" id="regConfirm" placeholder="Повторите пароль" required>
+          </div>
+
+          <!-- Race selection -->
+          <div class="race-section">
+            <div class="race-label">Выберите расу</div>
+            <div class="race-cards">
+              <div class="race-card" data-race="orcs" tabindex="0" role="button" aria-pressed="false">
+                <span class="race-emoji">🐉</span>
+                <span class="race-name">ОРКИ</span>
+                <span class="race-desc">Свирепые воители</span>
+              </div>
+              <div class="race-card selected" data-race="humans" tabindex="0" role="button" aria-pressed="true">
+                <span class="race-emoji">⚔️</span>
+                <span class="race-name">ЛЮДИ</span>
+                <span class="race-desc">Доблестные защитники</span>
+              </div>
+              <div class="race-card" data-race="elves" tabindex="0" role="button" aria-pressed="false">
+                <span class="race-emoji">🏹</span>
+                <span class="race-name">ЭЛЬФЫ</span>
+                <span class="race-desc">Мудрецы и лучники</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Captcha -->
+          <div class="form-group">
+            <label>Подтверждение (защита от ботов)</label>
+            <div class="captcha-row">
+              <div class="captcha-question" id="captchaQuestion">...</div>
+              <input type="number" class="captcha-answer" id="captchaAnswer" placeholder="?" min="0" max="99" required>
+              <button type="button" class="captcha-refresh" id="captchaRefresh" title="Обновить">🔄</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary">🏰 Основать замок!</button>
+          <div id="registerError" class="form-error"></div>
+          <p class="auth-switch">Уже есть аккаунт? <a id="go-login">Войти</a></p>
+        </form>
+
       </div>
     </div>
   </div>
 
   <script>
-    const tabs = document.querySelectorAll('.tab-btn');
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
+  // ──────────────────────────────────────────────
+  //  SPLASH SCREEN
+  // ──────────────────────────────────────────────
+  (function () {
+    const splash = document.getElementById('splash');
+    const canvas = document.getElementById('splash-canvas');
+    const ctx    = canvas.getContext('2d');
+    let   animId  = null;
+    let   splashDone = false;
 
-    tabs.forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-        if (btn.dataset.tab === 'login') {
-          loginForm.classList.remove('hidden');
-          registerForm.classList.add('hidden');
-        } else {
-          loginForm.classList.add('hidden');
-          registerForm.classList.remove('hidden');
-        }
+    // Stars
+    const starsContainer = document.getElementById('splash-stars');
+    for (let i = 0; i < 90; i++) {
+      const s = document.createElement('div');
+      s.className = 'splash-star';
+      const size = Math.random() * 2.5 + 1;
+      s.style.cssText = [
+        `width:${size}px`, `height:${size}px`,
+        `left:${Math.random() * 100}%`, `top:${Math.random() * 75}%`,
+        `--dur:${(Math.random() * 3 + 2).toFixed(1)}s`,
+        `animation-delay:${(Math.random() * 4).toFixed(1)}s`
+      ].join(';');
+      starsContainer.appendChild(s);
+    }
+
+    // Particle system
+    const particles = [];
+    function resizeCanvas() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    function spawnParticle() {
+      const x = Math.random() * canvas.width;
+      particles.push({
+        x,
+        y: canvas.height + 10,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: -(Math.random() * 1.5 + 0.5),
+        r: Math.random() * 2.5 + 1,
+        life: 1,
+        decay: Math.random() * 0.005 + 0.003,
+        hue: Math.random() * 40 + 10 // 10-50 = orange-yellow
+      });
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x    += p.vx;
+        p.y    += p.vy;
+        p.life -= p.decay;
+        if (p.life <= 0 || p.y < -20) { particles.splice(i, 1); continue; }
+
+        ctx.save();
+        ctx.globalAlpha = p.life * 0.85;
+        ctx.fillStyle   = `hsl(${p.hue}, 100%, 65%)`;
+        ctx.shadowColor = `hsl(${p.hue}, 100%, 60%)`;
+        ctx.shadowBlur  = p.r * 4;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    let lastSpawn = 0;
+    function loop(ts) {
+      if (!splashDone) animId = requestAnimationFrame(loop);
+      if (ts - lastSpawn > 40) { spawnParticle(); lastSpawn = ts; }
+      drawParticles();
+    }
+    requestAnimationFrame(loop);
+
+    // Advance to auth
+    function enterWorld() {
+      if (splashDone) return;
+      splashDone = true;
+      splash.classList.add('fade-out');
+      setTimeout(() => {
+        splash.style.display = 'none';
+        cancelAnimationFrame(animId);
+        document.getElementById('auth-screen').classList.add('visible');
+      }, 800);
+    }
+
+    // Auto-advance after 4s
+    const autoTimer = setTimeout(enterWorld, 4000);
+
+    document.getElementById('splash-enter-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      clearTimeout(autoTimer);
+      enterWorld();
+    });
+
+    splash.addEventListener('click', () => {
+      clearTimeout(autoTimer);
+      enterWorld();
+    });
+  })();
+
+
+  // ──────────────────────────────────────────────
+  //  AUTH LOGIC
+  // ──────────────────────────────────────────────
+  (function () {
+    // If already logged in, go to game
+    if (localStorage.getItem('auth_token')) {
+      window.location.href = '/game';
+      return;
+    }
+
+    const loginForm    = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const toggleLogin  = document.getElementById('toggle-login');
+    const toggleReg    = document.getElementById('toggle-register');
+
+    function showLogin() {
+      loginForm.classList.add('active');
+      registerForm.classList.remove('active');
+      toggleLogin.classList.add('active');
+      toggleReg.classList.remove('active');
+    }
+
+    function showRegister() {
+      registerForm.classList.add('active');
+      loginForm.classList.remove('active');
+      toggleReg.classList.add('active');
+      toggleLogin.classList.remove('active');
+      loadCaptcha();
+    }
+
+    toggleLogin.addEventListener('click', showLogin);
+    toggleReg.addEventListener('click', showRegister);
+    document.getElementById('go-register').addEventListener('click', showRegister);
+    document.getElementById('go-login').addEventListener('click', showLogin);
+
+    // Race selection
+    let selectedRace = 'humans';
+    document.querySelectorAll('.race-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.race-card').forEach(c => {
+          c.classList.remove('selected');
+          c.setAttribute('aria-pressed', 'false');
+        });
+        card.classList.add('selected');
+        card.setAttribute('aria-pressed', 'true');
+        selectedRace = card.dataset.race;
+      });
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
       });
     });
 
+    // Captcha
+    let captchaToken = '';
+
+    async function loadCaptcha() {
+      try {
+        const res  = await fetch('/api/auth/captcha');
+        const data = await res.json();
+        document.getElementById('captchaQuestion').textContent = data.question;
+        document.getElementById('captchaAnswer').value = '';
+        captchaToken = data.token;
+      } catch {
+        document.getElementById('captchaQuestion').textContent = 'Ошибка загрузки';
+      }
+    }
+
+    document.getElementById('captchaRefresh').addEventListener('click', loadCaptcha);
+
+    // Login
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const err = document.getElementById('loginError');
       err.textContent = '';
+      const btn = loginForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = '...';
       try {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            username: document.getElementById('loginUsername').value,
+            username: document.getElementById('loginUsername').value.trim(),
             password: document.getElementById('loginPassword').value,
           }),
           credentials: 'include',
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || 'Ошибка');
-        localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('player_id', data.player_id);
-        localStorage.setItem('username', data.username);
+        if (!res.ok) throw new Error(data.detail || 'Ошибка входа');
+        localStorage.setItem('auth_token',  data.token);
+        localStorage.setItem('player_id',   data.player_id);
+        localStorage.setItem('username',     data.username);
         window.location.href = '/game';
       } catch (ex) {
         err.textContent = ex.message;
+        btn.disabled = false;
+        btn.textContent = '⚔️ Войти';
       }
     });
 
+    // Register
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const err = document.getElementById('registerError');
       err.textContent = '';
-      const pass = document.getElementById('regPassword').value;
+
+      const pass    = document.getElementById('regPassword').value;
       const confirm = document.getElementById('regConfirm').value;
+      const answer  = parseInt(document.getElementById('captchaAnswer').value, 10);
+
       if (pass !== confirm) { err.textContent = 'Пароли не совпадают'; return; }
+      if (!captchaToken) { err.textContent = 'Загрузите капчу'; return; }
+      if (isNaN(answer)) { err.textContent = 'Введите ответ на капчу'; return; }
+
+      const btn = registerForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = '...';
       try {
         const res = await fetch('/api/auth/register', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            username: document.getElementById('regUsername').value,
-            password: pass,
-            castle_name: document.getElementById('regCastle').value || 'Мой замок',
+            username:       document.getElementById('regUsername').value.trim(),
+            password:       pass,
+            castle_name:    document.getElementById('regCastle').value.trim() || 'Мой замок',
+            race:           selectedRace,
+            captcha_token:  captchaToken,
+            captcha_answer: answer,
           }),
           credentials: 'include',
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || 'Ошибка');
-        localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('player_id', data.player_id);
-        localStorage.setItem('username', data.username);
+        if (!res.ok) throw new Error(data.detail || 'Ошибка регистрации');
+        localStorage.setItem('auth_token',  data.token);
+        localStorage.setItem('player_id',   data.player_id);
+        localStorage.setItem('username',     data.username);
         window.location.href = '/game';
       } catch (ex) {
         err.textContent = ex.message;
+        btn.disabled = false;
+        btn.textContent = '🏰 Основать замок!';
+        // Refresh captcha on failure so token can't be reused
+        loadCaptcha();
       }
     });
-
-    if (localStorage.getItem('auth_token')) {
-      window.location.href = '/game';
-    }
+  })();
   </script>
 </body>
 </html>

@@ -167,6 +167,35 @@ const City = {
     }
   },
 
+  // Alias methods called from hex info panel actions
+  openUpgrade(buildingType) {
+    // Show building info for existing building
+    if (this.state) {
+      const b = this.state.buildings.find(x => x.building_type === buildingType);
+      if (b) { this.showBuildingInfo(b); return; }
+    }
+    this.upgrade(buildingType);
+  },
+
+  openBuild(buildingType) {
+    this.showBuildMenu();
+  },
+
+  openDetail(buildingType) {
+    if (this.state) {
+      const b = this.state.buildings.find(x => x.building_type === buildingType);
+      if (b) { this.showBuildingInfo(b); return; }
+    }
+  },
+
+  // Refresh buildings on the hex grid after changes
+  async _refreshHexGrid() {
+    if (typeof Game !== 'undefined' && Game.me) {
+      await Game._loadBuildings();
+      Layers.switch('castle', { buildings: Game.buildings });
+    }
+  },
+
   formatSec(s) {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
@@ -177,4 +206,6 @@ const City = {
   },
 };
 
-document.getElementById('btn-build').addEventListener('click', () => City.showBuildMenu());
+// Safely bind btn-build if it exists (legacy layout)
+const _btnBuild = document.getElementById('btn-build');
+if (_btnBuild) _btnBuild.addEventListener('click', () => City.showBuildMenu());

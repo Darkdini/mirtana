@@ -4,156 +4,242 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>СРЕДНЕВЕКОВЬЕ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/main.css">
 <link rel="stylesheet" href="/css/game.css">
 </head>
 <body class="game-page">
 
-  <!-- TOP BAR -->
+  <!-- ═══════════ TOP BAR ═══════════ -->
   <header class="top-bar">
     <div class="top-bar-left">
-      <div class="game-logo">⚔️ СРЕДНЕВЕКОВЬЕ</div>
-    </div>
-    <div class="resources-bar">
-      <div class="res-item" title="Золото">
-        <img src="/assets/ui/gold.png" class="res-icon" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
-        <span class="res-emoji" style="display:none">🪙</span>
-        <span id="res-gold">0</span>
-        <span class="res-prod" id="prod-gold"></span>
-      </div>
-      <div class="res-item" title="Еда">
-        <img src="/assets/ui/food.png" class="res-icon" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
-        <span class="res-emoji" style="display:none">🌾</span>
-        <span id="res-food">0</span>
-        <span class="res-prod" id="prod-food"></span>
-      </div>
-      <div class="res-item" title="Дерево">
-        <img src="/assets/ui/wood.png" class="res-icon" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
-        <span class="res-emoji" style="display:none">🪵</span>
-        <span id="res-wood">0</span>
-        <span class="res-prod" id="prod-wood"></span>
-      </div>
-      <div class="res-item" title="Камень">
-        <img src="/assets/ui/stone.png" class="res-icon" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
-        <span class="res-emoji" style="display:none">🪨</span>
-        <span id="res-stone">0</span>
-        <span class="res-prod" id="prod-stone"></span>
+      <div class="player-info-badge">
+        <span class="player-info-name" id="player-name-display">...</span>
+        <span class="player-info-castle" id="castle-name-display">Замок</span>
       </div>
     </div>
+
+    <div class="top-bar-spacer"></div>
+
     <div class="top-bar-right">
-      <span id="online-count" class="online-badge">🟢 0 онлайн</span>
-      <span class="player-name" id="player-name-display">...</span>
-      <button class="btn-icon" id="btn-logout" title="Выйти">🚪</button>
+      <button class="btn-resources" id="btn-resources" title="Ресурсы">
+        🪙 <span id="res-gold-compact">0</span>
+        &nbsp;🌾 <span id="res-food-compact">0</span>
+        &nbsp;🪵 <span id="res-wood-compact">0</span>
+        &nbsp;🪨 <span id="res-stone-compact">0</span>
+      </button>
+      <button class="btn-menu" id="btn-menu" title="Меню">☰</button>
+      <button class="btn-logout-top" id="btn-logout" title="Выйти">🚪</button>
     </div>
   </header>
 
-  <!-- MAIN LAYOUT -->
-  <main class="game-layout">
-
-    <!-- LEFT NAV -->
-    <nav class="side-nav">
-      <button class="nav-btn active" data-view="city" title="Замок">🏰<span>Замок</span></button>
-      <button class="nav-btn" data-view="map" title="Карта">🗺️<span>Карта</span></button>
-      <button class="nav-btn" data-view="army" title="Армия">⚔️<span>Армия</span></button>
-      <button class="nav-btn" data-view="combat" title="Атаки">🛡️<span>Атаки</span></button>
-      <button class="nav-btn" data-view="alliance" title="Альянс">🤝<span>Альянс</span></button>
-      <button class="nav-btn" data-view="ranking" title="Рейтинг">🏆<span>Рейтинг</span></button>
-      <button class="nav-btn" data-view="chat" title="Чат">💬<span>Чат</span></button>
-    </nav>
-
-    <!-- CONTENT AREA -->
-    <section class="game-content" id="game-content">
-
-      <!-- CITY VIEW -->
-      <div class="view active" id="view-city">
-        <div class="view-header">
-          <h2>🏰 <span id="castle-name-display">Замок</span></h2>
-          <button class="btn-sm" id="btn-build">+ Строить</button>
-        </div>
-        <div class="buildings-grid" id="buildings-grid"></div>
-        <div class="training-section">
-          <h3>⚔️ Очередь обучения</h3>
-          <div id="training-queue"></div>
-        </div>
-      </div>
-
-      <!-- MAP VIEW -->
-      <div class="view" id="view-map">
-        <div class="view-header"><h2>🗺️ Карта мира</h2></div>
-        <div class="map-container">
-          <canvas id="map-canvas"></canvas>
-          <div class="map-tooltip" id="map-tooltip"></div>
-        </div>
-        <div class="map-controls">
-          <button id="btn-map-home">🏠 Мой замок</button>
-          <span class="map-coords" id="map-coords">0:0</span>
-        </div>
-      </div>
-
-      <!-- ARMY VIEW -->
-      <div class="view" id="view-army">
-        <div class="view-header"><h2>⚔️ Армия</h2></div>
-        <div class="units-grid" id="units-grid"></div>
-        <div class="train-panel">
-          <h3>Обучить войска</h3>
-          <div class="train-grid" id="train-grid"></div>
-        </div>
-      </div>
-
-      <!-- COMBAT VIEW -->
-      <div class="view" id="view-combat">
-        <div class="view-header"><h2>🛡️ Военные операции</h2></div>
-        <div class="combat-section">
-          <h3>Исходящие атаки</h3>
-          <div id="outgoing-attacks"></div>
-        </div>
-        <div class="combat-section">
-          <h3>Входящие атаки</h3>
-          <div id="incoming-attacks"></div>
-        </div>
-        <div class="combat-section">
-          <h3>История сражений</h3>
-          <div id="battle-history"></div>
-        </div>
-      </div>
-
-      <!-- ALLIANCE VIEW -->
-      <div class="view" id="view-alliance">
-        <div class="view-header"><h2>🤝 Альянс</h2></div>
-        <div id="alliance-content"></div>
-      </div>
-
-      <!-- RANKING VIEW -->
-      <div class="view" id="view-ranking">
-        <div class="view-header">
-          <h2>🏆 Рейтинг</h2>
-          <div class="tab-group">
-            <button class="tab-sm active" data-rtab="players">Игроки</button>
-            <button class="tab-sm" data-rtab="alliances">Альянсы</button>
-          </div>
-        </div>
-        <div id="ranking-players"></div>
-        <div id="ranking-alliances" class="hidden"></div>
-      </div>
-
-      <!-- CHAT VIEW -->
-      <div class="view" id="view-chat">
-        <div class="view-header"><h2>💬 Общий чат</h2></div>
-        <div class="chat-messages" id="chat-messages"></div>
-        <div class="chat-input-row">
-          <input type="text" id="chat-input" placeholder="Написать сообщение..." maxlength="200">
-          <button id="btn-chat-send" class="btn-primary">Отправить</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- RIGHT PANEL (context info) -->
-    <aside class="right-panel" id="right-panel">
-      <div id="right-panel-content"></div>
-    </aside>
+  <!-- ═══════════ MAIN HEX AREA ═══════════ -->
+  <main class="game-main">
+    <canvas id="hex-canvas"></canvas>
   </main>
 
-  <!-- MODALS -->
+  <!-- ═══════════ LAYER SWITCHER ═══════════ -->
+  <button class="layer-switcher-btn" id="layer-switcher-btn" title="Переключить слой">
+    ⊞
+  </button>
+
+  <div class="layer-popup" id="layer-popup">
+    <div class="layer-popup-title">Слой карты</div>
+    <div class="layer-option active" data-layer="castle">
+      <span class="layer-option-icon">🏰</span>
+      <div class="layer-option-text">
+        <span class="layer-option-name">Замок</span>
+        <span class="layer-option-desc">Ваши постройки</span>
+      </div>
+    </div>
+    <div class="layer-option" data-layer="field">
+      <span class="layer-option-icon">🌿</span>
+      <div class="layer-option-text">
+        <span class="layer-option-name">Поле</span>
+        <span class="layer-option-desc">Ближние земли</span>
+      </div>
+    </div>
+    <div class="layer-option" data-layer="world">
+      <span class="layer-option-icon">🗺️</span>
+      <div class="layer-option-text">
+        <span class="layer-option-name">Мир</span>
+        <span class="layer-option-desc">Карта игроков</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ RESOURCES POPUP ═══════════ -->
+  <div class="resources-popup" id="resources-popup">
+    <div class="resources-popup-title">Ресурсы</div>
+    <div class="res-popup-item">
+      <div class="res-popup-left">
+        <span class="res-popup-icon">🪙</span>
+        <span class="res-popup-name">Золото</span>
+      </div>
+      <div class="res-popup-right">
+        <div class="res-popup-amount" id="popup-gold">0</div>
+        <div class="res-popup-rate" id="popup-gold-rate">+0/ч</div>
+      </div>
+    </div>
+    <div class="res-popup-item">
+      <div class="res-popup-left">
+        <span class="res-popup-icon">🌾</span>
+        <span class="res-popup-name">Еда</span>
+      </div>
+      <div class="res-popup-right">
+        <div class="res-popup-amount" id="popup-food">0</div>
+        <div class="res-popup-rate" id="popup-food-rate">+0/ч</div>
+      </div>
+    </div>
+    <div class="res-popup-item">
+      <div class="res-popup-left">
+        <span class="res-popup-icon">🪵</span>
+        <span class="res-popup-name">Дерево</span>
+      </div>
+      <div class="res-popup-right">
+        <div class="res-popup-amount" id="popup-wood">0</div>
+        <div class="res-popup-rate" id="popup-wood-rate">+0/ч</div>
+      </div>
+    </div>
+    <div class="res-popup-item">
+      <div class="res-popup-left">
+        <span class="res-popup-icon">🪨</span>
+        <span class="res-popup-name">Камень</span>
+      </div>
+      <div class="res-popup-right">
+        <div class="res-popup-amount" id="popup-stone">0</div>
+        <div class="res-popup-rate" id="popup-stone-rate">+0/ч</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ HEX INFO PANEL ═══════════ -->
+  <div class="hex-info-panel" id="hex-info-panel">
+    <div class="hex-info-header">
+      <div class="hex-info-title-row">
+        <span class="hex-info-icon" id="hex-info-icon">🏰</span>
+        <div>
+          <div class="hex-info-title" id="hex-info-title">Ратуша</div>
+          <div class="hex-info-subtitle" id="hex-info-subtitle">Главное здание</div>
+        </div>
+      </div>
+      <button class="hex-info-close" id="hex-info-close">✕</button>
+    </div>
+    <div class="hex-info-body">
+      <div class="hex-info-desc" id="hex-info-desc"></div>
+      <div class="hex-info-stats" id="hex-info-stats"></div>
+    </div>
+    <div class="hex-info-actions" id="hex-info-actions"></div>
+  </div>
+
+  <!-- ═══════════ SECONDARY MENU OVERLAY ═══════════ -->
+  <div class="secondary-menu-overlay" id="menu-overlay"></div>
+
+  <!-- ═══════════ SECONDARY MENU ═══════════ -->
+  <div class="secondary-menu" id="secondary-menu">
+    <div class="secondary-menu-header">
+      <div class="secondary-menu-title">Управление</div>
+    </div>
+    <div class="secondary-menu-item" data-view="army">
+      <span class="secondary-menu-icon">⚔️</span>
+      <span class="secondary-menu-label">Армия</span>
+    </div>
+    <div class="secondary-menu-item" data-view="combat">
+      <span class="secondary-menu-icon">🛡️</span>
+      <span class="secondary-menu-label">Атаки</span>
+    </div>
+    <div class="secondary-menu-item" data-view="alliance">
+      <span class="secondary-menu-icon">🤝</span>
+      <span class="secondary-menu-label">Альянс</span>
+    </div>
+    <div class="secondary-menu-item" data-view="ranking">
+      <span class="secondary-menu-icon">🏆</span>
+      <span class="secondary-menu-label">Рейтинг</span>
+    </div>
+    <div class="secondary-menu-item" data-view="chat">
+      <span class="secondary-menu-icon">💬</span>
+      <span class="secondary-menu-label">Чат</span>
+    </div>
+  </div>
+
+  <!-- ═══════════ SECONDARY VIEWS ═══════════ -->
+
+  <!-- Army view -->
+  <div class="secondary-view" id="view-army">
+    <div class="secondary-view-header">
+      <div class="secondary-view-title">⚔️ Армия</div>
+      <button class="secondary-view-close" data-close="army">✕</button>
+    </div>
+    <div class="units-grid" id="units-grid"></div>
+    <div class="training-section">
+      <h3>Обучить войска</h3>
+      <div class="train-grid" id="train-grid"></div>
+    </div>
+    <div class="training-section">
+      <h3>Очередь обучения</h3>
+      <div id="training-queue"></div>
+    </div>
+  </div>
+
+  <!-- Combat view -->
+  <div class="secondary-view" id="view-combat">
+    <div class="secondary-view-header">
+      <div class="secondary-view-title">🛡️ Военные операции</div>
+      <button class="secondary-view-close" data-close="combat">✕</button>
+    </div>
+    <div class="combat-section">
+      <h3>Исходящие атаки</h3>
+      <div id="outgoing-attacks"></div>
+    </div>
+    <div class="combat-section">
+      <h3>Входящие атаки</h3>
+      <div id="incoming-attacks"></div>
+    </div>
+    <div class="combat-section">
+      <h3>История сражений</h3>
+      <div id="battle-history"></div>
+    </div>
+  </div>
+
+  <!-- Alliance view -->
+  <div class="secondary-view" id="view-alliance">
+    <div class="secondary-view-header">
+      <div class="secondary-view-title">🤝 Альянс</div>
+      <button class="secondary-view-close" data-close="alliance">✕</button>
+    </div>
+    <div id="alliance-content"></div>
+  </div>
+
+  <!-- Ranking view -->
+  <div class="secondary-view" id="view-ranking">
+    <div class="secondary-view-header">
+      <div class="secondary-view-title">🏆 Рейтинг</div>
+      <button class="secondary-view-close" data-close="ranking">✕</button>
+    </div>
+    <div class="tab-group" style="margin-bottom:16px">
+      <button class="tab-sm active" data-rtab="players">Игроки</button>
+      <button class="tab-sm" data-rtab="alliances">Альянсы</button>
+    </div>
+    <div id="ranking-players"></div>
+    <div id="ranking-alliances" class="hidden"></div>
+  </div>
+
+  <!-- Chat view -->
+  <div class="secondary-view" id="view-chat">
+    <div class="secondary-view-header">
+      <div class="secondary-view-title">💬 Общий чат</div>
+      <button class="secondary-view-close" data-close="chat">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Написать сообщение..." maxlength="200">
+      <button id="btn-chat-send" class="btn-primary" style="width:auto;padding:10px 18px">Отправить</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ MODAL ═══════════ -->
   <div class="modal-overlay hidden" id="modal-overlay">
     <div class="modal" id="modal">
       <button class="modal-close" id="modal-close">✕</button>
@@ -161,13 +247,15 @@
     </div>
   </div>
 
-  <!-- NOTIFICATION -->
+  <!-- ═══════════ NOTIFICATIONS ═══════════ -->
   <div class="notifications" id="notifications"></div>
 
+  <!-- ═══════════ SCRIPTS ═══════════ -->
   <script src="/js/api.js"></script>
   <script src="/js/ws.js"></script>
   <script src="/js/ui.js"></script>
-  <script src="/js/map.js"></script>
+  <script src="/js/hex.js"></script>
+  <script src="/js/layers.js"></script>
   <script src="/js/city.js"></script>
   <script src="/js/army.js"></script>
   <script src="/js/combat.js"></script>
