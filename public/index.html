@@ -1,0 +1,2890 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>СРЕДНЕВЕКОВЬЕ</title>
+<style>
+:root{
+  --gold:#d4a236;--gold2:#f0c958;--gold3:#8a6020;
+  --dark:#0a0604;--wood:#3a1f10;--wood2:#5a2f18;
+  --red:#5a0e0e;--red2:#3a0a0a;
+  --green:#2d6b3a;--green2:#1d4a26;
+  --hex-grass:#4a7a28;--hex-forest:#2a5a18;--hex-stone:#6a6860;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:'Times New Roman',serif;
+  background:var(--dark);color:#fff;user-select:none;-webkit-user-select:none;}
+button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer;}
+
+/* ===== AUTH ===== */
+#auth{
+  position:fixed;inset:0;
+  background:linear-gradient(160deg,#1a3a6a 0%,#2a4a1a 50%,#1a0e05 100%);
+  display:flex;flex-direction:column;align-items:center;
+  padding:10px 16px 20px;overflow-y:auto;z-index:200;
+}
+.auth-logo{margin-top:12px;text-align:center;}
+.auth-logo .t1{
+  display:block;font-size:clamp(28px,8vw,58px);
+  background:linear-gradient(180deg,#fff0a0,#e8a000 40%,#7a4000);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  font-weight:900;font-variant:small-caps;letter-spacing:3px;
+  filter:drop-shadow(0 4px 0 #2a1400);
+}
+.auth-logo .t2{
+  display:block;font-size:clamp(11px,3vw,16px);color:#5cd4ff;
+  letter-spacing:5px;text-transform:uppercase;margin-top:2px;
+}
+.parch{
+  background:linear-gradient(180deg,#7a5a30,#5a3a18);
+  border:3px solid #3a2008;border-radius:8px;
+  padding:18px 16px 20px;max-width:360px;width:100%;
+  margin-top:12px;position:relative;
+  box-shadow:0 12px 40px rgba(0,0,0,.7);
+}
+.parch::before{content:'⚔ ✦ ⚔';position:absolute;top:-13px;left:50%;
+  transform:translateX(-50%);font-size:18px;color:var(--gold2);white-space:nowrap;}
+.parch .rl{position:absolute;top:0;left:-4px;width:10px;height:50%;
+  background:linear-gradient(180deg,#c02020,#801010);border-radius:3px;}
+.parch .rr{position:absolute;top:0;right:-4px;width:10px;height:50%;
+  background:linear-gradient(180deg,#2040c0,#102080);border-radius:3px;}
+.parch h3{font-size:12px;color:#f0d890;margin:8px 0 4px;text-shadow:1px 1px 0 #000;}
+.parch input{width:100%;background:linear-gradient(180deg,#0a2010,#081808);
+  border:2px solid var(--gold3);color:#80ff80;padding:9px 12px;
+  font-size:14px;border-radius:5px;margin-bottom:7px;font-family:inherit;outline:none;}
+.parch input:focus{border-color:var(--gold2);}
+.parch input::placeholder{color:#305030;}
+.parch .err{color:#ff8080;font-size:12px;min-height:16px;margin-bottom:5px;text-align:center;}
+.parch .sw{font-size:12px;color:#c0a070;margin-top:7px;text-align:center;}
+.parch .sw a{color:#5cd4ff;text-decoration:underline;cursor:pointer;}
+.btn-g{display:block;width:100%;padding:12px;
+  background:linear-gradient(180deg,#3aaa4a,#207030);
+  border:3px solid #5cff7a;border-radius:6px;color:#fff;
+  font-weight:bold;font-size:14px;letter-spacing:2px;text-transform:uppercase;
+  text-align:center;margin-bottom:7px;cursor:pointer;
+  box-shadow:0 4px 0 #0a3010;}
+.btn-g:active{transform:translateY(2px);box-shadow:0 2px 0 #0a3010;}
+.btn-r{display:block;width:100%;padding:10px;
+  background:linear-gradient(180deg,#aa3a3a,#702020);
+  border:2px solid #ff6060;border-radius:6px;color:#fff;
+  font-weight:bold;font-size:13px;letter-spacing:1px;text-transform:uppercase;
+  text-align:center;cursor:pointer;box-shadow:0 3px 0 #300a0a;}
+.btn-r:active{transform:translateY(1px);}
+.race-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;}
+.rcard{padding:8px 4px;background:#1a1408;border:2px solid #5a4020;
+  border-radius:5px;cursor:pointer;text-align:center;}
+.rcard.sel{border-color:var(--gold2);background:#3a2010;box-shadow:0 0 8px rgba(240,200,88,.4);}
+.rcard .rg{font-size:22px;line-height:1;margin-bottom:3px;}
+.rcard .rn{font-size:11px;font-weight:bold;color:var(--gold2);}
+.rcard .rb{font-size:9px;color:#a08050;margin-top:1px;}
+
+/* ===== ИГРА ===== */
+#app{position:fixed;inset:0;display:grid;grid-template-rows:auto auto 1fr auto;}
+#sbar{height:30px;background:linear-gradient(180deg,var(--red2),var(--red));
+  border-bottom:2px solid var(--gold3);
+  display:flex;align-items:center;justify-content:space-between;padding:0 10px;}
+#sbar .stitle{color:var(--gold2);font-weight:bold;font-size:14px;letter-spacing:2px;}
+#sbar .conn{font-size:11px;font-weight:bold;}
+#sbar .conn.on{color:#5cff7a;}
+#sbar .conn.off{color:#ff5050;}
+#topbar{background:linear-gradient(180deg,#0a0604,#180a02);
+  border-bottom:2px solid var(--gold);padding:3px 4px;
+  display:flex;gap:1px;flex-wrap:nowrap;overflow:hidden;}
+.ri{flex:1;display:flex;align-items:center;gap:2px;
+  background:rgba(0,0,0,.5);border:1px solid var(--gold3);
+  border-radius:3px;padding:2px 4px;min-width:0;font-size:11px;}
+.ri img{width:13px;height:13px;image-rendering:pixelated;flex-shrink:0;}
+.ri span{font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ri.low span{color:#ff8080;}
+.ri.full span{color:#ffd44a;}
+#main{position:relative;overflow:hidden;}
+#mapwrap{position:absolute;inset:0;overflow:hidden;touch-action:none;}
+#canvas{display:block;}
+
+/* ── БОКОВАЯ ПАНЕЛЬ ── */
+#side-wrap{
+  position:absolute;
+  top:50%;right:0;
+  transform:translateY(-50%);
+  display:flex;align-items:center;
+  z-index:8;pointer-events:none;
+}
+/* панель слева от кнопки — сворачивается до 0 ширины */
+#sidepanel{
+  overflow:hidden;
+  max-height:0;width:0;
+  background:linear-gradient(180deg,var(--wood2),var(--dark));
+  border:0 solid var(--gold);border-right:0;
+  border-radius:8px 0 0 8px;
+  transition:max-height .35s cubic-bezier(.4,0,.2,1),
+             width .35s cubic-bezier(.4,0,.2,1),
+             border-width .3s,padding .3s;
+  display:flex;flex-direction:column;gap:6px;
+  padding:0;pointer-events:all;
+  align-items:center;
+}
+#sidepanel.open{
+  max-height:380px;
+  width:56px;
+  border-width:2px;
+  padding:10px 6px;
+}
+#sidepanel .sb{
+  width:44px;height:44px;flex-shrink:0;
+  background:linear-gradient(180deg,#c08840,#8a5a20);
+  border:2px solid var(--gold);border-radius:6px;
+  font-size:22px;display:flex;align-items:center;justify-content:center;
+  transition:filter .15s,transform .1s;
+}
+#sidepanel .sb:active{filter:brightness(.85);transform:scale(.92);}
+/* кнопка-язычок, всегда прижата к правому краю */
+#sidebtn{
+  width:30px;height:66px;
+  background:linear-gradient(180deg,#b07828,#7a4a18);
+  border:2px solid var(--gold);border-left:0;
+  border-radius:0 8px 8px 0;
+  color:var(--gold2);font-size:15px;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:all;cursor:pointer;
+  flex-shrink:0;
+  box-shadow:3px 0 10px rgba(0,0,0,.6);
+  transition:filter .15s;
+  writing-mode:vertical-rl;
+  letter-spacing:2px;
+}
+#sidebtn:active{filter:brightness(.85);}
+
+#timebar{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,.8);color:#fff;padding:2px 10px;border-radius:10px;
+  font-size:12px;font-family:monospace;font-weight:bold;z-index:5;
+  border:1px solid rgba(255,255,255,.15);pointer-events:none;}
+
+/* Нижняя панель */
+#bottombar{
+  background:linear-gradient(0deg,#050302,#150902);
+  border-top:2px solid var(--gold);
+  display:grid;grid-template-columns:repeat(5,1fr);
+  gap:2px;padding:3px;z-index:10;
+}
+.tab{padding:3px 1px 5px;
+  background:linear-gradient(180deg,#3a1f10,#1a0a05);
+  border:2px solid var(--gold3);border-radius:4px;
+  color:var(--gold);font-size:9px;font-weight:bold;
+  text-align:center;display:flex;flex-direction:column;align-items:center;gap:1px;
+  text-transform:uppercase;position:relative;}
+.tab .ti{font-size:20px;line-height:1;}
+.tab.active{background:linear-gradient(180deg,#5a3018,#2a1408);
+  border-color:var(--gold2);color:var(--gold2);}
+.tab:active{filter:brightness(1.3);}
+.tab .badge{position:absolute;top:-5px;right:-3px;
+  background:#c00;color:#fff;font-size:9px;font-weight:bold;
+  border-radius:8px;padding:1px 4px;min-width:14px;text-align:center;
+  border:1px solid var(--dark);}
+
+/* Тосты */
+#toasts{position:fixed;top:44px;left:50%;transform:translateX(-50%);
+  z-index:100;display:flex;flex-direction:column;gap:4px;
+  pointer-events:none;width:90%;max-width:380px;}
+.toast{background:rgba(10,4,2,.97);border:1px solid var(--gold);
+  color:var(--gold2);padding:7px 12px;border-radius:4px;font-size:13px;
+  text-align:center;animation:tsin .2s,tout .25s 2.7s forwards;
+  box-shadow:0 4px 12px rgba(0,0,0,.7);}
+.toast.err{border-color:#c44;color:#ffb0b0;}
+.toast.ok{border-color:#5cff7a;color:#c8ffc8;}
+@keyframes tsin{from{opacity:0;transform:translateY(-10px);}}
+@keyframes tout{to{opacity:0;}}
+
+/* Модалки */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(3px);
+  display:flex;align-items:center;justify-content:center;z-index:50;padding:8px;
+  animation:fadein .15s;}
+@keyframes fadein{from{opacity:0;}}
+.mbox{background:var(--wood);border:2px solid var(--gold);
+  border-radius:6px;max-width:450px;width:100%;max-height:90vh;
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,.9);}
+.mhead{background:linear-gradient(180deg,var(--red2),var(--red));
+  color:#fff;padding:8px 12px;font-size:14px;font-weight:bold;
+  text-align:center;border-bottom:2px solid var(--gold3);
+  position:relative;letter-spacing:1px;}
+.mhead .xb{position:absolute;top:50%;right:8px;transform:translateY(-50%);
+  width:26px;height:26px;background:linear-gradient(180deg,#c44,#722);
+  border:1px solid #fff;border-radius:3px;font-size:14px;
+  color:#fff;font-weight:bold;display:flex;align-items:center;justify-content:center;}
+.mbody{flex:1;overflow-y:auto;padding:12px;
+  background:repeating-linear-gradient(0deg,var(--wood) 0 3px,#3a1a08 3px 6px);
+  color:#e8d0b0;font-size:13px;line-height:1.5;}
+.mbody p{margin-bottom:5px;}
+.mfoot{padding:8px 12px;background:linear-gradient(0deg,var(--dark),var(--wood));
+  border-top:1px solid var(--gold3);display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.mbtn{padding:9px 14px;background:linear-gradient(180deg,#3a8a4a,var(--green2));
+  color:#fff;border:2px solid #5cff7a;border-radius:5px;font-weight:bold;
+  font-size:12px;letter-spacing:1px;text-transform:uppercase;min-width:90px;}
+.mbtn:active{transform:translateY(1px);}
+.mbtn:disabled{opacity:.4;cursor:not-allowed;border-color:#666;}
+.mbtn.red{background:linear-gradient(180deg,#c43a3a,#5a1414);border-color:#ff5050;}
+.mbtn.gold{background:linear-gradient(180deg,#c4a030,#7a5010);border-color:var(--gold2);color:#1a0800;text-shadow:none;}
+.mbtn.gray{background:linear-gradient(180deg,#5a4a30,#2a2010);border-color:#8a7050;}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;}
+.bcard{background:linear-gradient(180deg,#5a3018,#2a1008);
+  border:2px solid var(--gold3);border-radius:4px;padding:7px 5px;
+  cursor:pointer;text-align:center;}
+.bcard:hover{border-color:var(--gold2);transform:translateY(-1px);}
+.bcard.cant{opacity:.4;cursor:not-allowed;}
+.bcard img{width:42px;height:42px;image-rendering:pixelated;margin:0 auto 3px;display:block;object-fit:contain;}
+.bcard .bn{font-size:11px;font-weight:bold;color:var(--gold2);line-height:1.2;margin-bottom:3px;}
+.bcard .bc{font-size:10px;color:#c0a880;line-height:1.4;}
+.mbar{height:10px;background:rgba(0,0,0,.5);border:1px solid var(--gold3);
+  border-radius:5px;overflow:hidden;margin:5px 0;}
+.mbar-f{height:100%;background:linear-gradient(90deg,#5cffe0,#00c880);}
+.urow{background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:4px;padding:8px;margin-bottom:6px;}
+.urow .uh{display:flex;gap:8px;align-items:center;margin-bottom:4px;}
+.urow img{image-rendering:pixelated;flex-shrink:0;}
+.urow .un{font-weight:bold;color:var(--gold2);font-size:13px;}
+.urow .us{font-size:11px;color:#b0a080;}
+.urow .uc{font-size:11px;color:#e0c890;margin-bottom:4px;}
+.urow .ui{display:flex;gap:5px;align-items:center;}
+.urow input{width:55px;padding:5px;background:#0a2010;
+  border:2px solid var(--gold);color:#70ff70;
+  border-radius:4px;font-family:inherit;font-size:12px;text-align:center;outline:none;}
+/* Технологии */
+.tech-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:7px;}
+.tcard{background:linear-gradient(180deg,#1a2a3a,#0a1a2a);
+  border:2px solid #3a5a7a;border-radius:5px;padding:8px;cursor:pointer;}
+.tcard:hover{border-color:#5a8aaa;}
+.tcard.done{border-color:#3a8a4a;background:linear-gradient(180deg,#1a3a1a,#0a2a0a);}
+.tcard.cant{opacity:.45;cursor:not-allowed;}
+.tcard .tn{font-weight:bold;color:#7ad4ff;font-size:12px;margin-bottom:3px;}
+.tcard.done .tn{color:#7aff7a;}
+.tcard .td{font-size:10px;color:#a0b0c0;line-height:1.3;}
+
+/* ЧАТ */
+#chat-btn{
+  position:fixed;bottom:68px;right:8px;
+  width:46px;height:46px;
+  background:linear-gradient(180deg,#c08840,#7a4a10);
+  border:2px solid var(--gold2);border-radius:50%;
+  font-size:20px;display:none;align-items:center;justify-content:center;
+  z-index:20;box-shadow:0 3px 10px rgba(0,0,0,.5);}
+#chat-btn:active{transform:scale(.9);}
+#chat-nb{position:absolute;top:-4px;right:-4px;
+  background:#e03030;color:#fff;font-size:9px;font-weight:bold;
+  border-radius:50%;min-width:16px;height:16px;
+  display:none;align-items:center;justify-content:center;
+  border:2px solid var(--dark);padding:0 2px;}
+#chat-panel{
+  position:fixed;bottom:68px;right:8px;
+  width:min(320px,calc(100vw - 16px));
+  height:min(460px,calc(100vh - 150px));
+  background:linear-gradient(180deg,#1a0e05,#0a0604);
+  border:2px solid var(--gold);border-radius:10px;
+  display:flex;flex-direction:column;z-index:21;
+  box-shadow:0 8px 32px rgba(0,0,0,.9);overflow:hidden;
+  transform:scale(0) translateY(16px);transform-origin:bottom right;
+  transition:transform .2s cubic-bezier(.34,1.4,.64,1);
+  pointer-events:none;opacity:0;}
+#chat-panel.open{transform:scale(1) translateY(0);pointer-events:all;opacity:1;}
+#chat-head{background:linear-gradient(180deg,var(--red2),var(--red));
+  padding:7px 10px;display:flex;align-items:center;
+  justify-content:space-between;border-bottom:2px solid var(--gold3);flex-shrink:0;}
+#chat-head span{font-size:14px;font-weight:bold;color:var(--gold2);}
+#chat-head button{width:24px;height:24px;background:linear-gradient(180deg,#c44,#722);
+  border:1px solid #fff;border-radius:3px;color:#fff;font-size:14px;font-weight:bold;}
+#chat-msgs{flex:1;overflow-y:auto;padding:7px;display:flex;flex-direction:column;gap:3px;}
+#chat-msgs::-webkit-scrollbar{width:3px;}
+#chat-msgs::-webkit-scrollbar-thumb{background:var(--gold3);border-radius:2px;}
+.cmsg{padding:4px 7px;background:rgba(255,255,255,.04);
+  border-left:2px solid var(--gold3);border-radius:0 3px 3px 0;
+  font-size:12px;line-height:1.4;word-break:break-word;}
+.cmsg.me{background:rgba(212,162,54,.1);border-left-color:var(--gold2);}
+.cmsg.sys{border-left-color:#5cff7a;color:#5cff7a;text-align:center;}
+.cmsg .ch{display:flex;gap:4px;align-items:center;margin-bottom:2px;}
+.cmsg .cr{font-size:13px;}
+.cmsg .cn{font-weight:bold;font-size:10px;color:var(--gold2);}
+.cmsg .ct{font-size:9px;color:#604030;margin-left:auto;font-family:monospace;}
+.cmsg .cx{color:#e0c890;font-size:12px;}
+#chat-irow{display:flex;gap:5px;padding:7px;
+  border-top:1px solid var(--gold3);background:rgba(0,0,0,.3);flex-shrink:0;}
+#chat-inp{flex:1;background:#0a1a0a;border:2px solid var(--gold3);
+  color:#e0d0b0;padding:7px 9px;border-radius:5px;
+  font-family:inherit;font-size:12px;outline:none;}
+#chat-inp:focus{border-color:var(--gold2);}
+#chat-send{width:38px;height:38px;background:linear-gradient(180deg,#3a8a4a,#1d4a26);
+  border:2px solid #5cff7a;border-radius:5px;font-size:16px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#chat-send:active{transform:scale(.9);}
+
+@media(max-width:360px){
+  .tab{font-size:8px;}.tab .ti{font-size:17px;}
+  .ri{font-size:10px;}
+  .bgrid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth">
+  <div class="auth-logo">
+    <span class="t1">СРЕДНЕВЕКОВЬЕ</span>
+    <span class="t2">Война Королей</span>
+  </div>
+  <div class="parch" id="aLogin">
+    <div class="rl"></div><div class="rr"></div>
+    <h3>Логин</h3>
+    <input type="text" id="liU" placeholder="Имя игрока (мин. 3)">
+    <h3>Пароль</h3>
+    <input type="password" id="liP" placeholder="Пароль">
+    <div class="err" id="liE"></div>
+    <button class="btn-g" id="liBtn">ВОЙТИ</button>
+    <button class="btn-r" id="toReg">РЕГИСТРАЦИЯ</button>
+    <div class="sw">Нет аккаунта? <a id="sw1">Создать</a></div>
+  </div>
+  <div class="parch" id="aReg" style="display:none;">
+    <div class="rl"></div><div class="rr"></div>
+    <div style="font-size:13px;color:#f0d070;text-align:center;margin-bottom:10px;font-weight:bold;">
+      Правитель, укажи данные<br>для создания королевства!
+    </div>
+    <h3>Логин</h3>
+    <input type="text" id="reU" placeholder="Имя игрока (мин. 3)" maxlength="20">
+    <h3>Пароль</h3>
+    <input type="password" id="reP" placeholder="Пароль (мин. 4)" maxlength="40">
+    <h3>Название королевства</h3>
+    <input type="text" id="reK" placeholder="Как называть твоё королевство" maxlength="20">
+    <h3>Раса</h3>
+    <div class="race-grid" id="racePick"></div>
+    <div class="err" id="reE"></div>
+    <button class="btn-g" id="reBtn">ОСНОВАТЬ КОРОЛЕВСТВО</button>
+    <button class="btn-r" id="sw2">НАЗАД</button>
+  </div>
+</div>
+
+<!-- ИГРА -->
+<div id="app" style="display:none;">
+  <div id="sbar">
+    <span class="stitle">СРЕДНЕВЕКОВЬЕ</span>
+    <span class="conn off" id="conn">● OFF</span>
+  </div>
+  <div id="topbar"></div>
+  <div id="main">
+    <div id="mapwrap"><canvas id="canvas"></canvas></div>
+    <div id="side-wrap">
+      <div id="sidepanel">
+        <button class="sb" data-a="army" title="Армия">⚔</button>
+        <button class="sb" data-a="alliance" title="Альянс">🛡</button>
+        <button class="sb" data-a="tech" title="Технологии">🔬</button>
+        <button class="sb" data-a="reports" title="Отчёты">📨</button>
+        <button class="sb" data-a="profile" title="Профиль">👑</button>
+        <button class="sb" data-a="logout" title="Выход">🚪</button>
+      </div>
+      <button id="sidebtn">▶</button>
+    </div>
+    <div id="timebar">--:--:--</div>
+  </div>
+  <div id="bottombar">
+    <button class="tab active" data-loc="castle"><span class="ti">🏰</span>Замок</button>
+    <button class="tab" data-loc="lands"><span class="ti">🌾</span>Земли</button>
+    <button class="tab" data-loc="world"><span class="ti">🌍</span>Мир</button>
+    <button class="tab" data-loc="army"><span class="ti">⚔</span>Армия</button>
+    <button class="tab" data-loc="menu"><span class="ti">📜</span>Меню</button>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<button id="chat-btn">💬<span id="chat-nb"></span></button>
+<div id="chat-panel">
+  <div id="chat-head"><span>💬 Мировой чат</span><button id="chat-close">✕</button></div>
+  <div id="chat-msgs"></div>
+  <div id="chat-irow">
+    <input type="text" id="chat-inp" placeholder="Написать..." maxlength="200">
+    <button id="chat-send">➤</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ════════════════════════════════════════════════════════
+//  СРЕДНЕВЕКОВЬЕ — Canvas + Hex (соты) v4
+// ════════════════════════════════════════════════════════
+
+// ── КОНСТАНТЫ ──────────────────────────────────────────
+const RACES = {human:{name:"Люди",bonus:"Железо +20%"},elf:{name:"Эльфы",bonus:"Дерево +20%"},dwarv:{name:"Гномы",bonus:"Камень +20%"},orc:{name:"Орки",bonus:"Атака ×2, защита слабее"}};
+const RACE_G = {human:'⚔',elf:'🏹',dwarv:'⛏',orc:'🪓'};
+const RES = ['gold','wood','stone','food','iron','people'];
+const RES_L = {gold:'Золото',wood:'Дерево',stone:'Камень',food:'Еда',iron:'Железо',people:'Люди'};
+const RES_I = {gold:'res/gold.png',wood:'res/wood.png',stone:'res/stone.png',food:'res/food.png',iron:'res/iron.png',people:'res/people.png'};
+const CASTLE_COLS=7,CASTLE_ROWS=7,LANDS_COLS=10,LANDS_ROWS=10,WORLD_COLS=20,WORLD_ROWS=20;
+
+// ── ЗДАНИЯ ─────────────────────────────────────────────
+const BUILDINGS = {
+  // Базовые
+  castle:     {name:"Ратуша",           img:"build/castle.png",     unique:true, cat:'base'},
+  storage:    {name:"Склад",            img:"build/storage.png",    cat:'base'},
+  market:     {name:"Рынок",            img:"build/market.png",     unique:true, req:{castle:2}, cat:'econ'},
+  treasury:   {name:"Сокровищница",     img:"build/reasury.png",    unique:true, req:{castle:5}, cat:'econ'},
+  commerce:   {name:"Торговый центр",   img:"build/commerce.png",   unique:true, req:{market:3}, cat:'econ'},
+  // Военные
+  barracks:   {name:"Казарма",          img:"build/baraks.png",     unique:true, req:{castle:2}, cat:'mil'},
+  stables:    {name:"Конюшня",          img:"build/stables.png",    unique:true, req:{castle:3}, cat:'mil'},
+  smithy:     {name:"Кузница",          img:"build/smith.png",      unique:true, req:{castle:3}, cat:'mil'},
+  workshop:   {name:"Мастерская",       img:"build/workshop.png",   unique:true, req:{castle:3}, cat:'mil'},
+  guard_tower:{name:"Сторож.башня",     img:"build/guard_tower.png",unique:true, req:{castle:3}, cat:'mil'},
+  // Магия/наука
+  university: {name:"Университет",      img:"build/university.png", unique:true, req:{castle:5}, cat:'sci'},
+  magscool:   {name:"Акад.магов",       img:"build/magscool.png",   unique:true, req:{castle:5}, cat:'sci'},
+  magtower:   {name:"Башня арт.",       img:"build/magtower.png",   unique:true, req:{castle:5}, cat:'sci'},
+  alchimia:   {name:"Алхимик",          img:"build/alchimia.png",   unique:true, req:{castle:4}, cat:'sci'},
+  // Инфраструктура
+  temple:     {name:"Храм",             img:"build/temple.png",     unique:true, req:{castle:4}, cat:'inf'},
+  beer:       {name:"Пивоварня",        img:"build/beer.png",       unique:true, req:{castle:3}, cat:'inf'},
+  secret:     {name:"Тайник",           img:"build/secret.png",     unique:true, req:{castle:2}, cat:'inf'},
+  wisdom:     {name:"Дом мудрецов",     img:"build/wisdom_house.png",unique:true,req:{castle:3}, cat:'inf'},
+  gendel:     {name:"Гильдия",          img:"build/gendel.png",     unique:true, req:{castle:4}, cat:'inf'},
+  // Разведка/дипломатия
+  resident:   {name:"Шпионаж",          img:"build/resident.png",   unique:true, req:{castle:5}, cat:'dip'},
+  diplomat:   {name:"Дипломатия",       img:"build/diplomat.png",   unique:true, req:{castle:4}, cat:'dip'},
+  spycentr:   {name:"Центр разведки",   img:"build/spycentr.png",   unique:true, req:{resident:3},cat:'dip'},
+  expedition: {name:"Лагерь арх.",      img:"build/expedition.png", unique:true, req:{castle:4}, cat:'dip'},
+  // Великое
+  portal:     {name:"Портал",            img:"build/portal.png",      unique:true, req:{castle:7}, cat:'great'},
+  traveler:   {name:"Дом путеш.",        img:"build/traveler.png",    unique:true, req:{castle:6}, cat:'great'},
+  arhcamp:    {name:"Лагерь героя",      img:"build/arhcamp.png",     unique:true, req:{castle:5}, cat:'great'},
+  // Третий мир: Война Королей
+  wall:        {name:"Стена",             img:"build/mbases.png",      unique:true, req:{castle:2}, cat:'mil',  max:20,
+                desc:'Каждый ур. +5% защиты замка. Макс.20 = +100%'},
+  trap:        {name:"Капканщик",         img:"build/chip.png",        unique:true, req:{castle:3}, cat:'mil',  max:10,
+                desc:'Ловушки наносят урон атакующим до боя. Ур.7+ = универсальные'},
+  prison:      {name:"Темница",           img:"build/secret.png",      unique:true, req:{trap:3},   cat:'mil',
+                desc:'Держит военнопленных из ловушек'},
+  watchtower:  {name:"Дозорная башня",    img:"build/guard_tower.png", unique:true, req:{castle:4}, cat:'mil',  max:10,
+                desc:'Раннее предупреждение об атаке (5 мин × уровень)'},
+  magicschool: {name:"Школа магии",       img:"build/magtower.png",    unique:true, req:{castle:5}, cat:'sci',  max:20,
+                desc:'Каждый ур. +2% к маг.атаке и защите войск'},
+  kazenotos:   {name:"Каменотёс",         img:"build/storage.png",     unique:true, req:{castle:3}, cat:'mil',  max:20,
+                desc:'Каждый ур. -5% шанса разрушения зданий врагом'},
+  military_hq: {name:"Военный штаб",      img:"build/baraks.png",      unique:true, req:{castle:2}, cat:'mil',
+                desc:'Управление армиями. Воскрешение павших генералов за золото.'},
+};
+const LAND_BUILDINGS = {
+  farm_small:   {name:"Ферма",         img:"build/farm_small.png",   terrain:'grass', produces:'food',   lvlImg:['build/farm_small.png','build/farm_avg.png','build/farm_big.png']},
+  sawmill_small:{name:"Лесопилка",     img:"build/sawmill_small.png",terrain:'forest',produces:'wood',   lvlImg:['build/sawmill_small.png','build/sawmill_avg.png','build/sawmill_big.png']},
+  stone_small:  {name:"Каменоломня",   img:"build/stone_small.png",  terrain:'stone', produces:'stone',  lvlImg:['build/stone_small.png','build/stone_avg.png','build/stone_big.png']},
+  iron_small:   {name:"Жел.рудник",    img:"build/iron_small.png",   terrain:'stone', produces:'iron',   lvlImg:['build/iron_small.png','build/iron_avg.png','build/iron_big.png']},
+  house_small:  {name:"Дом",           img:"build/house_small.png",  terrain:'grass', produces:'people', lvlImg:['build/house_small.png','build/house_avg.png','build/house_big.png']},
+};
+// Категории зданий замка
+const BLD_CATS = {
+  base:'🏠 Базовые',econ:'💰 Экономика',mil:'⚔ Военные',
+  sci:'🔬 Наука/Магия',inf:'🏛 Инфраструктура',dip:'🕵 Разведка',great:'✨ Великие',
+};
+const BLD_DESC = {
+  wall:'Каждый уровень +5% к защите замка от атак. Макс. ур.20.',
+  trap:'Ловушки (ур.1-3 простые, ур.4-6 элитные, ур.7-10 универсальные) наносят урон атакующим до начала боя.',
+  watchtower:'Предупреждает о нападении за (уровень × 5) минут.',
+  magicschool:'Каждый уровень +2% к магической атаке и защите войск. Макс. ур.20.',
+  smithy:'Каждый уровень +3% атаки и +2% защиты войск. Макс. ур.20.',
+  kazenotos:'Каждый уровень снижает шанс разрушения зданий на 5%. Макс. ур.20.',
+  military_hq:'Управление армиями и походами. Воскрешение павших генералов за золото.',
+  prison:'Держит пленных, захваченных ловушками. +50 мест/уровень.',
+  diplomat:'Уровень = максимальный размер альянса × 2. Ур.3+ нужен для вступления в альянс.',
+};
+
+const UNITS = {
+  human_swordman:  {name:"Мечник",    race:"human",img:"units/human/swordman.png",  simg:"smallunits/human/swordman.png",  atk:30,def:35,hp:40,speed:18,carry:60,upkeep:2,building:"barracks", trainTime:60, reqLvl:1,cost:{wood:50,iron:80,food:30},people:1},
+  human_javelineer:{name:"Копейщик",  race:"human",img:"units/human/javelineer.png",simg:"smallunits/human/javelineer.png",atk:20,def:50,hp:35,speed:22,carry:50,upkeep:2,building:"barracks", trainTime:50, reqLvl:1,cost:{wood:80,iron:30,food:30},people:1},
+  human_scout:     {name:"Разведчик", race:"human",img:"units/human/scout.png",     simg:"smallunits/human/scout.png",     atk:15,def:15,hp:20,speed:8, carry:30,upkeep:1,building:"barracks", trainTime:40, reqLvl:1,cost:{wood:40,iron:20,food:20},people:1},
+  human_knight:    {name:"Рыцарь",    race:"human",img:"units/human/knight.png",    simg:"smallunits/human/knight.png",    atk:80,def:60,hp:80,speed:8, carry:100,upkeep:5,building:"stables",  trainTime:200,reqLvl:1,cost:{wood:60,iron:140,food:80},people:1},
+  human_paladin:   {name:"Паладин",   race:"human",img:"units/human/paladin.png",   simg:"smallunits/human/paladin.png",   atk:90,def:80,hp:100,speed:10,carry:80,upkeep:6,building:"stables",  trainTime:280,reqLvl:3,cost:{wood:80,iron:160,food:100},people:1},
+  human_mage:      {name:"Маг",       race:"human",img:"units/human/mage.png",      simg:"smallunits/human/mage.png",      atk:90,def:20,hp:35,speed:12,carry:30,upkeep:4,building:"magscool", trainTime:240,reqLvl:1,cost:{wood:30,iron:30,food:60},people:1},
+  human_general:   {name:"Генерал",   race:"human",img:"units/human/general.png",   simg:"smallunits/human/general.png",   atk:150,def:120,hp:200,speed:12,carry:150,upkeep:10,building:"university",trainTime:600,reqLvl:5,cost:{wood:200,iron:300,food:200},people:1},
+  elf_fighter:     {name:"Воин",      race:"elf",  img:"units/elf/fighter.png",     simg:"smallunits/elf/fighter.png",     atk:25,def:30,hp:35,speed:16,carry:50,upkeep:2,building:"barracks", trainTime:55, reqLvl:1,cost:{wood:60,iron:50,food:30},people:1},
+  elf_archer:      {name:"Лучник",    race:"elf",  img:"units/elf/archer.png",      simg:"smallunits/elf/archer.png",      atk:50,def:15,hp:25,speed:14,carry:40,upkeep:2,building:"barracks", trainTime:75, reqLvl:1,cost:{wood:80,iron:20,food:30},people:1},
+  elf_scout:       {name:"Разведчик", race:"elf",  img:"units/elf/scout.png",       simg:"smallunits/elf/scout.png",       atk:18,def:18,hp:22,speed:7, carry:35,upkeep:1,building:"barracks", trainTime:38, reqLvl:1,cost:{wood:50,iron:15,food:20},people:1},
+  elf_kenaur:      {name:"Кентавр",   race:"elf",  img:"units/elf/kenaur.png",      simg:"smallunits/elf/kenaur.png",      atk:70,def:55,hp:75,speed:7, carry:90,upkeep:5,building:"stables",  trainTime:190,reqLvl:1,cost:{wood:100,iron:60,food:80},people:1},
+  elf_edinorog:    {name:"Единорог",  race:"elf",  img:"units/elf/edinorog.png",    simg:"smallunits/elf/edinorog.png",    atk:80,def:70,hp:90,speed:8, carry:80,upkeep:6,building:"stables",  trainTime:250,reqLvl:3,cost:{wood:120,iron:40,food:100},people:1},
+  elf_ent:         {name:"Энт",       race:"elf",  img:"units/elf/ent.png",         simg:"smallunits/elf/ent.png",         atk:100,def:120,hp:150,speed:25,carry:120,upkeep:7,building:"magscool",trainTime:350,reqLvl:1,cost:{wood:200,iron:0,food:100},people:1},
+  elf_create:      {name:"Созидатель",race:"elf",  img:"units/elf/create.png",      simg:"smallunits/elf/create.png",      atk:85,def:25,hp:40,speed:11,carry:35,upkeep:4,building:"magscool", trainTime:230,reqLvl:1,cost:{wood:80,iron:40,food:80},people:1},
+  elf_general:     {name:"Генерал",   race:"elf",  img:"units/elf/general.png",     simg:"smallunits/elf/general.png",     atk:140,def:110,hp:180,speed:11,carry:140,upkeep:9,building:"university",trainTime:580,reqLvl:5,cost:{wood:200,iron:200,food:200},people:1},
+  dwarv_fighter:   {name:"Воин",      race:"dwarv",img:"units/dwarv/fighter.png",   simg:"smallunits/dwarv/fighter.png",   atk:35,def:45,hp:50,speed:20,carry:70,upkeep:3,building:"barracks", trainTime:65, reqLvl:1,cost:{wood:40,iron:100,food:30},people:1},
+  dwarv_defender:  {name:"Защитник",  race:"dwarv",img:"units/dwarv/defender.png",  simg:"smallunits/dwarv/defender.png",  atk:20,def:70,hp:60,speed:25,carry:60,upkeep:3,building:"barracks", trainTime:70, reqLvl:1,cost:{wood:30,iron:120,food:30},people:1},
+  dwarv_arbalet:   {name:"Арбалетчик",race:"dwarv",img:"units/dwarv/arbalet.png",   simg:"smallunits/dwarv/arbalet.png",   atk:55,def:20,hp:30,speed:16,carry:45,upkeep:2,building:"barracks", trainTime:85, reqLvl:2,cost:{wood:60,iron:80,food:30},people:1},
+  dwarv_revolver:  {name:"Пушкарь",   race:"dwarv",img:"units/dwarv/revolver.png",  simg:"smallunits/dwarv/revolver.png",  atk:100,def:30,hp:45,speed:20,carry:50,upkeep:4,building:"stables",  trainTime:220,reqLvl:1,cost:{wood:60,iron:180,food:60},people:1},
+  dwarv_gryphon:   {name:"Грифон",    race:"dwarv",img:"units/dwarv/gryphon.png",   simg:"smallunits/dwarv/gryphon.png",   atk:90,def:65,hp:85,speed:9, carry:95,upkeep:6,building:"stables",  trainTime:260,reqLvl:3,cost:{wood:80,iron:120,food:100},people:1},
+  dwarv_yeti:      {name:"Йети",      race:"dwarv",img:"units/dwarv/yeti.png",      simg:"smallunits/dwarv/yeti.png",      atk:110,def:100,hp:130,speed:22,carry:110,upkeep:7,building:"magscool",trainTime:320,reqLvl:1,cost:{wood:100,iron:60,food:120},people:1},
+  dwarv_elder:     {name:"Старейшина",race:"dwarv",img:"units/dwarv/elder.png",     simg:"smallunits/dwarv/elder.png",     atk:80,def:40,hp:50,speed:14,carry:40,upkeep:4,building:"magscool", trainTime:210,reqLvl:1,cost:{wood:60,iron:60,food:80},people:1},
+  dwarv_general:   {name:"Генерал",   race:"dwarv",img:"units/dwarv/general.png",   simg:"smallunits/dwarv/general.png",   atk:160,def:130,hp:210,speed:13,carry:160,upkeep:10,building:"university",trainTime:620,reqLvl:5,cost:{wood:200,iron:350,food:200},people:1},
+  // Орки — атака ×2, скорость, мало защиты
+  orc_marauder:  {name:"Мародёр",   race:"orc",  img:"units/unical/shadow.png",    simg:"smallunits/unical/shadow.png",   atk:40, def:10, hp:30, speed:11,carry:101,upkeep:2,building:"barracks", trainTime:45, reqLvl:1,cost:{wood:30,iron:60,food:20},people:1},
+  orc_brawler:   {name:"Бугай",     race:"orc",  img:"units/unical/giant.png",     simg:"smallunits/unical/giant.png",    atk:50, def:15, hp:35, speed:4, carry:60, upkeep:3,building:"barracks", trainTime:70, reqLvl:3,cost:{wood:40,iron:80,food:30},people:1},
+  orc_scout:     {name:"Загонщик",  race:"orc",  img:"units/unical/oko.png",       simg:"smallunits/unical/oko.png",      atk:20, def:10, hp:20, speed:15,carry:40, upkeep:1,building:"barracks", trainTime:35, reqLvl:1,cost:{wood:30,iron:20,food:15},people:1},
+  orc_tyrant:    {name:"Тиран",     race:"orc",  img:"units/unical/valkiriya.png", simg:"smallunits/unical/valkiriya.png",atk:120,def:25, hp:60, speed:7, carry:80, upkeep:6,building:"stables",  trainTime:240,reqLvl:3,cost:{wood:80,iron:160,food:80},people:1},
+  orc_catapult:  {name:"Катапульта",race:"orc",  img:"units/unical/katapulta.png", simg:"smallunits/unical/katapulta.png",atk:200,def:5,  hp:40, speed:3, carry:10, upkeep:8,building:"workshop", trainTime:400,reqLvl:1,cost:{wood:300,iron:150,food:50},people:2},
+  orc_ram:       {name:"Таран",     race:"orc",  img:"units/unical/taran.png",     simg:"smallunits/unical/taran.png",    atk:150,def:10, hp:50, speed:4, carry:20, upkeep:6,building:"workshop", trainTime:350,reqLvl:1,cost:{wood:250,iron:100,food:40},people:2},
+  orc_shaman:    {name:"Шаман",     race:"orc",  img:"units/dwarv/elder.png",      simg:"smallunits/dwarv/elder.png",     atk:130,def:30, hp:80, speed:6, carry:50, upkeep:8,building:"magscool", trainTime:450,reqLvl:1,cost:{wood:100,iron:100,food:150},people:1},
+  orc_general:   {name:"Генерал",   race:"orc",  img:"units/dwarv/general.png",    simg:"smallunits/dwarv/general.png",   atk:300,def:80, hp:250,speed:8, carry:200,upkeep:12,building:"university",trainTime:700,reqLvl:5,cost:{wood:250,iron:400,food:250},people:1},
+};
+
+// Технологии — дерево исследований
+const TECHS = {
+  iron_working:  {name:"Обработка железа", icon:"⚙",  cost:{gold:500,wood:200,iron:300},  time:300, req:{smithy:2},   effect:"Урон войск +10%",  cat:'mil'},
+  horse_breed:   {name:"Коневодство",      icon:"🐎",  cost:{gold:400,food:300,iron:100},  time:240, req:{stables:2},  effect:"Скорость конницы +20%", cat:'mil'},
+  siege_eng:     {name:"Осадное дело",     icon:"🏹",  cost:{gold:800,wood:500,iron:400},  time:600, req:{workshop:3}, effect:"Открывает катапульту",  cat:'mil'},
+  alchemy:       {name:"Алхимия",          icon:"⚗",   cost:{gold:600,stone:300,iron:200}, time:400, req:{alchimia:2}, effect:"Производство +15%",     cat:'sci'},
+  magic_shield:  {name:"Магический щит",   icon:"🛡",  cost:{gold:700,stone:400},          time:450, req:{magscool:2}, effect:"Защита от магии +25%",  cat:'sci'},
+  trade_routes:  {name:"Торговые пути",    icon:"💰",  cost:{gold:300,wood:200},           time:180, req:{market:2},   effect:"Торговля +30%",         cat:'econ'},
+  agriculture:   {name:"Агрикультура",     icon:"🌾",  cost:{gold:400,food:500},           time:300, req:{},           effect:"Еда +20%",              cat:'econ'},
+  architecture:  {name:"Архитектура",      icon:"🏛",  cost:{gold:500,stone:400,wood:300}, time:350, req:{castle:4},   effect:"Строительство -20% времени", cat:'inf'},
+  cartography:   {name:"Картография",      icon:"🗺",  cost:{gold:400,wood:100},           time:200, req:{expedition:1},effect:"Радар мира +5",         cat:'dip'},
+  espionage:     {name:"Шпионаж",          icon:"🕵",  cost:{gold:600,iron:200},           time:350, req:{resident:2}, effect:"Разведка +50%",         cat:'dip'},
+};
+
+// Цены зданий
+const BASE_COSTS = {
+  castle:{wood:200,stone:200,iron:50,food:0},storage:{wood:80,stone:120,iron:0,food:0},
+  market:{wood:120,stone:60,iron:0,food:0},barracks:{wood:80,stone:120,iron:60,food:0},
+  smithy:{wood:60,stone:120,iron:80,food:0},stables:{wood:140,stone:80,iron:60,food:40},
+  workshop:{wood:80,stone:160,iron:40,food:0},university:{wood:200,stone:200,iron:100,food:0},
+  magtower:{wood:150,stone:300,iron:100,food:0},magscool:{wood:300,stone:200,iron:100,food:0},
+  temple:{wood:200,stone:300,iron:50,food:0},treasury:{wood:100,stone:200,iron:80,food:0},
+  secret:{wood:120,stone:60,iron:30,food:0},alchimia:{wood:60,stone:120,iron:80,food:0},
+  beer:{wood:100,stone:60,iron:0,food:30},guard_tower:{wood:120,stone:160,iron:60,food:0},
+  expedition:{wood:160,stone:80,iron:0,food:0},resident:{wood:100,stone:100,iron:50,food:0},
+  diplomat:{wood:80,stone:80,iron:40,food:0},
+  commerce:{wood:200,stone:100,iron:50,food:0},wisdom:{wood:80,stone:60,iron:30,food:0},
+  gendel:{wood:120,stone:80,iron:60,food:0},spycentr:{wood:150,stone:100,iron:80,food:0},
+  portal:{wood:300,stone:300,iron:200,food:0},traveler:{wood:200,stone:200,iron:100,food:50},
+  arhcamp:{wood:180,stone:120,iron:100,food:80},
+  wall:{wood:80,stone:200,iron:60,food:0},trap:{wood:120,stone:60,iron:80,food:0},
+  prison:{wood:100,stone:200,iron:60,food:0},watchtower:{wood:160,stone:200,iron:80,food:0},
+  magicschool:{wood:200,stone:200,iron:100,food:0},
+  sawmill_small:{wood:40,stone:60,iron:10,food:0},stone_small:{wood:80,stone:30,iron:10,food:0},
+  iron_small:{wood:80,stone:80,iron:0,food:0},farm_small:{wood:60,stone:30,iron:0,food:0},
+  house_small:{wood:80,stone:40,iron:0,food:20},
+};
+const BASE_TIMES = {
+  castle:120,storage:60,market:90,barracks:120,smithy:120,stables:160,workshop:120,
+  university:300,magtower:300,magscool:360,temple:240,treasury:180,secret:90,alchimia:180,
+  beer:120,guard_tower:200,expedition:200,resident:180,diplomat:150,
+  commerce:200,wisdom:120,gendel:180,spycentr:220,portal:600,traveler:300,arhcamp:250,
+  wall:180,trap:150,prison:200,watchtower:220,magicschool:300,
+  sawmill_small:60,stone_small:60,iron_small:80,farm_small:50,house_small:70,
+};
+
+// ── УТИЛИТЫ ────────────────────────────────────────────
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const spr=k=>k||null;
+function fmtN(n){n=Math.floor(n);return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e4?(n/1e3).toFixed(0)+'k':String(n);}
+function fmtT(s){s=Math.max(0,Math.ceil(s));const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return h?h+'ч '+m+'м':m?m+'м '+sec+'с':sec+'с';}
+function clk(){return new Date().toTimeString().slice(0,8);}
+function escH(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function calcCost(id,lv){const b=BASE_COSTS[id]||{};const m=Math.pow(1.6,lv);
+  return{wood:Math.round((b.wood||0)*m),stone:Math.round((b.stone||0)*m),
+         iron:Math.round((b.iron||0)*m),food:Math.round((b.food||0)*m)};}
+function calcTime(id,lv,clvl){return Math.max(5,Math.round((BASE_TIMES[id]||60)*Math.pow(1.4,lv)*Math.pow(0.92,(clvl||1)-1)));}
+function canAfford(c){for(const k in c)if((S.player.res[k]||0)<c[k])return false;return true;}
+function getCLvl(){const c=(S.player.castle||[]).find(x=>x.bldId==='castle');return c?c.level:1;}
+function reqOk(id,cells){
+  const def=BUILDINGS[id]||LAND_BUILDINGS[id]||TECHS[id];if(!def?.req)return true;
+  for(const k in def.req){
+    let l=0;
+    for(const c of (cells||S.player.castle))if(c.bldId===k)l=Math.max(l,c.level);
+    if(l<def.req[k])return false;
+  }
+  return true;
+}
+function hasU(id){if(!BUILDINGS[id]?.unique)return false;return(S.player.castle||[]).some(c=>c.bldId===id);}
+function armyTotal(){return Object.values(S.player.army||{}).reduce((a,b)=>a+(+b||0),0);}
+function costHtml(c){return Object.entries(c).filter(([,v])=>v>0).map(([k,v])=>{
+  const ok=(S.player.res[k]||0)>=v;
+  return `<span style="color:${ok?'#7aff7a':'#ff7a7a'}">${RES_L[k]||k}:${fmtN(v)}</span>`;
+}).join(' ');}
+function toast(msg,kind=''){
+  const el=document.createElement('div');
+  el.className='toast'+(kind==='err'?' err':kind==='ok'?' ok':'');
+  el.textContent=msg;$('#toasts').appendChild(el);
+  setTimeout(()=>el.remove(),3200);
+}
+
+// ── СПРАЙТЫ ────────────────────────────────────────────
+const IC={};
+function gi(k){
+  if(!k)return null;
+  if(IC[k])return IC[k];
+  const img=new Image();img.src='/'+k;IC[k]=img;return img;
+}
+function preload(){
+  const keys=['ground/grass.png','ground/ground.png','ground/stone1.png',
+    'ground/lumber.png','ground/mount.png','ground/castle_small.png','ground/bandit_camp.png'];
+  for(const b of Object.values({...BUILDINGS,...LAND_BUILDINGS})){
+    keys.push(b.img);
+    if(b.lvlImg)b.lvlImg.forEach(i=>keys.push(i));
+  }
+  for(const u of Object.values(UNITS)){keys.push(u.img);keys.push(u.simg);}
+  keys.forEach(k=>gi(k));
+}
+
+// ── СОСТОЯНИЕ ──────────────────────────────────────────
+let S=null,LOC='castle',ws=null,chatOpen=false,chatUnread=0;
+let playerTechs = {}; // tid -> true
+// Кэш альянсов и игроков на карте мира
+let worldAlliances = {}; // id -> alliance
+
+// ── БРАУЗЕРНЫЕ УВЕДОМЛЕНИЯ ──────────────────────────────
+let _lastNotifTime = 0;
+function pushNotif(title, body, icon) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  const now = Date.now();
+  if (now - _lastNotifTime < 30000) return; // throttle 30s
+  _lastNotifTime = now;
+  try {
+    new Notification(title, { body: body || '', icon: icon || '/res/gold.png' });
+  } catch(e) {}
+}
+
+// ── API ────────────────────────────────────────────────
+async function api(path,opts={}){
+  const r=await fetch(path,{credentials:'include',
+    headers:{'Content-Type':'application/json'},...opts,
+    body:opts.body?JSON.stringify(opts.body):undefined});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.error||'HTTP '+r.status);
+  return d;
+}
+async function refreshState(){
+  S=await api('/api/state');
+  if(S.player.techs)playerTechs=S.player.techs;
+  // Обогащаем клетки мира тегами альянсов
+  if(S.world&&S.alliances){
+    worldAlliances=S.alliances;
+    if(!S.worldPlayers)S.worldPlayers={};
+    for(const c of S.world){
+      if(c.type==='player'&&c.player){
+        S.worldPlayers[c.player]=S.worldPlayers[c.player]||{};
+      }
+    }
+  }
+  renderTopbar();renderMap();
+}
+
+// ── WS ─────────────────────────────────────────────────
+function connectWS(){
+  const proto=location.protocol==='https:'?'wss:':'ws:';
+  ws=new WebSocket(`${proto}//${location.host}/`);
+  ws.onopen=()=>setConn(true);
+  ws.onclose=()=>{setConn(false);setTimeout(connectWS,3000);};
+  ws.onerror=()=>{};
+  ws.onmessage=ev=>{
+    let m;try{m=JSON.parse(ev.data);}catch{return;}
+    if(m.type==='state'){S.player=m.player;if(m.player.techs)playerTechs=m.player.techs;renderTopbar();renderMap();}
+    else if(m.type==='reports'){
+      for(const r of m.items){
+        toast(r.txt,r.kind==='battle-loss'?'err':r.kind==='build'?'ok':'');
+        if(r.kind==='build'){setTimeout(()=>refreshState(),400);pushNotif('🏗 Строительство','Постройка завершена!');}
+        else if(r.kind==='train'){pushNotif('⚔ Тренировка','Обучение юнитов завершено!');}
+        else if(r.kind==='battle-win'){pushNotif('🏆 Победа!',r.txt);}
+        else if(r.kind==='battle-loss'){pushNotif('⚔ Поражение',r.txt);}
+        else if(r.txt&&r.txt.includes('Экспедиция вернулась')){pushNotif('🗺 Экспедиция',r.txt);}
+      }
+    }
+    else if(m.type==='chat'){appendChat(m.msg);if(!chatOpen){chatUnread++;const b=$('#chat-nb');b.style.display='flex';b.textContent=chatUnread>99?'99+':chatUnread;}}
+  };
+}
+function setConn(ok){const e=$('#conn');e.className='conn '+(ok?'on':'off');e.textContent=ok?'● ON':'● OFF';}
+
+// ── ТОПБАР ─────────────────────────────────────────────
+function renderTopbar(){
+  if(!S?.player)return;
+  const p=S.player;
+  const oasisBonus={};
+  for(const o of (p.oases||[])) oasisBonus[o.resource]=(oasisBonus[o.resource]||0)+25;
+  const loyalty=p.loyalty??100;
+  const lc=loyalty>=70?'#5cff7a':loyalty>=40?'#ffd44a':loyalty>=20?'#ff8a4a':'#ff4444';
+  const prot=p.protectedUntil>Date.now()?`🛡${fmtT(Math.ceil((p.protectedUntil-Date.now())/1000))} · `:'';
+  const loyTip=`${prot}Лояльность: ${Math.floor(loyalty)}%${loyalty<40?' ⚠️':''} · Храм и Пивоварня поднимают`;
+  // Полоска лояльности — абсолютно внутри #topbar, не добавляет новый grid-элемент
+  const tb=$('#topbar');
+  tb.style.position='relative';
+  tb.innerHTML=RES.map(r=>{
+    const v=p.res[r]||0,mx=p.resMax[r]||1;
+    const cls=v>=mx?'full':v<mx*.1?'low':'';
+    const si=spr(RES_I[r]);
+    const oaz=oasisBonus[r]?`+${oasisBonus[r]}%`:'';
+    return `<div class="ri ${cls}" title="${RES_L[r]}: ${Math.floor(v)}/${Math.floor(mx)}${oaz?' 🌿'+oaz:''}">
+      ${si?`<img src="${si}">`:''}
+      <span>${fmtN(v)}${oaz?`<sup style="color:#5dff7a;font-size:9px;"> ${oaz}</sup>`:''}</span>
+    </div>`;
+  }).join('')+
+  `<div id="loyaltybar" title="${loyTip}"
+    style="position:absolute;bottom:0;left:0;right:0;height:4px;background:#1a1008;cursor:pointer;"
+    onclick="toast('${loyTip.replace(/'/g,'&apos;')}','${loyalty<40?'err':'ok'}')">
+    <div style="height:100%;width:${loyalty}%;background:${lc};transition:width .6s,background .6s;"></div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  ШЕСТИУГОЛЬНАЯ СЕТКА (СОТЫ)
+//  flat-top hex: ширина W, высота H = W*sin(60°)
+//  центр гекса (col,row):
+//    cx = ox + col*(W*3/4)              — если чётный ряд
+//    cx = ox + col*(W*3/4)              — нечётный смещён на H/2
+//    cy = oy + row*H + (col%2)*H/2
+// ══════════════════════════════════════════════════════
+let hexSize = 52;  // радиус описанной окружности (размер гекса)
+let vpX=0,vpY=0;
+
+function hexW(R){return R*2;}
+function hexH(R){return Math.round(R*Math.sqrt(3));}
+// Центр гекса col,row
+function hexCenter(col,row,R){
+  const W=hexW(R),H=hexH(R);
+  const x = col*(W*0.75);
+  const y = row*H + (col%2)*(H/2);
+  return {x,y};
+}
+// Вершины гекса (flat-top)
+function hexPoints(cx,cy,R){
+  const pts=[];
+  for(let i=0;i<6;i++){
+    const a=Math.PI/3*i;
+    pts.push({x:cx+R*Math.cos(a),y:cy+R*Math.sin(a)});
+  }
+  return pts;
+}
+
+// Цвет заливки гекса по типу
+function hexFill(c,loc,col,row,cols,rows){
+  if(loc==='castle'){
+    // Центральный гекс (ратуша) — золотистый
+    const cx=Math.floor(cols/2),cy=Math.floor(rows/2);
+    const dist=Math.max(Math.abs(col-cx),Math.abs(row-cy));
+    if(dist===0) return '#6a5a20';  // центр — золото
+    if(dist===1) return '#5a7030';  // вокруг — светлее
+    if(dist===2) return '#4a6828';  // средний пояс
+    return '#3a5820';               // края
+  }
+  if(c.type==='forest')return '#2a5a18';
+  if(c.type==='stone') return '#58524a';
+  if(c.type==='grass') return '#4a7a28';
+  if(c.type==='player')  return '#3a4a7a';
+  if(c.type==='bandit')  return '#5a3a18';
+  if(c.type==='oasis')   return '#2a6a4a';
+  if(c.type==='caravan') return '#4a5a20';
+  return '#4a6a2a';
+}
+function hexStroke(c,loc,col,row,cols,rows){
+  if(loc==='castle'){
+    const cx=Math.floor(cols/2),cy=Math.floor(rows/2);
+    const dist=Math.max(Math.abs(col-cx),Math.abs(row-cy));
+    if(dist===0) return 'rgba(212,162,54,.8)';  // золотой ободок у ратуши
+    if(dist===1) return 'rgba(160,130,60,.5)';
+    return 'rgba(0,0,0,.3)';
+  }
+  if(c.type==='forest')return 'rgba(0,0,0,.4)';
+  if(c.type==='stone') return 'rgba(0,0,0,.4)';
+  return 'rgba(0,0,0,.3)';
+}
+
+let hitHexes=[];
+
+function renderMap(){
+  if(!S?.player)return;
+  $('#main').className='loc-'+LOC;
+  if(LOC==='castle')drawHexGrid(S.player.castle,CASTLE_COLS,CASTLE_ROWS,'castle');
+  else if(LOC==='lands')drawHexGrid(S.player.lands,LANDS_COLS,LANDS_ROWS,'lands');
+  else drawWorldHex();
+}
+
+function calcHexSize(cols,rows,W,H){
+  // Подбираем размер гекса чтобы вся сетка влезла в экран
+  // Flat-top hex grid, cols колонн, rows строк
+  // Ширина сетки ≈ cols*(R*1.5) + R*0.5
+  // Высота сетки ≈ rows*H + H/2
+  for(let R=80;R>=18;R-=2){
+    const gw=(cols*(R*1.5)+R*0.5)*1.05;
+    const gh=(rows*hexH(R)+hexH(R)*0.5)*1.05;
+    if(gw<=W && gh<=H)return R;
+  }
+  return 18;
+}
+
+function drawHexGrid(cells,cols,rows,loc){
+  const canvas=$('#canvas');
+  const mw=$('#main').clientWidth,mh=$('#main').clientHeight;
+  const dpr=devicePixelRatio||1;
+  canvas.width=mw*dpr;canvas.height=mh*dpr;
+  canvas.style.width=mw+'px';canvas.style.height=mh+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+
+  // Размер гекса — подбираем чтобы влезло
+  const R=calcHexSize(cols,rows,mw,mh);
+  hexSize=R;
+
+  const W=hexW(R),H=hexH(R);
+  // Границы сетки
+  const gridW=cols*(R*1.5)+R*0.5;
+  const gridH=rows*H+H*0.5;
+  const ox=(mw-gridW)/2+vpX;
+  const oy=(mh-gridH)/2+vpY;
+
+  // Фон
+  ctx.fillStyle=loc==='castle'?'#2a4a18':'#1a3a0a';
+  ctx.fillRect(0,0,mw,mh);
+
+  hitHexes=[];
+  const now=Date.now();
+  const queue=S.player.queue||[];
+
+  // Сортировка по row потом col для правильного z-order
+  const sorted=[...cells].filter(c=>c.type!=='wall').sort((a,b)=>a.row!==b.row?a.row-b.row:a.col-b.col);
+
+  for(const c of sorted){
+    const {x:hx,y:hy}=hexCenter(c.col,c.row,R);
+    const cx2=ox+hx+R,cy2=oy+hy+H/2;
+    const pts=hexPoints(cx2,cy2,R);
+
+    // Заливка
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.closePath();
+    ctx.fillStyle=hexFill(c,loc,c.col,c.row,cols,rows);
+    ctx.fill();
+    // Тонкая внутренняя тень
+    if(loc==='castle'){
+      ctx.save();
+      ctx.clip();
+      const grd=ctx.createRadialGradient(cx2,cy2,0,cx2,cy2,R);
+      grd.addColorStop(0,'rgba(255,255,200,.08)');
+      grd.addColorStop(1,'rgba(0,0,0,.25)');
+      ctx.fillStyle=grd;ctx.fill();
+      ctx.restore();
+    }
+    ctx.strokeStyle=hexStroke(c,loc,c.col,c.row,cols,rows);
+    ctx.lineWidth=loc==='castle'?2:1.5;
+    ctx.stroke();
+
+    // Декор биома
+    if(loc==='lands'&&!c.bldId){
+      let dk=null;
+      if(c.type==='forest')dk='ground/lumber.png';
+      else if(c.type==='stone')dk='ground/mount.png';
+      if(dk){
+        const di=gi(dk);
+        if(di?.complete&&di.naturalWidth){
+          const dw=Math.round(R*1.3),dh=Math.round(di.naturalHeight/di.naturalWidth*dw);
+          ctx.drawImage(di,cx2-dw/2,cy2-dh*0.75,dw,dh);
+        }
+      }
+    }
+
+    // Здание
+    if(c.bldId){
+      const def=BUILDINGS[c.bldId]||LAND_BUILDINGS[c.bldId];
+      if(def){
+        // Для добывающих зданий — разный спрайт по уровню
+        let imgKey=def.img;
+        if(def.lvlImg){
+          const li=def.lvlImg;
+          imgKey=c.level<=1?li[0]:c.level<=4?li[1]:li[2];
+        }
+        const bi=gi(imgKey);
+        if(bi?.complete&&bi.naturalWidth){
+          const bw=Math.round(R*1.5),bh=Math.round(bi.naturalHeight/bi.naturalWidth*bw);
+          ctx.drawImage(bi,cx2-bw/2,cy2-bh*0.8,bw,bh);
+        }
+        // Уровень
+        if(c.level>0){
+          ctx.fillStyle='rgba(0,0,0,.75)';
+          ctx.beginPath();ctx.arc(cx2+R*0.55,cy2-R*0.55,8,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle='#f0c958';ctx.font='bold 9px monospace';ctx.textAlign='center';
+          ctx.fillText(c.level,cx2+R*0.55,cy2-R*0.55+3);
+        }
+      }
+    }
+
+    // Декор пустых гексов замка
+    if(loc==='castle' && !c.bldId && c.type==='inner'){
+      const cx2f=Math.floor(cols/2),cy2f=Math.floor(rows/2);
+      const dist2=Math.max(Math.abs(c.col-cx2f),Math.abs(c.row-cy2f));
+      // Мощение вокруг центра
+      if(dist2===1){
+        ctx.strokeStyle='rgba(180,150,80,.3)';ctx.lineWidth=1;
+        // Ромбики мощения
+        for(let di=0;di<4;di++){
+          const tx=cx2+(Math.random()-.5)*R*0.8,ty=cy2+(Math.random()-.5)*R*0.5;
+          ctx.strokeRect(tx-3,ty-2,6,4);
+        }
+      }
+      // Трава на дальних
+      if(dist2>=2){
+        ctx.fillStyle='rgba(80,120,40,.2)';
+        for(let gi=0;gi<3;gi++){
+          const gx=cx2+(Math.random()-.5)*R*1.2,gy=cy2+(Math.random()-.5)*R*0.7;
+          ctx.fillRect(gx-1,gy-4,2,8);
+          ctx.fillRect(gx-3,gy-2,6,2);
+        }
+      }
+    }
+
+    // В очереди
+    const inQ=queue.find(j=>j.loc===loc&&j.col===c.col&&j.row===c.row);
+    if(inQ){
+      // Пульсирующий контур
+      const a=0.4+0.3*Math.sin(now/400);
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x,pts[0].y);
+      for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
+      ctx.closePath();
+      ctx.strokeStyle=`rgba(255,200,0,${a})`;ctx.lineWidth=3;ctx.stroke();
+      // Иконка
+      ctx.font=`${Math.round(R*0.5)}px serif`;ctx.textAlign='center';
+      ctx.fillText('🏗',cx2,cy2+R*0.2);
+      // Прогресс
+      const elapsed=now-inQ.start,total=inQ.end-inQ.start;
+      const pct=Math.min(1,Math.max(0,elapsed/total));
+      const bw=R*1.2,bx=cx2-bw/2,by=cy2+R*0.6;
+      ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(bx,by,bw,5);
+      ctx.fillStyle=`hsl(${120*pct},100%,50%)`;ctx.fillRect(bx,by,bw*pct,5);
+      // Таймер
+      const rem=Math.ceil((inQ.end-now)/1000);
+      ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillRect(cx2-R*0.7,by+6,R*1.4,13);
+      ctx.fillStyle='#ffd44a';ctx.font=`bold 9px monospace`;ctx.textAlign='center';
+      ctx.fillText('⌛'+fmtT(rem),cx2,by+16);
+    }
+
+    hitHexes.push({col:c.col,row:c.row,cx:cx2,cy:cy2,R,type:c.type,data:c});
+  }
+}
+
+function drawWorldHex(){
+  const canvas=$('#canvas');
+  const mw=$('#main').clientWidth,mh=$('#main').clientHeight;
+  const dpr=devicePixelRatio||1;
+  canvas.width=mw*dpr;canvas.height=mh*dpr;
+  canvas.style.width=mw+'px';canvas.style.height=mh+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+
+  const R=calcHexSize(WORLD_COLS,WORLD_ROWS,mw,mh);
+  const W=hexW(R),H=hexH(R);
+  const gridW=WORLD_COLS*(R*1.5)+R*0.5;
+  const gridH=WORLD_ROWS*H+H*0.5;
+  const ox=(mw-gridW)/2+vpX;
+  const oy=(mh-gridH)/2+vpY;
+
+  ctx.fillStyle='#2a4a18';ctx.fillRect(0,0,mw,mh);
+
+  hitHexes=[];
+  const myName=S.player.username;
+  const castleS=gi('ground/castle_small.png');
+  const banditS=gi('ground/bandit_camp.png');
+  const sorted=[...S.world].sort((a,b)=>a.row!==b.row?a.row-b.row:a.col-b.col);
+
+  for(const c of sorted){
+    const {x:hx,y:hy}=hexCenter(c.col,c.row,R);
+    const cx2=ox+hx+R,cy2=oy+hy+H/2;
+    const pts=hexPoints(cx2,cy2,R);
+
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.closePath();
+    ctx.fillStyle=hexFill(c,'world');ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.3)';ctx.lineWidth=1;ctx.stroke();
+
+    if(c.type==='player'){
+      const isMe=c.player===myName;
+      const myAllianceId=S.player.alliance?.id;
+      const cellPlayer=S.worldPlayers?.[c.player];
+      const isAlly=myAllianceId&&cellPlayer?.allianceId===myAllianceId&&!isMe;
+      if(castleS?.complete&&castleS.naturalWidth){
+        const cw=Math.round(R*1.8),ch=Math.round(castleS.naturalHeight/castleS.naturalWidth*cw);
+        ctx.drawImage(castleS,cx2-cw/2,cy2-ch*0.75,cw,ch);
+      }
+      // Ободок: золото — я, зелёный — союзник
+      if(isMe||isAlly){
+        ctx.strokeStyle=isMe?'#f0c958':'#5cff7a';ctx.lineWidth=2.5;
+        ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+        for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
+        ctx.closePath();ctx.stroke();
+      }
+      // Щит защиты новичка
+      const defPlayer=S.player.username===c.player?S.player:null;
+      if(defPlayer?.protectedUntil>Date.now()){
+        ctx.font=`${R*0.5}px serif`;ctx.textAlign='center';
+        ctx.fillText('🛡',cx2+R*0.6,cy2-R*0.5);
+      }
+      // Тег альянса
+      const allianceTag=cellPlayer?.allianceTag||null;
+      const lbl=(isMe?'★':'')+( allianceTag?'['+allianceTag+'] ':'' )+(c.player||'');
+      ctx.fillStyle='rgba(0,0,0,.8)';
+      const tw=Math.max(40,ctx.measureText(lbl).width+8);
+      ctx.fillRect(cx2-tw/2,cy2+R*0.5,tw,13);
+      ctx.fillStyle=isMe?'#f0c958':'#e0d0b0';
+      ctx.font=`${Math.max(8,Math.round(R*0.28))}px Arial`;ctx.textAlign='center';
+      ctx.fillText(lbl,cx2,cy2+R*0.5+10);
+    } else if(c.type==='bandit'){
+      if(banditS?.complete&&banditS.naturalWidth){
+        const bw=Math.round(R*1.6),bh=Math.round(banditS.naturalHeight/banditS.naturalWidth*bw);
+        ctx.drawImage(banditS,cx2-bw/2,cy2-bh*0.75,bw,bh);
+      } else {ctx.font=`${R*0.7}px serif`;ctx.textAlign='center';ctx.fillText('🐺',cx2,cy2+R*0.3);}
+      ctx.fillStyle='rgba(0,0,0,.8)';
+      const pw='⚔'+c.power;const twp=ctx.measureText(pw).width+6;
+      ctx.fillRect(cx2-twp/2,cy2+R*0.5,twp,13);
+      ctx.fillStyle='#ff9080';ctx.font=`bold ${Math.max(8,Math.round(R*0.28))}px Arial`;ctx.textAlign='center';
+      ctx.fillText(pw,cx2,cy2+R*0.5+10);
+      // Реликвия на клетке
+      if(c.relic){
+        ctx.font=`${Math.round(R*0.55)}px serif`;ctx.textAlign='center';
+        ctx.fillText('⚡',cx2+R*0.55,cy2-R*0.45);
+      }
+    } else if(c.type==='oasis'){
+      const rg={wood:'🌲',stone:'⛰',iron:'⛏',food:'🌾',gold:'🪙'}[c.resource]||'💎';
+      ctx.font=`${R*0.8}px serif`;ctx.textAlign='center';
+      ctx.fillText(rg,cx2,cy2+R*0.2);
+      // Показываем владельца оазиса
+      if(c.owner){
+        const isMe=c.owner===S.player.username;
+        ctx.fillStyle='rgba(0,0,0,.75)';
+        const ow=isMe?'МОЙ':c.owner.slice(0,4);
+        const tw=ctx.measureText(ow).width+6;
+        ctx.fillRect(cx2-tw/2,cy2+R*0.45,tw,11);
+        ctx.fillStyle=isMe?'#5cff7a':'#ffcc60';
+        ctx.font=`bold ${Math.max(7,Math.round(R*0.22))}px Arial`;ctx.textAlign='center';
+        ctx.fillText(ow,cx2,cy2+R*0.45+9);
+      }
+    }
+
+    // Обоз
+    if(c.type==='caravan'){
+      ctx.font=`${R*0.8}px serif`;ctx.textAlign='center';
+      ctx.fillText('🚚',cx2,cy2+R*0.2);
+      ctx.fillStyle='rgba(0,0,0,.8)';
+      const tw2=ctx.measureText('🚚').width+10;
+      ctx.fillRect(cx2-tw2/2,cy2+R*0.45,tw2,11);
+      ctx.fillStyle='#ffd44a';
+      ctx.font=`bold ${Math.max(7,Math.round(R*0.22))}px Arial`;ctx.textAlign='center';
+      ctx.fillText('Обоз',cx2,cy2+R*0.45+9);
+    }
+
+    hitHexes.push({col:c.col,row:c.row,cx:cx2,cy:cy2,R,type:c.type,data:c});
+  }
+}
+
+// ── КЛИКИ ──────────────────────────────────────────────
+function hitTestHex(px,py,cx,cy,R){
+  // Расстояние от центра с учётом формы гекса
+  const dx=Math.abs(px-cx),dy=Math.abs(py-cy);
+  return dx<=R && dy<=hexH(R)/2 && dx/(R)+dy/(hexH(R)/2)<=1.0;
+}
+function onCanvasClick(px,py){
+  if(!S?.player)return;
+  // Ищем с конца (ближние сверху)
+  for(let i=hitHexes.length-1;i>=0;i--){
+    const h=hitHexes[i];
+    if(hitTestHex(px,py,h.cx,h.cy,h.R)){
+      if(LOC==='world'){showWorldModal(h.data||{col:h.col,row:h.row,type:h.type});}
+      else{
+        const cells=LOC==='castle'?S.player.castle:S.player.lands;
+        const cell=cells.find(c=>c.col===h.col&&c.row===h.row);
+        if(cell&&cell.type!=='wall')onCellClick(cell);
+      }
+      break;
+    }
+  }
+}
+
+// ── DRAG ───────────────────────────────────────────────
+function initDrag(){
+  const mw=$('#mapwrap');
+  const ptr=e=>e.touches?.[0]??e.changedTouches?.[0]??e;
+  let sx=0,sy=0,svx=0,svy=0,moved=false;
+  const dn=e=>{const p=ptr(e);sx=p.clientX;sy=p.clientY;svx=vpX;svy=vpY;moved=false;};
+  const mv=e=>{
+    const p=ptr(e);const dx=p.clientX-sx,dy=p.clientY-sy;
+    if(!moved&&(Math.abs(dx)>6||Math.abs(dy)>6))moved=true;
+    if(!moved)return;
+    vpX=svx+dx;vpY=svy+dy;
+    renderMap();
+  };
+  const up=()=>{if(moved){mw.dataset.dragged='1';setTimeout(()=>mw.dataset.dragged='',80);}};
+  mw.addEventListener('mousedown',dn);mw.addEventListener('touchstart',dn,{passive:true});
+  mw.addEventListener('mousemove',mv);mw.addEventListener('touchmove',mv,{passive:true});
+  window.addEventListener('mouseup',up);mw.addEventListener('touchend',up);
+  mw.addEventListener('click',e=>{
+    if(mw.dataset.dragged==='1')return;
+    const rect=$('#canvas').getBoundingClientRect();
+    const dpr=devicePixelRatio||1;
+    // Нужно учесть масштаб canvas
+    const scaleX=($('#canvas').width/dpr)/rect.width;
+    const scaleY=($('#canvas').height/dpr)/rect.height;
+    onCanvasClick((e.clientX-rect.left)*scaleX,(e.clientY-rect.top)*scaleY);
+  });
+  window.addEventListener('resize',()=>{vpX=0;vpY=0;renderMap();});
+  // Двойной тап — сброс позиции
+  let lastTap=0;
+  mw.addEventListener('touchend',()=>{
+    const now=Date.now();
+    if(now-lastTap<300){vpX=0;vpY=0;renderMap();}
+    lastTap=now;
+  });
+}
+
+// Анимационный цикл — только если есть очередь
+let afId=null;
+function startAnim(){
+  if(afId)return;
+  const loop=()=>{
+    const hasQ=(S?.player?.queue||[]).filter(j=>j.loc===LOC).length>0;
+    if(hasQ)renderMap();
+    afId=requestAnimationFrame(loop);
+  };
+  afId=requestAnimationFrame(loop);
+}
+
+// ── МОДАЛКИ ────────────────────────────────────────────
+function modal({title,body,actions=[]}){
+  const bg=document.createElement('div');bg.className='mbg';
+  const m=document.createElement('div');m.className='mbox';
+  m.innerHTML=`<div class="mhead">${title}<button class="xb">✕</button></div>`;
+  const bd=document.createElement('div');bd.className='mbody';
+  if(typeof body==='string')bd.innerHTML=body;
+  else if(Array.isArray(body))body.forEach(x=>bd.appendChild(x));
+  else bd.appendChild(body);
+  m.appendChild(bd);
+  if(actions.length){
+    const ft=document.createElement('div');ft.className='mfoot';
+    actions.forEach(a=>{
+      const b=document.createElement('button');b.className='mbtn '+(a.kind||'');b.textContent=a.label;
+      if(a.disabled)b.disabled=true;
+      b.onclick=async()=>{if(a.handler)await a.handler(bg);if(a.close!==false)bg.remove();};
+      ft.appendChild(b);
+    });
+    m.appendChild(ft);
+  }
+  bg.appendChild(m);m.querySelector('.xb').onclick=()=>bg.remove();
+  bg.onclick=e=>{if(e.target===bg)bg.remove();};
+  document.body.appendChild(bg);return bg;
+}
+
+function onCellClick(cell){
+  const inQ=(S.player.queue||[]).find(j=>j.loc===LOC&&j.col===cell.col&&j.row===cell.row);
+  if(inQ)return showJobModal(inQ);
+  if(cell.bldId)return showBldModal(cell,LOC);
+  showBuildPick(cell,LOC);
+}
+
+function showBuildPick(cell,loc){
+  const isCastle=loc==='castle';
+  const defs=isCastle?BUILDINGS:LAND_BUILDINGS;
+  const clvl=getCLvl();
+  const con=document.createElement('div');
+  // Показать очереди строительства
+  const maxQueues = clvl >= 5 ? 2 : 1;
+  const activeQ = (S.player.queue||[]).filter(j=>j.loc===loc);
+  const queueInfo = document.createElement('div');
+  queueInfo.style.cssText = 'font-size:11px;color:#a09060;margin-bottom:8px;padding:5px;background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:4px;';
+  queueInfo.innerHTML = `Очереди строительства: ${activeQ.length}/${maxQueues}${clvl>=5?' 🔓 2 слота разблокированы':'  (2 слота при ратуше ур.5)'}`;
+  con.appendChild(queueInfo);
+
+  if(isCastle){
+    // Группируем по категориям
+    for(const [cat,catName] of Object.entries(BLD_CATS)){
+      const catDefs=Object.entries(defs).filter(([id,d])=>d.cat===cat);
+      if(!catDefs.length)continue;
+      const h=document.createElement('div');
+      h.style.cssText='font-size:12px;color:var(--gold2);margin:8px 0 5px;font-weight:bold;';
+      h.textContent=catName;con.appendChild(h);
+      const grid=document.createElement('div');grid.className='bgrid';
+      catDefs.forEach(([id,def])=>{
+        if(def.unique&&hasU(id)&&cell.bldId!==id)return;
+        const rq=reqOk(id);
+        const cost=calcCost(id,0),time=calcTime(id,0,clvl);
+        const ok=canAfford(cost)&&rq;
+        const s=spr(def.img);
+        const card=document.createElement('div');card.className='bcard'+(ok?'':' cant');
+        card.innerHTML=`${s?`<img src="${s}">`:'<div style="font-size:28px;margin:4px 0;">🏗</div>'}
+          <div class="bn">${def.name}</div>
+          <div class="bc">${costHtml(cost)}</div>
+          <div class="bc" style="color:#8a8a6a;">⌛${fmtT(time)}</div>
+          ${!rq?`<div class="bc" style="color:#ff8080;">🔒 Треб.</div>`:''}`;
+        card.onclick=async()=>{
+          if(!ok){toast(rq?'Не хватает ресурсов':'Требования не выполнены','err');return;}
+          try{await api('/api/build',{method:'POST',body:{loc,col:cell.col,row:cell.row,bldId:id}});
+            toast('Начато: '+def.name,'ok');bg.remove();await refreshState();}
+          catch(err){toast(err.message,'err');}
+        };
+        grid.appendChild(card);
+      });
+      if(grid.children.length)con.appendChild(grid);
+    }
+  } else {
+    // Земли — только по биому
+    const grid=document.createElement('div');grid.className='bgrid';
+    let cnt=0;
+    for(const[id,def]of Object.entries(defs)){
+      if(def.terrain&&def.terrain!==cell.type)continue;
+      const cost=calcCost(id,0),time=calcTime(id,0,clvl);
+      const ok=canAfford(cost);
+      const s=spr(def.img);
+      const card=document.createElement('div');card.className='bcard'+(ok?'':' cant');
+      card.innerHTML=`${s?`<img src="${s}">`:'<div style="font-size:28px;margin:4px 0;">🌱</div>'}
+        <div class="bn">${def.name}</div>
+        <div class="bc">${costHtml(cost)}</div>
+        <div class="bc" style="color:#8a8a6a;">⌛${fmtT(time)}</div>
+        <div class="bc" style="color:#5cff7a;">+${def.produces?RES_L[def.produces]:''}/ч</div>`;
+      card.onclick=async()=>{
+        if(!ok){toast('Не хватает ресурсов','err');return;}
+        try{await api('/api/build',{method:'POST',body:{loc,col:cell.col,row:cell.row,bldId:id}});
+          toast('Начато: '+def.name,'ok');bg.remove();await refreshState();}
+        catch(err){toast(err.message,'err');}
+      };
+      grid.appendChild(card);cnt++;
+    }
+    if(!cnt)grid.innerHTML='<p style="text-align:center;color:#a89070;padding:16px;grid-column:1/-1;">Нет доступных построек<br><small>Биом: '+cell.type+'</small></p>';
+    con.appendChild(grid);
+  }
+
+  if(!con.children.length)con.innerHTML='<p style="text-align:center;color:#a89070;padding:16px;">Нет доступных построек</p>';
+  const terrain={inner:'замок',grass:'трава',forest:'лес',stone:'камень'}[cell.type]||cell.type;
+  const bg=modal({title:`Строить — ${terrain}`,body:con});
+}
+
+function showBldModal(cell,loc){
+  if(cell.bldId==='military_hq') return showMilitaryHQModal(cell);
+  if(cell.bldId==='expedition' || cell.bldId==='magtower') return showArtifactsModal();
+  const def=BUILDINGS[cell.bldId]||LAND_BUILDINGS[cell.bldId];if(!def)return;
+  const clvl=getCLvl();
+  const cost=calcCost(cell.bldId,cell.level),time=calcTime(cell.bldId,cell.level,clvl);
+  const ok=canAfford(cost);
+  const s=spr(def.img);
+  let extra='';
+  if(def.produces)extra=`<p>📈 Производство: <b style="color:#5cff7a;">+${(60*Math.pow(1.3,cell.level)).toFixed(0)}/ч</b></p>`;
+  const descText = def.desc || BLD_DESC[cell.bldId] || '';
+  if(descText) extra += `<p style="color:#a0c0e0;font-size:11px;margin-top:3px;">ℹ️ ${descText}</p>`;
+  if(cell.bldId==='wall')     extra+=`<p style="color:#5cff7a;font-size:12px;">🛡 Текущий бонус: +${cell.level*5}% к защите</p>`;
+  if(cell.bldId==='smithy')   extra+=`<p style="color:#5cff7a;font-size:12px;">⚔ Войска: +${cell.level*3}% атак, +${cell.level*2}% защ.</p>`;
+  if(cell.bldId==='magicschool') extra+=`<p style="color:#a080ff;font-size:12px;">✨ Маг.бонус: +${cell.level*2}%</p>`;
+  if(cell.bldId==='trap')     extra+=`<p style="color:#ffaa40;font-size:12px;">🪤 Урон ловушек: ${cell.level*30}</p>`;
+  const bd=`
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;">
+      ${s?`<img src="${s}" width="54" height="54" style="image-rendering:pixelated;flex-shrink:0;">`:
+           '<div style="font-size:40px;flex-shrink:0;">🏗</div>'}
+      <div><div style="font-size:16px;font-weight:bold;color:var(--gold2);">${def.name}</div>
+        <div style="color:var(--gold);font-size:12px;">Уровень ${cell.level}</div>
+        ${extra}
+      </div>
+    </div>
+    <div style="background:rgba(0,0,0,.3);padding:8px;border-radius:4px;border:1px dashed var(--gold3);margin-top:6px;">
+      <b style="color:var(--gold2);">Улучшить → ур.${cell.level+1}</b><br>
+      ${costHtml(cost)}<br>
+      <span style="color:var(--gold);">⌛ ${fmtT(time)}</span>
+    </div>`;
+  const rDelta=ratingDeltaClient(cell.bldId,cell.level+1);
+  const actions=[{label:`Улучшить (+${rDelta}⭐)`,disabled:!ok,handler:async()=>{
+    try{await api('/api/build',{method:'POST',body:{loc,col:cell.col,row:cell.row,bldId:cell.bldId}});
+      toast(`Начато улучшение! +${rDelta} к рейтингу 🏆`,'ok');await refreshState();}
+    catch(e){toast(e.message,'err');}
+  }}];
+  const trainables=Object.entries(UNITS).filter(([,u])=>u.race===S.player.race&&u.building===cell.bldId&&u.reqLvl<=cell.level);
+  if(trainables.length)actions.push({label:'⚔ Тренировать',kind:'gold',handler:()=>showTrainModal(cell),close:true});
+  if(cell.bldId!=='castle')actions.push({label:'Снести',kind:'red',handler:async(bg)=>{
+    if(!confirm('Снести '+def.name+'?'))return;
+    try{await api('/api/demolish',{method:'POST',body:{loc,col:cell.col,row:cell.row}});
+      toast('Снесено');bg.remove();await refreshState();}
+    catch(e){toast(e.message,'err');}
+  },close:false});
+  modal({title:def.name,body:bd,actions});
+}
+
+function showTrainModal(cell){
+  const def=BUILDINGS[cell.bldId];
+  const avail=Object.entries(UNITS).filter(([,u])=>u.race===S.player.race&&u.building===cell.bldId&&u.reqLvl<=cell.level);
+  const con=document.createElement('div');
+  con.innerHTML=`<p style="text-align:center;color:#a89070;margin-bottom:8px;">${def.name} ур.${cell.level} · Раса: ${RACES[S.player.race].name} · Очередь: ${(S.player.trainQueue||[]).length}/4</p>`;
+  avail.forEach(([uid,u])=>{
+    const have=S.player.army[uid]||0;
+    const inQ=(S.player.trainQueue||[]).filter(j=>j.uid===uid).reduce((a,b)=>a+b.count,0);
+    const s=spr(u.img);
+    const row=document.createElement('div');row.className='urow';
+    row.innerHTML=`
+      <div class="uh">
+        ${s?`<img src="${s}" width="28" height="44">`:'<div style="font-size:28px;">⚔</div>'}
+        <div><div class="un">${u.name}</div>
+          <div class="us">⚔${u.atk} 🛡${u.def} ❤${u.hp} 🏃${u.speed} 🎒${u.carry}</div>
+          <div class="us">В замке: <b>${have}</b>${inQ?' · ждут: '+inQ:''}</div>
+        </div>
+      </div>
+      <div class="uc">${costHtml(u.cost)} + 👥${u.people} · ⌛${fmtT(u.trainTime)}</div>
+      <div class="ui">
+        <input type="number" class="tnc" data-uid="${uid}" value="1" min="1" max="999">
+        <button class="mbtn tnb" data-uid="${uid}" style="flex:1;padding:7px;font-size:11px;min-width:auto;">Нанять</button>
+      </div>`;
+    con.appendChild(row);
+  });
+  if(!avail.length)con.innerHTML+='<p style="text-align:center;color:#a89070;">Нет доступных юнитов<br><small>Нужен более высокий уровень здания</small></p>';
+  const bg=modal({title:`⚔ ${def.name} — Тренировка`,body:con,actions:[]});
+  bg.querySelectorAll('.tnb').forEach(btn=>{
+    btn.onclick=async()=>{
+      const uid=btn.dataset.uid;const inp=bg.querySelector(`.tnc[data-uid="${uid}"]`);
+      const count=Math.max(1,parseInt(inp.value)||1);
+      try{const r=await api('/api/train',{method:'POST',body:{bldCol:cell.col,bldRow:cell.row,uid,count}});
+        toast(`Начат найм: ${r.count}× ${UNITS[uid].name}`,'ok');bg.remove();await refreshState();}
+      catch(e){toast(e.message,'err');}
+    };
+  });
+}
+
+function showJobModal(job){
+  const def=BUILDINGS[job.bldId]||LAND_BUILDINGS[job.bldId];
+  const rem=(job.end-Date.now())/1000,total=(job.end-job.start)/1000;
+  const pct=Math.min(100,Math.max(0,(1-rem/total)*100));
+  const s=spr(def?.img);
+  const bd=`
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;">
+      ${s?`<img src="${s}" width="48" height="48" style="image-rendering:pixelated;">`:
+           '<div style="font-size:36px;">🏗</div>'}
+      <div>
+        <div style="font-size:15px;font-weight:bold;color:var(--gold2);">${def?.name} → ур.${job.toLvl}</div>
+        <div style="color:var(--gold);font-family:monospace;" data-timer="${job.end}">⌛ ${fmtT(rem)}</div>
+      </div>
+    </div>
+    <div class="mbar"><div class="mbar-f" style="width:${pct}%"></div></div>`;
+  modal({title:'🏗 Строительство',body:bd,actions:[
+    {label:'Ускорить ×2 (за 🪙)',kind:'gold',disabled:rem<5,handler:async()=>{
+      const idx=(S.player.queue||[]).indexOf(job);
+      try{const r=await api('/api/speed-build',{method:'POST',body:{jobIndex:idx}});
+        toast(`Ускорено за ${r.cost}🪙`,'ok');await refreshState();}
+      catch(e){toast(e.message,'err');}
+    }}
+  ]});
+}
+
+function showWorldModal(c){
+  const myName=S.player.username;
+  let title='',bd='';const actions=[];
+  if(c.type==='player'){
+    if(c.player===myName){
+      title='🏰 Ваш замок';
+      bd=`<p>Королевство: <b>${S.player.kingdom}</b></p>
+          <p>Раса: <b>${RACES[c.race]?.name||c.race}</b></p>
+          <p>Координаты: <b>${c.col}-${c.row}</b></p>
+          <p style="color:var(--gold2);">Войско: <b>${armyTotal()}</b> воинов</p>`;
+      actions.push({label:'Армия',kind:'gold',handler:showArmyModal,close:true});
+    }else{
+      title=`🏯 ${c.player}`;
+      const wp=S.worldPlayers?.[c.player]||{};
+      const alliTag=wp.allianceTag?` [${wp.allianceTag}]`:'';
+      bd=`<p>Игрок: <b>${c.player}${alliTag}</b></p>
+          <p>Раса: <b>${RACES[c.race]?.name||'?'}</b></p>
+          <p style="color:var(--gold);">Сила обороны: ~${(c.lvl||1)*200}</p>
+          <p style="font-size:11px;color:#a09070;">🏃 Набег — только грабёж · ⚔ Нападение — бой+здание · 🔥 Штурм — максимальный урон</p>`;
+      if(armyTotal()>0)actions.push({label:'⚔ Атаковать',kind:'red',handler:()=>showAttackModal(c),close:true});
+      else actions.push({label:'Нет войск',disabled:true,handler:()=>{}});
+      // Шпионаж
+      const hasResident = (S.player.castle||[]).some(c2=>c2.bldId==='resident'&&c2.level>0);
+      if (hasResident) {
+        actions.push({label:'🕵 Шпионаж',kind:'gray',handler:()=>showSpyModal(c.player),close:true});
+      }
+    }
+  }else if(c.type==='caravan'){
+    title='🚚 Торговый обоз';
+    const reward = c.reward || {gold:300,wood:100,iron:50};
+    const rewardStr = Object.entries(reward).filter(([,v])=>v>0).map(([k,v])=>`${RES_L[k]||k}:${v}`).join(', ');
+    const rem = c.expiresAt ? Math.max(0, Math.ceil((c.expiresAt - Date.now()) / 1000)) : 0;
+    bd = `<p>Торговый обоз в (${c.col},${c.row})</p>
+      <p>Награда: <b style="color:#5cff7a;">${rewardStr}</b></p>
+      <p style="color:#ffd44a;">⌛ Уйдёт через: ${fmtT(rem)}</p>
+      <p style="font-size:11px;color:#a09070;">Нужно минимум 10 воинов</p>`;
+    const totalArmy = armyTotal();
+    if(totalArmy>=10)actions.push({label:'🚚 Ограбить',kind:'red',handler:async()=>{
+      try{const r=await api('/api/caravan/raid',{method:'POST',body:{col:c.col,row:c.row}});
+        const rStr=Object.entries(r.reward||{}).filter(([,v])=>v>0).map(([k,v])=>`${k}+${v}`).join(' ');
+        toast('🚚 Обоз ограблен! '+rStr,'ok');await refreshState();}
+      catch(e){toast(e.message,'err');}
+    },close:true});
+    else actions.push({label:'Мало войск (нужно 10)',disabled:true,handler:()=>{}});
+  }else if(c.type==='bandit'){
+    title='🐺 Анархисты';
+    bd=`<p>Сила гарнизона: <b style="color:var(--gold)">${c.power}</b></p>
+        <p>Награда: золото и ресурсы</p>
+        ${c.relic?`<p style="color:#f0c958;font-weight:bold;">⚡ Здесь хранится реликвия!</p>`:''}`;
+    if(armyTotal()>0)actions.push({label:'⚔ Атаковать',kind:'red',handler:()=>showAttackModal(c),close:true});
+    else actions.push({label:'Нет войск',disabled:true,handler:()=>{}});
+  }else if(c.type==='oasis'){
+    const myOasis=(S.player.oases||[]).some(o=>o.col===c.col&&o.row===c.row);
+    const owned=c.owner?`<p>Владелец: <b style="color:${c.owner===S.player.username?'#5cff7a':'#ffc060'}">${c.owner}</b></p>`:'<p style="color:#a0c090;">Бесхозный — захватите!</p>';
+    title=`🌿 Оазис ${RES_L[c.resource]||''}`;
+    bd=`${owned}
+        <p>Захват даёт: <b>+25% ${RES_L[c.resource]||''}</b> постоянно</p>
+        <p style="color:var(--gold);font-size:12px;">Макс. 3 оазиса на замок · Защита: ${c.owner?80:30}</p>
+        ${myOasis?'<p style="color:#5cff7a;">✅ Этот оазис принадлежит вам!</p>':''}`;
+    if(!myOasis&&armyTotal()>0)actions.push({label:'🌿 Захватить',kind:'gold',handler:()=>showAttackModal(c),close:true});
+    else if(!myOasis)actions.push({label:'Нет войск',disabled:true,handler:()=>{}});
+  }else{
+    title='Свободные земли';bd='<p>Здесь можно основать новый замок.</p>';
+  }
+  modal({title,body:bd,actions});
+}
+
+function showArmyModal(){
+  let bd='';
+  if(armyTotal()===0){bd='<p style="text-align:center;color:#a89070;padding:16px;">Нет войск.<br>Постройте казарму.</p>';}
+  else{
+    bd='<div style="display:flex;flex-direction:column;gap:5px;">';
+    for(const uid in S.player.army){
+      const n=S.player.army[uid];if(!n)continue;
+      const u=UNITS[uid];const s=spr(u?.simg);
+      bd+=`<div style="display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.3);padding:7px;border:1px solid var(--gold3);border-radius:4px;">
+        ${s?`<img src="${s}" width="22" height="22" style="image-rendering:pixelated;">`:'<span>⚔</span>'}
+        <div style="flex:1;"><b style="color:var(--gold2);">${u?.name||uid} ×${n}</b>
+        <div style="font-size:11px;color:#b0a080;">Сила атаки: ${n*(u?.atk||0)}</div></div>
+      </div>`;
+    }
+    bd+='</div>';
+  }
+  if((S.player.marches||[]).length){
+    bd+='<h3 style="color:var(--gold2);margin:8px 0 4px;">⚔ Активные походы:</h3>';
+    for(const m of S.player.marches){
+      const eta=m.phase==='going'?m.arriveAt:m.returnAt;
+      const cnt=Object.values(m.units).reduce((a,b)=>a+b,0);
+      const dir=m.phase==='going'?'→':'←';
+      bd+=`<div style="font-size:12px;padding:5px;border:1px solid var(--gold3);border-radius:3px;margin-bottom:4px;">
+        ${dir} (${m.target.col},${m.target.row}) · ${cnt} воинов
+        · <span data-timer="${eta}">${fmtT((eta-Date.now())/1000)}</span>
+      </div>`;
+    }
+  }
+  if((S.player.trainQueue||[]).length){
+    bd+='<h3 style="color:var(--gold2);margin:8px 0 4px;">👥 Тренировка:</h3>';
+    for(const j of S.player.trainQueue){
+      const u=UNITS[j.uid];
+      bd+=`<div style="font-size:12px;padding:4px 0;">${u?.name||j.uid} ×${j.count} · <span data-timer="${j.nextDone}">${fmtT((j.nextDone-Date.now())/1000)}</span></div>`;
+    }
+  }
+  // Павшие генералы — воскрешение в Военном штабе
+  const dead=S.player.deadGenerals||[];
+  if(dead.length){
+    const hasHQ=S.player.castle.some(c=>c.bldId==='military_hq'&&c.level>0);
+    bd+=`<h3 style="color:#ff8080;margin:8px 0 4px;">⚰ Павшие генералы:</h3>`;
+    dead.forEach((g,i)=>{
+      const u=UNITS[g.uid];
+      const canAfford=(S.player.res.gold||0)>=g.resurrectCost;
+      bd+=`<div style="display:flex;gap:7px;align-items:center;background:rgba(80,0,0,.4);padding:7px;border:1px solid #662020;border-radius:4px;margin-bottom:4px;">
+        <span style="font-size:20px;">⚰</span>
+        <div style="flex:1;font-size:12px;"><b style="color:#ff9090;">${u?.name||g.uid}</b>
+        <div style="color:#a08080;">Стоимость воскрешения: <b style="color:#ffd060;">${g.resurrectCost} 🪙</b></div></div>
+        <button class="mbtn${canAfford&&hasHQ?' gold':' gray'} res-gen" data-idx="${i}"
+          style="font-size:11px;padding:4px 8px;"
+          ${!hasHQ?'title="Нужен Военный штаб"':''}>${hasHQ?'Воскресить':'Нет штаба'}</button>
+      </div>`;
+    });
+    if(!hasHQ) bd+=`<p style="font-size:11px;color:#a06060;text-align:center;">Постройте Военный штаб чтобы воскрешать генералов</p>`;
+  }
+  const bg=modal({title:'⚔ Армия',body:bd});
+  bg.querySelectorAll('.res-gen').forEach(btn=>{
+    btn.onclick=async()=>{
+      const idx=parseInt(btn.dataset.idx);
+      try{const r=await api('/api/resurrect',{method:'POST',body:{idx}});
+        toast(`✅ ${r.name} воскрешён!`,'ok');bg.remove();await refreshState();}
+      catch(e){toast(e.message,'err');}
+    };
+  });
+}
+
+function showAttackModal(target){
+  const tn=target.type==='bandit'?'Разбойники':target.type==='oasis'?`Оазис ${RES_L[target.resource]||''}`:target.player||'?';
+  const tp=target.type==='bandit'?(target.power||100):target.type==='oasis'?(target.owner?80:30):(target.lvl||1)*200;
+  const con=document.createElement('div');
+  // Тип боя — только для атаки игрока или оазиса
+  let battleType='attack';
+  const isPlayer=target.type==='player';
+  if(isPlayer){
+    con.innerHTML=`<p style="text-align:center;margin-bottom:6px;">Цель: <b style="color:var(--gold2);">${tn}</b> · Сила обороны: ~<b>${tp}</b></p>
+    <div style="display:flex;gap:6px;margin-bottom:8px;justify-content:center;">
+      <button class="mbtn gray btype" data-t="raid" style="flex:1;font-size:11px;padding:5px 4px;">🏃 Набег<br><span style="font-size:10px;color:#a0b0a0;">Грабёж, мало потерь</span></button>
+      <button class="mbtn red btype" data-t="attack" style="flex:1;font-size:11px;padding:5px 4px;">⚔ Нападение<br><span style="font-size:10px;color:#ffc0a0;">Полный бой, урон зданиям</span></button>
+      <button class="mbtn btype" data-t="assault" style="flex:1;font-size:11px;padding:5px 4px;background:#6a1010;border-color:#cc3030;">🔥 Штурм<br><span style="font-size:10px;color:#ff9090;">Максимальный урон</span></button>
+    </div>`;
+  } else {
+    con.innerHTML=`<p style="text-align:center;margin-bottom:8px;">Цель: <b style="color:var(--gold2);">${tn}</b> · Сила: <b>${tp}</b></p>`;
+  }
+  const sumDiv=document.createElement('div');
+  sumDiv.style.cssText='background:rgba(0,0,0,.4);padding:7px;border:1px solid var(--gold);border-radius:4px;margin-bottom:7px;text-align:center;font-size:12px;';
+  con.appendChild(sumDiv);
+  const sel={};
+  function refresh(){
+    let pow=0,cnt=0,slow=0;
+    for(const uid in sel){const n=sel[uid];if(!n)continue;const u=UNITS[uid];pow+=n*(u?.atk||0);cnt+=n;slow=Math.max(slow,u?.speed||18);}
+    const pos=S.player.worldPos||{col:0,row:0};
+    const dist=Math.max(1,Math.abs(pos.col-target.col)+Math.abs(pos.row-target.row));
+    const t=slow*dist;
+    const raidMult=battleType==='raid'?0.65:1;
+    const effPow=Math.round(pow*raidMult);
+    let out=cnt===0?'Выберите войска':effPow>=tp*1.5?'<span style="color:#5cff7a;">Лёгкая победа</span>':effPow>=tp?'<span style="color:#ffd44a;">Победа с потерями</span>':effPow>=tp*.6?'<span style="color:#ff8a4a;">Тяжёлый бой</span>':'<span style="color:#ff5a5a;">Разгром</span>';
+    const typeInfo=battleType==='raid'?'🏃 Набег (атака ×0.65, мало потерь)':battleType==='assault'?'🔥 Штурм (2+ здания, двойной грабёж)':'⚔ Нападение (повреждает 1 здание)';
+    sumDiv.innerHTML=`${typeInfo}<br>Войск: <b>${cnt}</b> · Сила: <b>${effPow}</b> · ${out}<br>В пути: <b>${fmtT(t)}</b>`;
+    const gb=bg.querySelector('.atkgo');if(gb)gb.disabled=cnt===0;
+  }
+  const list=document.createElement('div');
+  for(const uid in S.player.army){
+    const have=S.player.army[uid];if(!have)continue;
+    const u=UNITS[uid];const s=spr(u?.simg);
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;gap:7px;align-items:center;background:rgba(0,0,0,.3);padding:6px;border:1px solid var(--gold3);border-radius:4px;margin-bottom:4px;';
+    row.innerHTML=`
+      ${s?`<img src="${s}" width="22" height="22" style="image-rendering:pixelated;">`:'<span>⚔</span>'}
+      <div style="flex:1;font-size:12px;"><b style="color:var(--gold2);">${u?.name||uid}</b>
+      <div style="color:#a09060;">${have} в замке · ⚔${u?.atk}</div></div>
+      <input type="number" class="ac" data-uid="${uid}" value="0" min="0" max="${have}"
+        style="width:50px;padding:4px;background:#0a1a0a;border:2px solid var(--gold);color:#70ff70;border-radius:4px;font-family:inherit;font-size:12px;text-align:center;outline:none;">
+      <button class="mbtn gray aal" data-uid="${uid}" style="padding:4px 7px;font-size:11px;min-width:auto;">Все</button>`;
+    list.appendChild(row);
+  }
+  con.appendChild(list);
+  const bg=modal({title:'⚔ Подготовка похода',body:con,actions:[
+    {label:'Отправить',kind:'red',handler:async()=>{
+      const cnt=Object.values(sel).reduce((a,b)=>a+b,0);
+      if(!cnt){toast('Выберите войска','err');return;}
+      try{await api('/api/attack',{method:'POST',body:{targetCol:target.col,targetRow:target.row,units:sel,battleType}});
+        toast(battleType==='raid'?'Набег отправлен!':battleType==='assault'?'Штурм начат!':'Войско отправлено!','ok');await refreshState();}
+      catch(e){toast(e.message,'err');}
+    },close:true},
+  ]});
+  bg.querySelector('.mbtn.red').classList.add('atkgo');
+  refresh();
+  if(isPlayer){
+    bg.querySelectorAll('.btype').forEach(btn=>{
+      btn.onclick=()=>{
+        battleType=btn.dataset.t;
+        bg.querySelectorAll('.btype').forEach(b=>b.style.outline='');
+        btn.style.outline='2px solid var(--gold)';
+        refresh();
+      };
+    });
+    // По умолчанию выделяем "нападение"
+    const defBtn=bg.querySelector('.btype[data-t="attack"]');
+    if(defBtn){defBtn.style.outline='2px solid var(--gold)';}
+  }
+  bg.querySelectorAll('.ac').forEach(inp=>{
+    inp.oninput=()=>{const uid=inp.dataset.uid;sel[uid]=Math.max(0,Math.min(S.player.army[uid]||0,parseInt(inp.value)||0));inp.value=sel[uid];refresh();};
+  });
+  bg.querySelectorAll('.aal').forEach(btn=>{
+    btn.onclick=()=>{const uid=btn.dataset.uid;const inp=bg.querySelector(`.ac[data-uid="${uid}"]`);inp.value=S.player.army[uid]||0;inp.dispatchEvent(new Event('input'));};
+  });
+}
+
+function renderBattleReport(report) {
+  if (!report) return '';
+  const winColor = report.win ? '#5cff7a' : '#ff8080';
+  const winText = report.win ? '🏆 ПОБЕДА' : '💀 ПОРАЖЕНИЕ';
+  let html = `<div style="background:rgba(0,0,0,.4);border:1px solid ${winColor};border-radius:6px;padding:10px;margin-top:8px;">
+    <div style="font-size:14px;font-weight:bold;color:${winColor};text-align:center;margin-bottom:8px;">${winText}</div>
+    <div style="font-size:11px;color:#c0a080;margin-bottom:6px;">
+      ⚔ ${escH(report.attacker?.username||'?')} [${report.attacker?.race||'?'}]
+      vs 🛡 ${escH(report.defender?.username||'?')} [${report.defender?.race||'?'}]
+    </div>`;
+  // Таблица потерь атакующего
+  const atkUnits = report.attackerUnits || {};
+  const defUnits = report.defenderUnits || {};
+  if (Object.keys(atkUnits).length) {
+    html += `<div style="font-size:11px;color:var(--gold2);margin-bottom:3px;">Потери атакующего:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">`;
+    for (const [uid, d] of Object.entries(atkUnits)) {
+      if (!d.sent) continue;
+      const u = UNITS[uid];
+      html += `<span style="font-size:10px;background:rgba(255,80,80,.2);border:1px solid #804040;border-radius:3px;padding:2px 5px;">
+        ${u?.name||uid}: ${d.sent}→потерь ${d.lost}
+      </span>`;
+    }
+    html += `</div>`;
+  }
+  // Добыча
+  const loot = report.loot || {};
+  const lootEntries = Object.entries(loot).filter(([,v])=>v>0);
+  if (lootEntries.length) {
+    html += `<div style="font-size:11px;color:#5cff7a;">Добыча: ${lootEntries.map(([k,v])=>`${RES_L[k]||k}+${v}`).join(', ')}</div>`;
+  }
+  // Разрушенные здания
+  if (report.destroyed && report.destroyed.length) {
+    html += `<div style="font-size:11px;color:#ff9060;margin-top:4px;">🔥 Разрушено: ${report.destroyed.join(', ')}</div>`;
+  }
+  if (report.generalXP > 0) {
+    html += `<div style="font-size:11px;color:#f0c958;margin-top:4px;">⭐ Опыт генерала: +${report.generalXP}</div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function showReportsModal(){
+  const reps=(S.player.reports||[]).slice().reverse();
+  const con = document.createElement('div');
+  if (!reps.length) {
+    con.innerHTML = '<p style="text-align:center;color:#a89070;padding:16px;">Нет отчётов</p>';
+  } else {
+    con.innerHTML = '<div style="display:flex;flex-direction:column;gap:4px;">' +
+      reps.map(r=>{
+        const t=new Date(r.t).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+        const col=r.kind==='battle-win'?'#5cff7a':r.kind==='battle-loss'?'#ff8080':r.kind==='build'?'#7ad4ff':'#e0d0b0';
+        const icon=r.kind==='battle-win'?'🏆':r.kind==='battle-loss'?'💀':r.kind==='build'?'🏗':r.kind==='train'?'👥':'📋';
+        const battleDetails = (r.kind==='battle-win'||r.kind==='battle-loss') && r.data
+          ? renderBattleReport(r.data) : '';
+        return `<div style="padding:6px 8px;border:1px solid rgba(255,255,255,.08);border-radius:4px;color:${col};font-size:12px;background:rgba(0,0,0,.3);">
+          <span style="color:var(--gold);font-family:monospace;font-size:10px;">[${t}]</span> ${icon} ${escH(r.txt)}
+          ${battleDetails}
+        </div>`;
+      }).join('') + '</div>';
+  }
+  modal({title:'📨 Отчёты',body:con});
+}
+
+function showTechModal(){
+  const con=document.createElement('div');
+  // Группируем технологии по категориям
+  const techCats={mil:'⚔ Военные',sci:'🔬 Наука',econ:'💰 Экономика',inf:'🏛 Инфраструктура',dip:'🕵 Разведка'};
+  for(const[cat,catName]of Object.entries(techCats)){
+    const catTechs=Object.entries(TECHS).filter(([,t])=>t.cat===cat);
+    if(!catTechs.length)continue;
+    const h=document.createElement('div');
+    h.style.cssText='font-size:12px;color:var(--gold2);margin:8px 0 5px;font-weight:bold;';
+    h.textContent=catName;con.appendChild(h);
+    const grid=document.createElement('div');grid.className='tech-grid';
+    catTechs.forEach(([tid,t])=>{
+      const done=playerTechs[tid];
+      const rq=reqOk(tid,[...S.player.castle,...S.player.lands]);
+      const costOk=done||canAfford(t.cost);
+      const card=document.createElement('div');
+      card.className='tcard'+(done?' done':(!rq||!costOk)?' cant':'');
+      const costStr=Object.entries(t.cost).map(([k,v])=>`${RES_L[k]||k}:${fmtN(v)}`).join(' ');
+      card.innerHTML=`<div class="tn">${t.icon} ${t.name}</div>
+        <div class="td">${t.effect}</div>
+        ${!done?`<div class="td" style="margin-top:4px;">${costStr}</div>`:'<div class="td" style="color:#5cff7a;margin-top:4px;">✓ Изучено</div>'}
+        ${!done&&!rq?'<div class="td" style="color:#ff8080;">🔒 Требования не выполнены</div>':''}`;
+      if(!done&&rq&&costOk)card.onclick=async()=>{
+        // Исследование — через API
+        try{
+          const r=await api('/api/research',{method:'POST',body:{tid}});
+          if(r.ok){playerTechs[tid]=true;toast('Исучено: '+t.name,'ok');bg.remove();}
+        }catch(e){toast(e.message,'err');}
+      };
+      grid.appendChild(card);
+    });
+    con.appendChild(grid);
+  }
+  const bg=modal({title:'🔬 Технологии',body:con});
+}
+
+// ── РЕЙТИНГ ────────────────────────────────────────
+const RATING_WEIGHTS_CLIENT = {
+  castle:10,barracks:6,stables:6,smithy:5,university:8,
+  magscool:7,magtower:7,market:5,treasury:6,temple:4,
+  storage:3,workshop:4,guard_tower:4,alchimia:5,beer:3,
+  secret:3,diplomat:5,resident:5,expedition:4,commerce:6,
+  wisdom:3,gendel:4,spycentr:5,portal:15,traveler:8,arhcamp:6,
+  wall:8,trap:5,prison:4,watchtower:6,magicschool:7,
+  farm_small:2,sawmill_small:2,stone_small:2,iron_small:2,house_small:2,
+};
+function clientRating(p){
+  let pts=0;
+  for(const c of [...(p.castle||[]),...(p.lands||[])]){
+    if(!c.bldId||!c.level)continue;
+    const w=RATING_WEIGHTS_CLIENT[c.bldId]||1;
+    for(let lv=1;lv<=c.level;lv++) pts+=Math.round(w*lv*1.5);
+  }
+  for(const uid in (p.army||{})) pts+=Math.floor((p.army[uid]||0)*0.5);
+  pts+=Object.keys(p.techs||{}).length*20;
+  return pts;
+}
+function ratingDeltaClient(bldId,toLvl){
+  return Math.round((RATING_WEIGHTS_CLIENT[bldId]||1)*toLvl*1.5);
+}
+function ratingTitle(pts){
+  if(pts>=5000) return {t:'👑 Великий Король',c:'#f0c958'};
+  if(pts>=2000) return {t:'⚔ Повелитель',c:'#c8a0ff'};
+  if(pts>=800)  return {t:'🛡 Рыцарь',c:'#80c8ff'};
+  if(pts>=300)  return {t:'🏹 Воин',c:'#80ff80'};
+  if(pts>=100)  return {t:'🌱 Новичок',c:'#c8d890'};
+  return {t:'🥚 Поселенец',c:'#a8a890'};
+}
+
+const AVATARS=['⚔','🏹','⛏','🧙','🛡','🐉','🦅','🌟','💎','🔥','❄️','⚡','🌙','☀️','🗡️','🏰','🐺','🦁'];
+const AVATAR_BGS=['#3a2a10','#1a3a2a','#1a1a3a','#2a1a2a','#3a1a1a','#1a2a3a','#2a3a1a','#3a2a2a'];
+
+function showProfileModal(){
+  const p=S.player;
+  const pts=p.rating||clientRating(p);
+  const techCount=Object.keys(p.techs||{}).length;
+  const {t:rankTitle,c:rankColor}=ratingTitle(pts);
+  const hasPhoto=p.photo;
+  const avatar=p.avatar||RACE_G[p.race]||'👤';
+  const avatarBg=p.avatarBg||'#3a2a10';
+
+  const con=document.createElement('div');
+  con.innerHTML=`
+    <!-- ШАПКА профиля -->
+    <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;">
+      <!-- Аватар -->
+      <div id="avatar-wrap" style="position:relative;flex-shrink:0;cursor:pointer;" title="Нажми чтобы изменить">
+        <div id="avatar-display" style="width:72px;height:72px;border-radius:50%;
+          background:${avatarBg};border:3px solid var(--gold);
+          display:flex;align-items:center;justify-content:center;
+          font-size:36px;overflow:hidden;position:relative;">
+          ${hasPhoto
+            ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;">`
+            : `<span>${avatar}</span>`}
+        </div>
+        <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;
+          background:var(--gold);border-radius:50%;border:2px solid var(--dark);
+          display:flex;align-items:center;justify-content:center;font-size:12px;">✏️</div>
+      </div>
+      <!-- Инфо -->
+      <div style="flex:1;">
+        <div style="font-size:18px;font-weight:bold;color:var(--gold2);">${p.kingdom}</div>
+        <div style="font-size:12px;color:#a89070;">@${p.username}</div>
+        <div style="font-size:13px;color:#e0d0b0;margin-top:4px;">${RACES[p.race]?.name} ${RACE_G[p.race]||''}</div>
+        <div style="margin-top:6px;font-size:14px;font-weight:bold;color:${rankColor};">${rankTitle}</div>
+        ${p.isAdmin?`<div style="margin-top:5px;display:inline-block;background:rgba(60,0,0,.7);border:1px solid #c03030;border-radius:4px;padding:2px 10px;font-size:11px;color:#ff9090;font-weight:bold;letter-spacing:1px;">⚙ АДМИНИСТРАТОР</div>`:''}
+      </div>
+    </div>
+
+    <!-- РЕЙТИНГОВАЯ КАРТОЧКА -->
+    <div style="background:linear-gradient(135deg,#1a0e05,#2a1a08);border:1px solid var(--gold3);border-radius:8px;padding:12px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="color:var(--gold2);font-weight:bold;font-size:14px;">🏆 Рейтинг</span>
+        <span style="font-size:22px;font-weight:bold;color:var(--gold2);">${fmtN(pts)}</span>
+      </div>
+      <!-- Прогресс до следующего ранга -->
+      ${(()=>{
+        const thresholds=[100,300,800,2000,5000,99999];
+        const cur=thresholds.findIndex(t=>pts<t);
+        const prev=cur>0?thresholds[cur-1]:0;
+        const next=thresholds[cur]||9999;
+        const pct=Math.min(100,(pts-prev)/(next-prev)*100);
+        const nextRank=cur<thresholds.length-2?ratingTitle(next).t:'MAX';
+        return `<div style="font-size:10px;color:#a08060;margin-bottom:4px;">До ${nextRank}: ${fmtN(next-pts)} очков</div>
+          <div class="mbar"><div class="mbar-f" style="width:${pct}%;background:linear-gradient(90deg,var(--gold3),var(--gold2));"></div></div>`;
+      })()}
+    </div>
+
+    <!-- СТАТИСТИКА -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;">
+      ${[
+        ['🏰','Уровень ратуши',(p.castle||[]).find(c=>c.bldId==='castle')?.level||1],
+        ['⚔','Армия',armyTotal()+' воинов'],
+        ['🏗','Зданий',(p.castle||[]).filter(c=>c.bldId).length+(p.lands||[]).filter(c=>c.bldId).length],
+        ['🔬','Технологий',techCount+' / '+Object.keys(TECHS).length],
+        ['🌍','Позиция',p.worldPos?p.worldPos.col+','+p.worldPos.row:'—'],
+        ['⏳','Стройка в очереди',(p.queue||[]).length],
+      ].map(([i,l,v])=>`
+        <div style="background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:5px;padding:7px;display:flex;flex-direction:column;gap:2px;">
+          <span style="font-size:16px;">${i}</span>
+          <span style="font-size:10px;color:#a08060;">${l}</span>
+          <span style="font-size:13px;font-weight:bold;color:var(--gold2);">${v}</span>
+        </div>`).join('')}
+    </div>
+
+    <!-- РЕДАКТОР АВАТАРА (скрыт по умолчанию) -->
+    <div id="avatar-editor" style="display:none;background:rgba(0,0,0,.4);border:1px solid var(--gold3);border-radius:6px;padding:10px;margin-bottom:10px;">
+      <div style="font-size:12px;color:var(--gold2);margin-bottom:8px;font-weight:bold;">Выбери аватар:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" id="avatar-pick">
+        ${AVATARS.map(a=>`<button data-av="${a}" style="width:36px;height:36px;font-size:20px;background:rgba(0,0,0,.4);border:2px solid #5a4020;border-radius:50%;">${a}</button>`).join('')}
+      </div>
+      <div style="font-size:12px;color:var(--gold2);margin-bottom:6px;">Цвет фона:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="bg-pick">
+        ${AVATAR_BGS.map(bg=>`<button data-bg="${bg}" style="width:28px;height:28px;background:${bg};border:2px solid #5a4020;border-radius:4px;"></button>`).join('')}
+      </div>
+      <div style="font-size:12px;color:var(--gold2);margin-bottom:6px;">📷 Своя картинка:</div>
+      <div style="display:flex;gap:7px;align-items:center;">
+        <label style="cursor:pointer;padding:6px 12px;background:linear-gradient(180deg,#3a8a4a,#1d4a26);border:2px solid #5cff7a;border-radius:4px;font-size:11px;font-weight:bold;color:#fff;">
+          Загрузить фото
+          <input type="file" id="photo-input" accept="image/*" style="display:none;">
+        </label>
+        ${p.photo?'<button id="remove-photo" class="mbtn red" style="padding:5px 10px;font-size:11px;min-width:auto;">Удалить</button>':''}
+      </div>
+    </div>
+    ${p.isAdmin?`
+    <div style="margin-top:14px;border-top:1px solid #501010;padding-top:12px;">
+      <div style="font-size:11px;color:#c05050;font-weight:bold;letter-spacing:1px;margin-bottom:8px;">⚙ ИНСТРУМЕНТЫ АДМИНИСТРАТОРА</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button data-admin="fill" style="padding:10px 14px;background:linear-gradient(180deg,#5a1a1a,#2a0808);border:1px solid #903030;border-radius:6px;color:#faa;font-size:12px;font-weight:bold;cursor:pointer;text-align:left;">
+          💰 Максимальные ресурсы + все технологии
+        </button>
+        <button data-admin="complete" style="padding:10px 14px;background:linear-gradient(180deg,#5a1a1a,#2a0808);border:1px solid #903030;border-radius:6px;color:#faa;font-size:12px;font-weight:bold;cursor:pointer;text-align:left;">
+          ⚡ Завершить все очереди строительства и обучения
+        </button>
+        <button data-admin="max-buildings" style="padding:10px 14px;background:linear-gradient(180deg,#5a1a1a,#2a0808);border:1px solid #903030;border-radius:6px;color:#faa;font-size:12px;font-weight:bold;cursor:pointer;text-align:left;">
+          🏗 +5 уровней всем построенным зданиям
+        </button>
+        <button data-admin="full-setup" style="padding:10px 14px;background:linear-gradient(180deg,#1a3a1a,#0a1a0a);border:2px solid #40a040;border-radius:6px;color:#8afa8a;font-size:12px;font-weight:bold;cursor:pointer;text-align:left;">
+          🚀 ПОЛНЫЙ ТЕСТ — все здания + генерал + оазисы + ресурсы
+          <div style="font-size:10px;color:#60c060;margin-top:2px;">Все здания макс. ур. · Генерал · 3 оазиса · Все технологии · Защита снята</div>
+        </button>
+      </div>
+    </div>`:''}`;
+
+  const actions=[
+    {label:'🏆 Рейтинг',kind:'gold',handler:()=>{showRatingModal();},close:true},
+    {label:'Изменить аватар',kind:'gray',handler:()=>{
+      const ed=con.querySelector('#avatar-editor');
+      ed.style.display=ed.style.display==='none'?'block':'none';
+    },close:false},
+    {label:'💬 Чат',handler:()=>openChat(),close:true},
+  ];
+
+  const bg=modal({title:'👑 Профиль',body:con,actions});
+
+  // Логика админ-кнопок
+  if(p.isAdmin){
+    con.querySelectorAll('[data-admin]').forEach(btn=>{
+      btn.onmouseenter=()=>btn.style.borderColor='#d05050';
+      btn.onmouseleave=()=>btn.style.borderColor='#903030';
+      btn.onclick=async()=>{
+        const action=btn.dataset.admin;
+        btn.disabled=true;btn.style.opacity='.5';
+        try{
+          await api('/api/admin/'+action,{method:'POST',body:{}});
+          await refreshState();renderTopbar();renderMap();
+          toast('✓ Выполнено','ok');
+        }catch(e){toast(e.message,'err');}
+        btn.disabled=false;btn.style.opacity='1';
+      };
+    });
+  }
+
+  // Логика аватар-редактора
+  let curAv=avatar,curBg=avatarBg;
+  async function saveAvatar(opts={}){
+    const body={avatar:curAv,bg:curBg,...opts};
+    try{
+      await api('/api/avatar',{method:'POST',body});
+      toast('Аватар обновлён','ok');
+      await refreshState();
+      // Обновляем отображение
+      const disp=con.querySelector('#avatar-display');
+      if(disp){
+        if(S.player.photo) disp.innerHTML=`<img src="${S.player.photo}" style="width:100%;height:100%;object-fit:cover;">`;
+        else {disp.style.background=curBg;disp.innerHTML=`<span style="font-size:36px;">${curAv}</span>`;}
+      }
+    }catch(e){toast(e.message,'err');}
+  }
+  // Клик на аватар — открыть редактор
+  con.querySelector('#avatar-wrap').onclick=()=>{
+    const ed=con.querySelector('#avatar-editor');
+    ed.style.display=ed.style.display==='none'?'block':'none';
+  };
+  // Выбор эмодзи
+  con.querySelectorAll('#avatar-pick button').forEach(btn=>{
+    btn.onclick=async()=>{
+      curAv=btn.dataset.av;
+      con.querySelectorAll('#avatar-pick button').forEach(b=>b.style.borderColor='#5a4020');
+      btn.style.borderColor='var(--gold2)';
+      await saveAvatar({avatar:curAv,photo:null});
+    };
+  });
+  // Выбор фона
+  con.querySelectorAll('#bg-pick button').forEach(btn=>{
+    btn.onclick=async()=>{
+      curBg=btn.dataset.bg;
+      con.querySelectorAll('#bg-pick button').forEach(b=>b.style.borderColor='#5a4020');
+      btn.style.borderColor='var(--gold2)';
+      await saveAvatar({bg:curBg});
+    };
+  });
+  // Загрузка фото
+  const photoInput=con.querySelector('#photo-input');
+  if(photoInput) photoInput.onchange=async e=>{
+    const file=e.target.files[0];if(!file)return;
+    if(file.size>2*1024*1024){toast('Файл слишком большой (макс 2МБ)','err');return;}
+    const reader=new FileReader();
+    reader.onload=async ev=>{
+      // Сжимаем через Canvas
+      const img=new Image();
+      img.onload=async()=>{
+        const canvas=document.createElement('canvas');
+        const size=120;canvas.width=size;canvas.height=size;
+        const ctx=canvas.getContext('2d');
+        // Вписываем в квадрат
+        const scale=Math.max(size/img.width,size/img.height);
+        const sw=img.width*scale,sh=img.height*scale;
+        ctx.drawImage(img,(size-sw)/2,(size-sh)/2,sw,sh);
+        const compressed=canvas.toDataURL('image/jpeg',0.7);
+        await saveAvatar({photo:compressed});
+      };
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  // Удаление фото
+  const removeBtn=con.querySelector('#remove-photo');
+  if(removeBtn) removeBtn.onclick=async()=>saveAvatar({photo:null});
+}
+
+async function showRatingModal(){
+  const con=document.createElement('div');
+  con.innerHTML='<p style="text-align:center;color:#a89070;font-size:12px;">Загрузка...</p>';
+  const bg=modal({title:'🏆 Рейтинг игроков',body:con});
+  try{
+    const d=await api('/api/rating');
+    const me=S.player.username;
+    const myRank=(d.top.findIndex(p=>p.username===me)+1)||'?';
+    let html=`<div style="font-size:12px;color:#a89070;text-align:center;margin-bottom:10px;">
+      Твоё место: <b style="color:var(--gold2);font-size:16px;">#${myRank}</b>
+      из <b>${d.top.length}</b> игроков
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;">`;
+    d.top.forEach((p,i)=>{
+      const isMeR=p.username===me;
+      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
+      const {t:rt,c:rc}=ratingTitle(p.rating);
+      html+=`<div style="display:flex;align-items:center;gap:8px;padding:8px;
+        background:${isMeR?'rgba(212,162,54,.15)':'rgba(0,0,0,.3)'};
+        border:1px solid ${isMeR?'var(--gold2)':'var(--gold3)'};border-radius:5px;">
+        <span style="font-size:16px;width:28px;text-align:center;flex-shrink:0;">${medal}</span>
+        <span style="font-size:16px;">${RACE_G[p.race]||'👤'}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:bold;color:${isMeR?'var(--gold2)':'#e0d0b0'};font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.kingdom}</div>
+          <div style="font-size:10px;color:${rc};">${rt}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-weight:bold;color:var(--gold2);font-size:14px;">${fmtN(p.rating)}</div>
+          <div style="font-size:10px;color:#a09060;">⚔${p.armySize}</div>
+        </div>
+      </div>`;
+    });
+    if(!d.top.length) html+='<p style="text-align:center;color:#a89070;padding:20px;">Ещё нет игроков</p>';
+    html+='</div>';
+    con.innerHTML=html;
+  }catch(e){con.innerHTML=`<p style="color:#ff8080;text-align:center;">${e.message}</p>`;}
+}
+
+// ── ЧАТ ────────────────────────────────────────────────
+function fmtCT(t){const d=new Date(t);return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
+function appendChat(msg,prepend=false){
+  const msgs=$('#chat-msgs');if(!msgs)return;
+  const mine=msg.username===S?.player?.username;
+  const el=document.createElement('div');
+  el.className='cmsg'+(mine?' me':'')+(msg.system?' sys':'');
+  if(msg.system)el.innerHTML=`<span>${escH(msg.text||'')}</span>`;
+  else{
+    const dn=msg.kingdom||msg.username;
+    el.innerHTML=`<div class="ch"><span class="cr">${RACE_G[msg.race]||'👤'}</span><span class="cn">${escH(dn)}</span><span class="ct">${fmtCT(msg.t)}</span></div><div class="cx">${escH(msg.text)}</div>`;
+  }
+  if(prepend)msgs.insertBefore(el,msgs.firstChild);
+  else msgs.appendChild(el);
+  if(!prepend)msgs.scrollTop=msgs.scrollHeight;
+}
+function sendChat(){
+  const inp=$('#chat-inp');const text=(inp.value||'').trim();
+  if(!text||!ws||ws.readyState!==1)return;
+  ws.send(JSON.stringify({type:'chat',text}));inp.value='';inp.focus();
+}
+async function openChat(){
+  chatOpen=true;chatUnread=0;
+  const b=$('#chat-nb');b.style.display='none';
+  $('#chat-panel').classList.add('open');
+  const msgs=$('#chat-msgs');
+  if(msgs.children.length===0){
+    try{
+      const d=await api('/api/chat');
+      if(d.messages?.length)d.messages.forEach(m=>appendChat(m));
+      else appendChat({system:true,text:'Чат пока пуст — напиши что-нибудь!',t:Date.now()});
+    }catch{appendChat({system:true,text:'Не удалось загрузить историю',t:Date.now()});}
+  }
+  setTimeout(()=>$('#chat-inp')?.focus(),250);
+}
+function closeChat(){chatOpen=false;$('#chat-panel').classList.remove('open');}
+function initChat(){
+  const btn=$('#chat-btn');if(!btn)return;
+  btn.style.display='flex';
+  btn.onclick=()=>chatOpen?closeChat():openChat();
+  $('#chat-close').onclick=closeChat;
+  $('#chat-send').onclick=sendChat;
+  $('#chat-inp').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}};
+}
+
+// ── AUTH ────────────────────────────────────────────────
+function initAuth(){
+  $('#sw1').onclick=$('#toReg').onclick=()=>{$('#aLogin').style.display='none';$('#aReg').style.display='block';};
+  $('#sw2').onclick=()=>{$('#aReg').style.display='none';$('#aLogin').style.display='block';};
+  let selRace=null;
+  const rp=$('#racePick');
+  rp.innerHTML=Object.entries(RACES).map(([id,r])=>`
+    <div class="rcard" data-race="${id}">
+      <div class="rg">${RACE_G[id]}</div>
+      <div class="rn">${r.name}</div>
+      <div class="rb">${r.bonus}</div>
+    </div>`).join('');
+  rp.onclick=e=>{
+    const c=e.target.closest('.rcard');if(!c)return;
+    rp.querySelectorAll('.rcard').forEach(x=>x.classList.remove('sel'));
+    c.classList.add('sel');selRace=c.dataset.race;
+  };
+  $('#liBtn').onclick=async()=>{
+    $('#liE').textContent='';
+    try{await api('/api/login',{method:'POST',body:{username:$('#liU').value.trim(),password:$('#liP').value}});await enterGame();}
+    catch(e){$('#liE').textContent=e.message;}
+  };
+  $('#reBtn').onclick=async()=>{
+    $('#reE').textContent='';
+    if(!selRace){$('#reE').textContent='Выберите расу';return;}
+    try{
+      await api('/api/register',{method:'POST',body:{username:$('#reU').value.trim(),password:$('#reP').value,race:selRace,kingdom:$('#reK').value.trim()}});
+      await enterGame();
+    }catch(e){$('#reE').textContent=e.message;}
+  };
+}
+
+async function enterGame(){
+  $('#auth').style.display='none';
+  $('#app').style.display='grid';
+  preload();
+  await refreshState();
+  // Запрашиваем разрешение на уведомления
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().catch(()=>{});
+  }
+
+  // Навигация
+  $$('.tab').forEach(t=>t.addEventListener('click',()=>{
+    const loc=t.dataset.loc;
+    if(loc==='menu'){showMenu();return;}
+    if(loc==='army'){showArmyModal();return;}
+    $$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+    LOC=loc;vpX=0;vpY=0;renderMap();
+  }));
+
+  // Боковая панель — теперь плавная
+  const sbtn=$('#sidebtn');
+  const spanel=$('#sidepanel');
+  sbtn.onclick=()=>{
+    const open=spanel.classList.toggle('open');
+    sbtn.textContent=open?'◀':'▶';
+  };
+  $$('#sidepanel .sb').forEach(b=>b.addEventListener('click',()=>{
+    const a=b.dataset.a;
+    spanel.classList.remove('open');sbtn.textContent='▶';
+    if(a==='logout'){api('/api/logout',{method:'POST'}).then(()=>location.reload());return;}
+    if(a==='army')showArmyModal();
+    else if(a==='alliance')showAllianceModal();
+    else if(a==='tech')showTechModal();
+    else if(a==='reports')showReportsModal();
+    else if(a==='profile')showProfileModal();
+  }));
+
+  connectWS();initChat();initDrag();startAnim();
+
+  // Таймеры
+  setInterval(()=>{
+    $('#timebar').textContent=clk();
+    $$('[data-timer]').forEach(el=>{const s=(+el.dataset.timer-Date.now())/1000;el.textContent=s<=0?'✓ Готово':'⌛ '+fmtT(s);});
+  },1000);
+  setInterval(()=>{if(!ws||ws.readyState!==1)refreshState();},10000);
+}
+
+async function showAllianceModal(){
+  const p=S.player;
+  const alInfo=p.alliance;
+  if(!alInfo){
+    // Нет альянса — показываем создание или список
+    let alliances=[];
+    try{const r=await api('/api/alliances');alliances=r.alliances||[];}catch{}
+    const myInvites=[];
+    for(const a of alliances){
+      // проверяем через детальный запрос свои приглашения
+    }
+    const con=document.createElement('div');
+    // Форма создания
+    con.innerHTML=`
+      <div style="background:rgba(0,0,0,.3);border:1px dashed var(--gold3);border-radius:6px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:bold;color:var(--gold2);margin-bottom:8px;">⚔ Создать альянс</div>
+        <input id="al-name" type="text" maxlength="30" placeholder="Название (2–30 симв.)" style="width:100%;background:#0a1a0a;border:2px solid var(--gold3);color:#80ff80;padding:8px;border-radius:4px;font-family:inherit;font-size:13px;margin-bottom:6px;">
+        <input id="al-tag" type="text" maxlength="4" placeholder="Тег [2–4 буквы]" style="width:100%;background:#0a1a0a;border:2px solid var(--gold3);color:#80ff80;padding:8px;border-radius:4px;font-family:inherit;font-size:13px;margin-bottom:8px;">
+        <button id="al-create-btn" class="mbtn" style="width:100%;padding:9px;">Создать альянс</button>
+      </div>
+      <div style="font-size:13px;font-weight:bold;color:var(--gold2);margin-bottom:6px;">🌍 Все альянсы (${alliances.length})</div>
+      <div style="max-height:200px;overflow-y:auto;">
+        ${alliances.length?alliances.map(a=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px;background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:4px;margin-bottom:4px;">
+            <div>
+              <span style="font-weight:bold;color:var(--gold2);">[${a.tag}] ${a.name}</span>
+              <div style="font-size:11px;color:#a08060;">Лидер: ${a.leader} · ${a.memberCount} чел.</div>
+            </div>
+          </div>`).join('')
+        :'<p style="text-align:center;color:#a08060;padding:12px;">Пока нет альянсов</p>'}
+      </div>`;
+    const bg=modal({title:'🛡 Альянс',body:con});
+    bg.querySelector('#al-create-btn').onclick=async()=>{
+      const name=bg.querySelector('#al-name').value.trim();
+      const tag=bg.querySelector('#al-tag').value.trim();
+      try{await api('/api/alliance/create',{method:'POST',body:{name,tag}});
+        toast('Альянс создан!','ok');bg.remove();await refreshState();showAllianceModal();}
+      catch(e){toast(e.message,'err');}
+    };
+    return;
+  }
+  // Есть альянс — показываем управление
+  let fullAlliance=null;
+  try{const r=await api('/api/alliance');fullAlliance=r.alliance;}catch{}
+  const isLeader=fullAlliance?.leader===p.username;
+  const membersHtml=fullAlliance?fullAlliance.members.map(m=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:4px;margin-bottom:4px;">
+      <div>
+        <span style="font-weight:bold;color:var(--gold2);">${m.username=== fullAlliance.leader?'👑 ':''} ${m.kingdom||m.username}</span>
+        <div style="font-size:11px;color:#a08060;">@${m.username} · ${RACES[m.race]?.name||''} · ⭐${fmtN(m.rating||0)}</div>
+      </div>
+      ${isLeader&&m.username!==p.username?`<button class="mbtn red kick-btn" data-u="${m.username}" style="padding:3px 7px;font-size:10px;min-width:auto;">Исключить</button>`:''}
+    </div>`).join(''):'<p style="color:#a08060;">Загрузка...</p>';
+  const invHtml=isLeader?`
+    <div style="margin-top:10px;border-top:1px solid var(--gold3);padding-top:10px;">
+      <div style="font-size:12px;font-weight:bold;color:var(--gold2);margin-bottom:6px;">Пригласить игрока:</div>
+      <div style="display:flex;gap:6px;">
+        <input id="inv-name" type="text" placeholder="Имя игрока" style="flex:1;background:#0a1a0a;border:2px solid var(--gold3);color:#80ff80;padding:7px;border-radius:4px;font-family:inherit;font-size:12px;">
+        <button id="inv-btn" class="mbtn gold" style="padding:7px 12px;font-size:11px;min-width:auto;">Пригласить</button>
+      </div>
+    </div>`:'';
+  const tradeHtml=`
+    <div style="margin-top:10px;border-top:1px solid var(--gold3);padding-top:10px;">
+      <div style="font-size:12px;font-weight:bold;color:var(--gold2);margin-bottom:6px;">📦 Отправить ресурсы союзнику:</div>
+      <select id="trade-to" style="width:100%;background:#0a1a0a;border:2px solid var(--gold3);color:#80ff80;padding:7px;border-radius:4px;font-family:inherit;font-size:12px;margin-bottom:6px;">
+        ${(fullAlliance?.members||[]).filter(m=>m.username!==p.username).map(m=>`<option value="${m.username}">${m.kingdom||m.username}</option>`).join('')}
+      </select>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:7px;">
+        ${['gold','wood','stone','iron','food'].map(r=>`<div style="display:flex;gap:4px;align-items:center;">
+          <span style="font-size:11px;color:#c0a070;width:42px;">${RES_L[r]}</span>
+          <input type="number" class="trade-res" data-r="${r}" value="0" min="0" style="flex:1;background:#0a1a0a;border:1px solid var(--gold3);color:#80ff80;padding:4px;border-radius:3px;font-size:11px;text-align:center;">
+        </div>`).join('')}
+      </div>
+      <button id="trade-btn" class="mbtn gold" style="width:100%;padding:8px;">Отправить</button>
+    </div>`;
+  const con2=document.createElement('div');
+  con2.innerHTML=`
+    <div style="background:linear-gradient(135deg,#1a1a2a,#0a0a1a);border:1px solid #4a5a7a;border-radius:6px;padding:10px;margin-bottom:10px;">
+      <div style="font-size:16px;font-weight:bold;color:#7ad4ff;">[${alInfo.tag}] ${alInfo.name}</div>
+      <div style="font-size:12px;color:#8a9aaa;margin-top:3px;">Лидер: ${alInfo.leader} · ${alInfo.memberCount} участников</div>
+    </div>
+    <div style="font-size:12px;font-weight:bold;color:var(--gold2);margin-bottom:6px;">👥 Участники:</div>
+    <div style="max-height:180px;overflow-y:auto;" id="members-list">${membersHtml}</div>
+    ${invHtml}
+    ${tradeHtml}`;
+  // Войны альянсов
+  const myWars = S.player.allianceWars || {};
+  const myWarsList = Object.entries(myWars);
+  const warHtml = isLeader ? `
+    <div style="margin-top:10px;border-top:1px solid var(--gold3);padding-top:10px;">
+      <div style="font-size:12px;font-weight:bold;color:#ff8060;margin-bottom:6px;">⚔ Войны альянса</div>
+      ${myWarsList.length > 0 ? myWarsList.map(([wk, war]) => {
+        const enemyId = war.attacker === p.allianceId ? war.defender : war.attacker;
+        const enemyAlliance = worldAlliances[enemyId] || { tag: enemyId, name: enemyId };
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px;background:rgba(80,0,0,.3);border:1px solid #803030;border-radius:3px;margin-bottom:3px;">
+          <span style="font-size:12px;color:#ff8080;">⚔ vs [${enemyAlliance.tag||enemyId}] ${enemyAlliance.name||''}</span>
+          <button class="mbtn gray peace-btn" data-enemy="${enemyId}" style="padding:3px 8px;font-size:10px;min-width:auto;">🕊 Мир</button>
+        </div>`;
+      }).join('') : '<p style="font-size:11px;color:#a08060;">Войн нет</p>'}
+      <div style="display:flex;gap:5px;margin-top:6px;">
+        <input id="war-target" type="text" placeholder="ID альянса (из /alliances)" style="flex:1;background:#0a1a0a;border:2px solid #803030;color:#ff8080;padding:6px;border-radius:4px;font-family:inherit;font-size:11px;">
+        <button id="war-declare-btn" class="mbtn red" style="padding:6px 10px;font-size:11px;min-width:auto;">Объявить войну</button>
+      </div>
+    </div>` : '';
+  con2.innerHTML += warHtml;
+
+  const actions2=[{label:'🚪 Выйти из альянса',kind:'red',handler:async()=>{
+    if(!confirm('Выйти из альянса?'))return;
+    try{await api('/api/alliance/leave',{method:'POST'});toast('Вы вышли из альянса','ok');await refreshState();}
+    catch(e){toast(e.message,'err');}
+  }}];
+  const bg2=modal({title:`🛡 Альянс [${alInfo.tag}]`,body:con2,actions:actions2});
+  // Kick buttons
+  bg2.querySelectorAll('.kick-btn').forEach(btn=>{
+    btn.onclick=async()=>{
+      if(!confirm('Исключить '+btn.dataset.u+'?'))return;
+      try{await api('/api/alliance/kick',{method:'POST',body:{target:btn.dataset.u}});
+        toast('Исключён','ok');bg2.remove();showAllianceModal();}
+      catch(e){toast(e.message,'err');}
+    };
+  });
+  // Invite
+  const invBtn=bg2.querySelector('#inv-btn');
+  if(invBtn)invBtn.onclick=async()=>{
+    const n=bg2.querySelector('#inv-name').value.trim();
+    if(!n)return;
+    try{await api('/api/alliance/invite',{method:'POST',body:{target:n}});toast('Приглашение отправлено!','ok');}
+    catch(e){toast(e.message,'err');}
+  };
+  // War buttons
+  bg2.querySelectorAll('.peace-btn').forEach(btn=>{
+    btn.onclick=async()=>{
+      const enemy=btn.dataset.enemy;
+      if(!confirm(`Заключить мир с альянсом ${enemy}?`))return;
+      try{await api('/api/alliance/peace',{method:'POST',body:{targetAlliance:enemy}});
+        toast('Мир заключён!','ok');bg2.remove();showAllianceModal();}
+      catch(e){toast(e.message,'err');}
+    };
+  });
+  const warDeclareBtn=bg2.querySelector('#war-declare-btn');
+  if(warDeclareBtn)warDeclareBtn.onclick=async()=>{
+    const target=bg2.querySelector('#war-target')?.value.trim();
+    if(!target)return;
+    if(!confirm(`Объявить войну альянсу ${target}?`))return;
+    try{await api('/api/alliance/declare-war',{method:'POST',body:{targetAlliance:target}});
+      toast('⚔ Война объявлена!','ok');bg2.remove();showAllianceModal();}
+    catch(e){toast(e.message,'err');}
+  };
+
+  // Trade
+  bg2.querySelector('#trade-btn')?.addEventListener('click',async()=>{
+    const to=bg2.querySelector('#trade-to')?.value;
+    if(!to)return;
+    const resources={};
+    bg2.querySelectorAll('.trade-res').forEach(inp=>{const v=parseInt(inp.value)||0;if(v>0)resources[inp.dataset.r]=v;});
+    if(!Object.keys(resources).length){toast('Укажите количество ресурсов','err');return;}
+    try{await api('/api/trade',{method:'POST',body:{targetUsername:to,resources}});
+      toast('Ресурсы отправлены!','ok');bg2.remove();await refreshState();}
+    catch(e){toast(e.message,'err');}
+  });
+}
+
+function showMenu(){
+  const bd=document.createElement('div');
+  bd.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;';
+  [
+    ['👑','Профиль',showProfileModal],
+    ['📨','Отчёты',showReportsModal],
+    ['⚔','Армия',showArmyModal],
+    ['🔬','Технологии',showTechModal],
+    ['🛡','Альянс',()=>showAllianceModal()],
+    ['📜','Задания',showQuestsModal],
+    ['🏪','Рынок',showMarketModal],
+    ['💬','Чат',openChat],
+    ['🏆','Рейтинг',()=>showRatingModal()],
+    ['🚪','Выход',()=>{api('/api/logout',{method:'POST'}).then(()=>location.reload());}],
+  ].forEach(([i,n,h])=>{
+    const c=document.createElement('div');
+    c.style.cssText='padding:10px 4px;background:linear-gradient(180deg,#5a3018,#2a1008);border:2px solid var(--gold3);border-radius:4px;text-align:center;cursor:pointer;transition:border-color .15s;';
+    c.innerHTML=`<div style="font-size:28px;line-height:1;">${i}</div><div style="font-size:11px;color:var(--gold2);font-weight:bold;margin-top:4px;">${n}</div>`;
+    c.onmouseenter=()=>c.style.borderColor='var(--gold2)';
+    c.onmouseleave=()=>c.style.borderColor='var(--gold3)';
+    c.onclick=()=>{bg.remove();h();};bd.appendChild(c);
+  });
+  const bg=modal({title:'📜 Меню',body:bd});
+}
+
+// ── АРТЕФАКТЫ ──────────────────────────────────────────
+const ARTIFACTS = {
+  sword_of_power:   {name:'Меч силы',          desc:'Атака +15%',                icon:'⚔'},
+  shield_of_faith:  {name:'Щит веры',           desc:'Защита +15%',               icon:'🛡'},
+  horn_of_plenty:   {name:'Рог изобилия',       desc:'Все ресурсы +10%',          icon:'🦌'},
+  ring_of_speed:    {name:'Кольцо скорости',    desc:'Скорость войск +20%',       icon:'💍'},
+  crown_of_loyalty: {name:'Корона лояльности',  desc:'Лояльность +20',            icon:'👑'},
+  tome_of_magic:    {name:'Фолиант магии',       desc:'Маг.атака +20%',            icon:'📖'},
+  builders_hammer:  {name:'Молот зодчего',       desc:'Строительство -20% времени',icon:'🔨'},
+  crown_of_kings:   {name:'Корона Королей',      desc:'Все бонусы +10%',           icon:'💎', super:true},
+};
+
+function showArtifactsModal() {
+  const p = S.player;
+  const inv = p.artifacts || [];
+  const active = p.activeArtifacts || [];
+  const exp = p.expedition;
+  const hasExp = (p.castle || []).some(c => c.bldId === 'expedition' && c.level > 0);
+  const hasMagt = (p.castle || []).some(c => c.bldId === 'magtower' && c.level > 0);
+  const con = document.createElement('div');
+
+  // Экспедиция
+  const expNow = Date.now();
+  const expDone = exp ? (exp.startedAt + exp.duration) : 0;
+  const expActive = exp && expDone > expNow;
+  const expRem = expActive ? Math.ceil((expDone - expNow) / 1000) : 0;
+  let expHtml = '';
+  if (hasExp) {
+    if (expActive) {
+      expHtml = `<div style="background:rgba(60,40,0,.5);border:1px solid var(--gold3);border-radius:5px;padding:8px;margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--gold2);font-weight:bold;margin-bottom:4px;">🗺 Экспедиция в пути...</div>
+        <div style="color:#c0a060;font-size:12px;" id="exp-timer">⌛ ${fmtT(expRem)}</div>
+      </div>`;
+    } else {
+      expHtml = `<div style="margin-bottom:10px;">
+        <button class="mbtn gold" id="exp-start-btn" style="width:100%;padding:9px;font-size:12px;">
+          🗺 Запустить экспедицию (500 🪙)
+        </button>
+        <div style="font-size:10px;color:#a08060;margin-top:4px;text-align:center;">10 мин · Шанс найти артефакт 60%</div>
+      </div>`;
+    }
+  }
+
+  // Вкладки
+  con.innerHTML = `${expHtml}
+  <div style="display:flex;gap:4px;margin-bottom:10px;">
+    <button class="mbtn art-tab" data-tab="inv" style="flex:1;padding:7px;font-size:11px;${hasMagt?'':'opacity:.5'}">📦 Инвентарь (${inv.length})</button>
+    <button class="mbtn gray art-tab" data-tab="active" style="flex:1;padding:7px;font-size:11px;">✨ Активные (${active.length}/5)</button>
+  </div>
+  <div id="art-inv-tab">
+    ${inv.length ? inv.map((artId, i) => {
+      const art = ARTIFACTS[artId] || {name: artId, desc: '', icon: '?'};
+      const canActivate = hasMagt && active.length < 5;
+      return `<div style="display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:4px;padding:8px;margin-bottom:4px;">
+        <span style="font-size:24px;flex-shrink:0;">${art.icon || '✨'}</span>
+        <div style="flex:1;">
+          <div style="font-weight:bold;color:var(--gold2);font-size:13px;">${art.name}</div>
+          <div style="font-size:11px;color:#a09060;">${art.desc}</div>
+        </div>
+        <button class="mbtn${canActivate ? ' gold' : ' gray'} act-btn" data-idx="${i}" style="padding:5px 8px;font-size:10px;min-width:auto;"${canActivate ? '' : ' disabled'}>
+          ${canActivate ? 'Активировать' : (!hasMagt ? 'Нет башни' : 'Макс.5')}
+        </button>
+      </div>`;
+    }).join('') : '<p style="text-align:center;color:#a08060;padding:12px;">Инвентарь пуст. Запускайте экспедиции!</p>'}
+  </div>
+  <div id="art-active-tab" style="display:none;">
+    ${active.length ? active.map((artId, i) => {
+      const art = ARTIFACTS[artId] || {name: artId, desc: '', icon: '?'};
+      return `<div style="display:flex;gap:8px;align-items:center;background:rgba(20,40,0,.5);border:1px solid #5cff7a;border-radius:4px;padding:8px;margin-bottom:4px;">
+        <span style="font-size:24px;flex-shrink:0;">${art.icon || '✨'}</span>
+        <div style="flex:1;">
+          <div style="font-weight:bold;color:#5cff7a;font-size:13px;">${art.name}</div>
+          <div style="font-size:11px;color:#a09060;">${art.desc}</div>
+        </div>
+        <button class="mbtn gray deact-btn" data-idx="${i}" style="padding:5px 8px;font-size:10px;min-width:auto;">Убрать</button>
+      </div>`;
+    }).join('') : '<p style="text-align:center;color:#a08060;padding:12px;">Нет активных артефактов.</p>'}
+    ${active.length >= 5 ? `<button class="mbtn gold" id="craft-super-btn" style="width:100%;padding:9px;margin-top:6px;font-size:12px;">
+      💎 Скрафтить Корону Королей (из 5 активных)
+    </button>` : ''}
+  </div>`;
+
+  const bg = modal({ title: '✨ Артефакты', body: con });
+
+  // Вкладки
+  bg.querySelectorAll('.art-tab').forEach(btn => {
+    btn.onclick = () => {
+      const tab = btn.dataset.tab;
+      bg.querySelectorAll('.art-tab').forEach(b => b.className = b === btn ? 'mbtn art-tab' : 'mbtn gray art-tab');
+      bg.querySelector('#art-inv-tab').style.display = tab === 'inv' ? 'block' : 'none';
+      bg.querySelector('#art-active-tab').style.display = tab === 'active' ? 'block' : 'none';
+    };
+  });
+
+  // Экспедиция
+  const expBtn = bg.querySelector('#exp-start-btn');
+  if (expBtn) expBtn.onclick = async () => {
+    try {
+      await api('/api/expedition/start', { method: 'POST', body: {} });
+      toast('Экспедиция запущена!', 'ok');
+      bg.remove();
+      await refreshState();
+    } catch(e) { toast(e.message, 'err'); }
+  };
+
+  // Активировать
+  bg.querySelectorAll('.act-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const idx = parseInt(btn.dataset.idx);
+      try {
+        const r = await api('/api/artifact/activate', { method: 'POST', body: { idx } });
+        toast(`${r.name} активирован!`, 'ok');
+        bg.remove();
+        await refreshState();
+        showArtifactsModal();
+      } catch(e) { toast(e.message, 'err'); }
+    };
+  });
+
+  // Деактивировать
+  bg.querySelectorAll('.deact-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const idx = parseInt(btn.dataset.idx);
+      try {
+        const r = await api('/api/artifact/deactivate', { method: 'POST', body: { idx } });
+        toast(`${r.name} деактивирован`, 'ok');
+        bg.remove();
+        await refreshState();
+        showArtifactsModal();
+      } catch(e) { toast(e.message, 'err'); }
+    };
+  });
+
+  // Крафт
+  const craftBtn = bg.querySelector('#craft-super-btn');
+  if (craftBtn) craftBtn.onclick = async () => {
+    if (!confirm('Скрафтить Корону Королей? Все 5 активных артефактов будут потрачены!')) return;
+    try {
+      const r = await api('/api/artifact/craft-super', { method: 'POST', body: {} });
+      toast(`${r.name} скована! Величайший артефакт!`, 'ok');
+      bg.remove();
+      await refreshState();
+    } catch(e) { toast(e.message, 'err'); }
+  };
+
+  // Таймер экспедиции
+  if (expActive) {
+    const timerEl = bg.querySelector('#exp-timer');
+    if (timerEl) {
+      const timerInterval = setInterval(() => {
+        const rem = Math.ceil((expDone - Date.now()) / 1000);
+        if (rem <= 0) { clearInterval(timerInterval); timerEl.textContent = '✓ Готово!'; return; }
+        timerEl.textContent = '⌛ ' + fmtT(rem);
+      }, 1000);
+      bg.querySelector('.xb').addEventListener('click', () => clearInterval(timerInterval));
+    }
+  }
+}
+
+// ── ШПИОНАЖ ────────────────────────────────────────────
+function showSpyModal(targetUsername) {
+  const p = S.player;
+  const residentCell = (p.castle||[]).find(c=>c.bldId==='resident'&&c.level>0);
+  const residentLvl = residentCell ? residentCell.level : 0;
+  const chance = Math.min(85, 40 + residentLvl * 5);
+  const cooldownRem = (p.spyCooldown||0) > Date.now() ? Math.ceil(((p.spyCooldown||0) - Date.now()) / 60000) : 0;
+
+  const con = document.createElement('div');
+  con.innerHTML = `
+    <p style="text-align:center;color:#a08060;margin-bottom:8px;">Цель: <b style="color:var(--gold2);">${escH(targetUsername)}</b></p>
+    <p style="text-align:center;font-size:11px;color:#c0a060;margin-bottom:10px;">
+      Шпионаж ур.${residentLvl} · Шанс успеха: <b style="color:#5cff7a;">${chance}%</b>
+      · Стоимость: 200🪙 + 50⚙
+    </p>
+    ${cooldownRem > 0 ? `<p style="text-align:center;color:#ff8080;">⏳ Перезарядка: ${cooldownRem} мин.</p>` : ''}
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="background:rgba(0,0,0,.4);border:1px solid var(--gold3);border-radius:5px;padding:10px;">
+        <div style="font-weight:bold;color:#ffd44a;margin-bottom:4px;">💰 Кража ресурсов</div>
+        <div style="font-size:11px;color:#a09060;">Крадёт 5–15% ресурсов у цели</div>
+        <button class="mbtn gold spy-btn" data-action="steal" style="width:100%;margin-top:6px;padding:7px;font-size:11px;" ${cooldownRem>0?'disabled':''}>Украсть</button>
+      </div>
+      <div style="background:rgba(0,0,0,.4);border:1px solid var(--gold3);border-radius:5px;padding:10px;">
+        <div style="font-weight:bold;color:#ff9060;margin-bottom:4px;">🔥 Диверсия</div>
+        <div style="font-size:11px;color:#a09060;">40% шанс понизить уровень здания у цели на 1</div>
+        <button class="mbtn spy-btn" data-action="sabotage" style="width:100%;margin-top:6px;padding:7px;font-size:11px;background:linear-gradient(180deg,#c07030,#803010);border-color:#e09050;" ${cooldownRem>0?'disabled':''}>Диверсия</button>
+      </div>
+      <div style="background:rgba(0,0,0,.4);border:1px solid var(--gold3);border-radius:5px;padding:10px;">
+        <div style="font-weight:bold;color:#ff6060;margin-bottom:4px;">🗡 Убийство</div>
+        <div style="font-size:11px;color:#a09060;">30%+ шанс уничтожить 5–10% армии цели</div>
+        <button class="mbtn red spy-btn" data-action="assassinate" style="width:100%;margin-top:6px;padding:7px;font-size:11px;" ${cooldownRem>0?'disabled':''}>Убить</button>
+      </div>
+    </div>`;
+
+  const bg = modal({ title: '🕵 Шпионаж', body: con });
+  bg.querySelectorAll('.spy-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const action = btn.dataset.action;
+      try {
+        const r = await api('/api/spy', { method: 'POST', body: { targetUsername, action } });
+        if (r.success) { toast(`🕵 Успех: ${r.result||''}`, 'ok'); }
+        else { toast('🕵 Провал — шпион раскрыт!', 'err'); }
+        bg.remove(); await refreshState();
+      } catch(e) { toast(e.message, 'err'); }
+    };
+  });
+}
+
+// ── РЫНОК ──────────────────────────────────────────────
+const QUESTS_CLIENT = {
+  build_5:        { name:'Строитель',     desc:'Построй 5 зданий',         goal:{type:'build',count:5},       reward:{gold:500} },
+  train_20:       { name:'Командир',      desc:'Натренируй 20 юнитов',     goal:{type:'train',count:20},      reward:{gold:300,iron:100} },
+  attack_3:       { name:'Завоеватель',   desc:'Атакуй 3 раза',            goal:{type:'attack',count:3},      reward:{gold:400} },
+  raid_bandits:   { name:'Охотник',       desc:'Разгроми 5 бандитов',      goal:{type:'bandit_kill',count:5}, reward:{gold:600,wood:200} },
+  scout_5:        { name:'Разведчик',     desc:'Проведи 5 разведок',       goal:{type:'scout',count:5},       reward:{gold:200,iron:50} },
+  collect_relic:  { name:'Искатель',      desc:'Захвати реликвию',         goal:{type:'relic',count:1},       reward:{gold:1000} },
+  alliance_member:{ name:'Дипломат',      desc:'Вступи в альянс',          goal:{type:'alliance',count:1},    reward:{gold:300} },
+  expedition_done:{ name:'Путешественник',desc:'Заверши 3 экспедиции',     goal:{type:'expedition',count:3},  reward:{gold:700} },
+};
+
+function showQuestsModal() {
+  const p = S.player;
+  const quests = p.quests || {};
+  const con = document.createElement('div');
+  con.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px;">' +
+    Object.entries(QUESTS_CLIENT).map(([qid, qdef]) => {
+      const q = quests[qid] || { progress: 0, done: false, claimed: false };
+      const pct = Math.min(100, Math.round((q.progress || 0) / qdef.goal.count * 100));
+      const rewardStr = Object.entries(qdef.reward).map(([k,v])=>`${RES_L[k]||k}:${v}`).join(' ');
+      const statusColor = q.claimed ? '#888' : q.done ? '#5cff7a' : '#c0a070';
+      const btnHtml = q.claimed ? '<span style="font-size:11px;color:#888;">✓ Получено</span>' :
+        q.done ? `<button class="mbtn gold claim-btn" data-qid="${qid}" style="padding:5px 10px;font-size:11px;min-width:auto;">Забрать!</button>` :
+        `<span style="font-size:11px;color:#a08060;">${q.progress||0}/${qdef.goal.count}</span>`;
+      return `<div style="background:rgba(0,0,0,.3);border:1px solid ${statusColor};border-radius:5px;padding:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+          <div>
+            <div style="font-weight:bold;color:${statusColor};font-size:13px;">${qdef.name}</div>
+            <div style="font-size:11px;color:#a09060;">${qdef.desc}</div>
+            <div style="font-size:11px;color:#5cff7a;margin-top:2px;">🎁 ${rewardStr}</div>
+          </div>
+          <div style="flex-shrink:0;margin-left:8px;">${btnHtml}</div>
+        </div>
+        <div style="height:6px;background:rgba(0,0,0,.4);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${q.done?'#5cff7a':'var(--gold2)'};transition:width .4s;"></div>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+
+  const bg = modal({ title: '📜 Ежедневные задания', body: con });
+  bg.querySelectorAll('.claim-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const questId = btn.dataset.qid;
+      try {
+        const r = await api('/api/quest/claim', { method: 'POST', body: { questId } });
+        toast('🎁 Награда получена!', 'ok');
+        bg.remove();
+        await refreshState();
+        showQuestsModal();
+      } catch(e) { toast(e.message, 'err'); }
+    };
+  });
+}
+
+async function showMarketModal() {
+  const p = S.player;
+  const con = document.createElement('div');
+  // Вкладки
+  con.innerHTML = `
+    <div style="display:flex;gap:4px;margin-bottom:10px;">
+      <button class="mbtn mkt-tab" data-tab="all" style="flex:1;padding:6px;font-size:11px;">🌍 Все ордера</button>
+      <button class="mbtn gray mkt-tab" data-tab="mine" style="flex:1;padding:6px;font-size:11px;">📦 Мои ордера (${(p.marketOrders||[]).length}/5)</button>
+      <button class="mbtn gray mkt-tab" data-tab="create" style="flex:1;padding:6px;font-size:11px;">➕ Создать</button>
+    </div>
+    <div id="mkt-all">
+      <p style="text-align:center;color:#a08060;font-size:12px;">Загрузка...</p>
+    </div>
+    <div id="mkt-mine" style="display:none;">
+      ${(p.marketOrders||[]).length === 0 ? '<p style="text-align:center;color:#a08060;padding:12px;">У вас нет активных ордеров</p>' :
+        (p.marketOrders||[]).map(o => `
+          <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:4px;padding:8px;margin-bottom:4px;">
+            <div>
+              <div style="font-weight:bold;color:var(--gold2);font-size:12px;">${o.type==='sell'?'Продажа':'Покупка'}: ${o.amount} ${RES_L[o.res]||o.res}</div>
+              <div style="font-size:11px;color:#a09060;">Цена: ${o.price}/ед. = ${o.price*o.amount}🪙 всего</div>
+            </div>
+            <button class="mbtn red cancel-btn" data-oid="${o.id}" style="padding:4px 8px;font-size:10px;min-width:auto;">Отмена</button>
+          </div>`).join('')}
+    </div>
+    <div id="mkt-create" style="display:none;">
+      <div style="display:flex;gap:5px;margin-bottom:6px;">
+        <button class="mbtn gray ord-type" data-t="sell" style="flex:1;padding:7px;font-size:11px;">📤 Продать</button>
+        <button class="mbtn gray ord-type" data-t="buy" style="flex:1;padding:7px;font-size:11px;">📥 Купить</button>
+      </div>
+      <select id="ord-res" style="width:100%;background:#0a1a0a;border:2px solid var(--gold3);color:#80ff80;padding:7px;border-radius:4px;font-family:inherit;font-size:12px;margin-bottom:5px;">
+        ${['gold','wood','stone','food','iron'].map(r=>`<option value="${r}">${RES_L[r]||r}</option>`).join('')}
+      </select>
+      <div style="display:flex;gap:5px;margin-bottom:6px;">
+        <input type="number" id="ord-amount" placeholder="Кол-во" min="1"
+          style="flex:1;padding:7px;background:#0a1a0a;border:2px solid var(--gold3);color:#80ff80;border-radius:4px;font-family:inherit;font-size:12px;">
+        <input type="number" id="ord-price" placeholder="Цена/ед." min="1"
+          style="flex:1;padding:7px;background:#0a1a0a;border:2px solid var(--gold3);color:#80ff80;border-radius:4px;font-family:inherit;font-size:12px;">
+      </div>
+      <button class="mbtn gold" id="ord-submit" style="width:100%;padding:8px;">Создать ордер</button>
+    </div>`;
+
+  const bg = modal({ title: '🏪 Рынок', body: con });
+
+  // Загружаем все ордера
+  let allOrders = [];
+  try {
+    const d = await api('/api/market/orders');
+    allOrders = (d.orders||[]).filter(o => o.seller !== p.username);
+  } catch{}
+
+  const allDiv = bg.querySelector('#mkt-all');
+  if (allOrders.length === 0) {
+    allDiv.innerHTML = '<p style="text-align:center;color:#a08060;padding:12px;">Нет активных ордеров других игроков</p>';
+  } else {
+    allDiv.innerHTML = '<div style="display:flex;flex-direction:column;gap:4px;">' +
+      allOrders.map(o => {
+        const isAffordable = o.type === 'sell'
+          ? (p.res.gold||0) >= o.price * o.amount
+          : (p.res[o.res]||0) >= o.amount;
+        return `<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:4px;padding:8px;">
+          <div>
+            <div style="font-weight:bold;color:var(--gold2);font-size:12px;">${o.type==='sell'?'📤 Продажа':'📥 Покупка'}: ${o.amount} ${RES_L[o.res]||o.res}</div>
+            <div style="font-size:11px;color:#a09060;">от ${escH(o.seller)} · ${o.price}/ед. = ${o.price*o.amount}🪙</div>
+          </div>
+          <button class="mbtn${isAffordable?' gold':' gray'} fill-btn" data-seller="${escH(o.seller)}" data-oid="${o.id}"
+            style="padding:4px 8px;font-size:10px;min-width:auto;" ${isAffordable?'':'disabled'}>
+            ${o.type==='sell'?'Купить':'Продать'}
+          </button>
+        </div>`;
+      }).join('') + '</div>';
+  }
+
+  // Вкладки
+  bg.querySelectorAll('.mkt-tab').forEach(btn => {
+    btn.onclick = () => {
+      bg.querySelectorAll('.mkt-tab').forEach(b => b.className = b === btn ? 'mbtn mkt-tab' : 'mbtn gray mkt-tab');
+      bg.querySelector('#mkt-all').style.display = btn.dataset.tab === 'all' ? 'block' : 'none';
+      bg.querySelector('#mkt-mine').style.display = btn.dataset.tab === 'mine' ? 'block' : 'none';
+      bg.querySelector('#mkt-create').style.display = btn.dataset.tab === 'create' ? 'block' : 'none';
+    };
+  });
+
+  // Тип ордера
+  let ordType = 'sell';
+  bg.querySelectorAll('.ord-type').forEach(btn => {
+    btn.onclick = () => {
+      ordType = btn.dataset.t;
+      bg.querySelectorAll('.ord-type').forEach(b => b.className = b === btn ? 'mbtn ord-type' : 'mbtn gray ord-type');
+    };
+  });
+
+  // Создать ордер
+  bg.querySelector('#ord-submit').onclick = async () => {
+    const res2 = bg.querySelector('#ord-res').value;
+    const amount = parseInt(bg.querySelector('#ord-amount').value) || 0;
+    const price = parseInt(bg.querySelector('#ord-price').value) || 0;
+    try {
+      await api('/api/market/order', { method: 'POST', body: { type: ordType, res: res2, amount, price } });
+      toast('Ордер создан!', 'ok');
+      bg.remove();
+      await refreshState();
+      showMarketModal();
+    } catch(e) { toast(e.message, 'err'); }
+  };
+
+  // Отменить ордер
+  bg.querySelectorAll('.cancel-btn').forEach(btn => {
+    btn.onclick = async () => {
+      try {
+        await api('/api/market/cancel', { method: 'POST', body: { orderId: btn.dataset.oid } });
+        toast('Ордер отменён', 'ok');
+        bg.remove();
+        await refreshState();
+        showMarketModal();
+      } catch(e) { toast(e.message, 'err'); }
+    };
+  });
+
+  // Исполнить ордер
+  bg.querySelectorAll('.fill-btn').forEach(btn => {
+    btn.onclick = async () => {
+      try {
+        await api('/api/market/fill', { method: 'POST', body: { sellerId: btn.dataset.seller, orderId: btn.dataset.oid } });
+        toast('Сделка выполнена!', 'ok');
+        bg.remove();
+        await refreshState();
+        showMarketModal();
+      } catch(e) { toast(e.message, 'err'); }
+    };
+  });
+}
+
+// ── ВОЕННЫЙ ШТАБ ───────────────────────────────────────
+function showMilitaryHQModal(cell) {
+  const p = S.player;
+  const army = p.army || {};
+  const generals = p.generals || {};
+  const dead = p.deadGenerals || [];
+  const hasHQ = (p.castle || []).some(c => c.bldId === 'military_hq' && c.level > 0);
+
+  // Подсчёт боевой силы
+  let totalPower = 0;
+  for (const uid in army) {
+    const n = army[uid] || 0;
+    const u = UNITS[uid];
+    totalPower += n * (u?.atk || 0);
+  }
+
+  // Список воинов
+  let unitsHtml = '';
+  if (Object.keys(army).length) {
+    unitsHtml = '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;">';
+    for (const uid in army) {
+      const n = army[uid]; if (!n) continue;
+      const u = UNITS[uid];
+      const isGeneral = uid.endsWith('_general');
+      const genData = generals[uid];
+      const s = u?.simg;
+      const genStyle = isGeneral ? 'border-color:#f0c958;background:rgba(60,40,0,.5);' : '';
+      const genInfo = isGeneral ? `
+        <div style="font-size:10px;color:#f0c958;margin-top:2px;">
+          Генерал · Ур.${genData?.level || 1} · XP: ${genData?.xp || 0}/${100 * Math.pow(genData?.level || 1, 2)}
+        </div>` : '';
+      unitsHtml += `<div style="display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.3);border:1px solid var(--gold3);${genStyle}border-radius:4px;padding:7px;">
+        ${s ? `<img src="${s}" width="22" height="22" style="image-rendering:pixelated;">` : '<span>⚔</span>'}
+        <div style="flex:1;">
+          <div style="font-weight:bold;color:${isGeneral ? '#f0c958' : 'var(--gold2)'};font-size:13px;">${u?.name || uid} ×${n}</div>
+          <div style="font-size:11px;color:#b0a080;">⚔${u?.atk} 🛡${u?.def} · Сила: ${n * (u?.atk || 0)}</div>
+          ${genInfo}
+        </div>
+      </div>`;
+    }
+    unitsHtml += '</div>';
+  } else {
+    unitsHtml = '<p style="text-align:center;color:#a08060;padding:8px;">Армия пуста. Постройте казарму.</p>';
+  }
+
+  // Павшие генералы
+  let deadHtml = '';
+  if (dead.length) {
+    deadHtml = `<div style="margin-top:8px;border-top:1px dashed var(--gold3);padding-top:8px;">
+      <div style="font-size:12px;font-weight:bold;color:#ff8080;margin-bottom:6px;">⚰ Павшие генералы:</div>`;
+    dead.forEach((g, i) => {
+      const u = UNITS[g.uid];
+      const canAffordRes = (p.res.gold || 0) >= g.resurrectCost;
+      deadHtml += `<div style="display:flex;gap:7px;align-items:center;background:rgba(80,0,0,.4);padding:7px;border:1px solid #662020;border-radius:4px;margin-bottom:4px;">
+        <span style="font-size:20px;">⚰</span>
+        <div style="flex:1;font-size:12px;"><b style="color:#ff9090;">${u?.name || g.uid}</b>
+        <div style="color:#a08080;">Воскрешение: <b style="color:#ffd060;">${g.resurrectCost} 🪙</b></div></div>
+        <button class="mbtn${canAffordRes && hasHQ ? ' gold' : ' gray'} res-gen" data-idx="${i}"
+          style="font-size:11px;padding:4px 8px;min-width:auto;">${hasHQ ? 'Воскресить' : 'Нет штаба'}</button>
+      </div>`;
+    });
+    deadHtml += '</div>';
+  }
+
+  // Активный генерал (localStorage)
+  const activeGeneral = localStorage.getItem('activeGeneral') || '';
+  const myGenerals = Object.keys(army).filter(uid => uid.endsWith('_general') && army[uid] > 0);
+  let pickGenHtml = '';
+  if (myGenerals.length > 0) {
+    pickGenHtml = `<div style="margin-top:8px;border-top:1px dashed var(--gold3);padding-top:8px;">
+      <div style="font-size:12px;font-weight:bold;color:var(--gold2);margin-bottom:5px;">⭐ Назначить генерала:</div>
+      <select id="gen-pick" style="width:100%;background:#0a1a0a;border:2px solid var(--gold3);color:#80ff80;padding:6px;border-radius:4px;font-family:inherit;font-size:12px;margin-bottom:6px;">
+        <option value="">— Без генерала —</option>
+        ${myGenerals.map(uid => {
+          const u = UNITS[uid];
+          const g = generals[uid];
+          return `<option value="${uid}" ${uid === activeGeneral ? 'selected' : ''}>${u?.name || uid} (Ур.${g?.level || 1})</option>`;
+        }).join('')}
+      </select>
+      <button class="mbtn gold" id="gen-save-btn" style="width:100%;padding:7px;font-size:11px;">Сохранить назначение</button>
+    </div>`;
+  }
+
+  // Кнопка разведки
+  const scoutUnits = Object.entries(army).filter(([uid, n]) => uid.includes('scout') && n > 0);
+  const scoutHtml = scoutUnits.length ? `
+    <div style="margin-top:8px;border-top:1px dashed var(--gold3);padding-top:8px;">
+      <button class="mbtn gray" id="scout-btn" style="width:100%;padding:8px;font-size:12px;">🔭 Разведка</button>
+    </div>` : '';
+
+  const bd = `
+    <div style="background:rgba(0,0,0,.3);border:1px dashed var(--gold);border-radius:5px;padding:8px;margin-bottom:10px;text-align:center;">
+      <div style="font-size:14px;color:var(--gold2);font-weight:bold;">⚔ Военный штаб ур.${cell.level}</div>
+      <div style="font-size:12px;color:#a09060;margin-top:3px;">Общая боевая сила: <b style="color:#5cff7a;">${totalPower}</b></div>
+    </div>
+    ${unitsHtml}${deadHtml}${pickGenHtml}${scoutHtml}`;
+
+  // Дополнительные действия — улучшение здания
+  const clvl = getCLvl();
+  const def = BUILDINGS['military_hq'];
+  const cost = calcCost('military_hq', cell.level);
+  const timeS = calcTime('military_hq', cell.level, clvl);
+  const ok = canAfford(cost);
+  const upgradeSection = `
+    <div style="background:rgba(0,0,0,.3);padding:8px;border-radius:4px;border:1px dashed var(--gold3);margin-top:8px;">
+      <b style="color:var(--gold2);">Улучшить → ур.${cell.level + 1}</b><br>
+      ${costHtml(cost)}<br><span style="color:var(--gold);">⌛ ${fmtT(timeS)}</span>
+    </div>`;
+
+  const bg = modal({
+    title: '⚔ Военный штаб',
+    body: bd + upgradeSection,
+    actions: [
+      {
+        label: `Улучшить (+${ratingDeltaClient('military_hq', cell.level + 1)}⭐)`,
+        disabled: !ok,
+        handler: async () => {
+          try {
+            await api('/api/build', { method: 'POST', body: { loc: 'castle', col: cell.col, row: cell.row, bldId: 'military_hq' } });
+            toast('Начато улучшение!', 'ok');
+            await refreshState();
+          } catch(e) { toast(e.message, 'err'); }
+        },
+      },
+      {
+        label: 'Снести',
+        kind: 'red',
+        handler: async (mbg) => {
+          if (!confirm('Снести Военный штаб?')) return;
+          try {
+            await api('/api/demolish', { method: 'POST', body: { loc: 'castle', col: cell.col, row: cell.row } });
+            toast('Снесено');
+            mbg.remove();
+            await refreshState();
+          } catch(e) { toast(e.message, 'err'); }
+        },
+        close: false,
+      },
+    ],
+  });
+
+  // Воскрешение генералов
+  bg.querySelectorAll('.res-gen').forEach(btn => {
+    btn.onclick = async () => {
+      const idx = parseInt(btn.dataset.idx);
+      try {
+        const r = await api('/api/resurrect', { method: 'POST', body: { idx } });
+        toast(`✅ ${r.name} воскрешён!`, 'ok');
+        bg.remove();
+        await refreshState();
+      } catch(e) { toast(e.message, 'err'); }
+    };
+  });
+
+  // Сохранить генерала
+  const genSaveBtn = bg.querySelector('#gen-save-btn');
+  if (genSaveBtn) {
+    genSaveBtn.onclick = () => {
+      const pick = bg.querySelector('#gen-pick')?.value || '';
+      localStorage.setItem('activeGeneral', pick);
+      toast(pick ? `Генерал ${UNITS[pick]?.name || pick} назначен` : 'Генерал снят', 'ok');
+    };
+  }
+
+  // Кнопка разведки
+  const scoutBtn = bg.querySelector('#scout-btn');
+  if (scoutBtn) {
+    scoutBtn.onclick = () => {
+      bg.remove();
+      showScoutModal();
+    };
+  }
+}
+
+function showScoutModal() {
+  const p = S.player;
+  const scoutUnits = Object.entries(p.army || {}).filter(([uid, n]) => uid.includes('scout') && n > 0);
+  const con = document.createElement('div');
+  con.innerHTML = `
+    <p style="text-align:center;color:#a08060;margin-bottom:8px;">Выберите цель для разведки (только scout-юниты)</p>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <input type="number" id="scout-col" placeholder="Колонка" min="0" max="19"
+        style="flex:1;padding:6px;background:#0a1a0a;border:2px solid var(--gold3);color:#80ff80;border-radius:4px;font-family:inherit;font-size:12px;text-align:center;">
+      <input type="number" id="scout-row" placeholder="Строка" min="0" max="19"
+        style="flex:1;padding:6px;background:#0a1a0a;border:2px solid var(--gold3);color:#80ff80;border-radius:4px;font-family:inherit;font-size:12px;text-align:center;">
+    </div>
+    <div style="font-size:12px;color:var(--gold2);margin-bottom:6px;">Scout-юниты:</div>
+    ${scoutUnits.map(([uid, have]) => {
+      const u = UNITS[uid];
+      return `<div style="display:flex;gap:7px;align-items:center;padding:5px;background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:4px;margin-bottom:4px;">
+        <div style="flex:1;font-size:12px;"><b style="color:var(--gold2);">${u?.name || uid} (${have})</b></div>
+        <input type="number" class="sc" data-uid="${uid}" value="${Math.min(have, 3)}" min="1" max="${have}"
+          style="width:50px;padding:4px;background:#0a1a0a;border:2px solid var(--gold);color:#70ff70;border-radius:4px;font-family:inherit;font-size:12px;text-align:center;">
+      </div>`;
+    }).join('')}`;
+  const bg = modal({ title: '🔭 Разведка', body: con, actions: [
+    { label: 'Разведать', kind: 'gold', handler: async () => {
+      const col = parseInt(bg.querySelector('#scout-col').value);
+      const row = parseInt(bg.querySelector('#scout-row').value);
+      if (isNaN(col) || isNaN(row)) { toast('Укажите координаты', 'err'); return; }
+      const units = {};
+      bg.querySelectorAll('.sc').forEach(inp => {
+        const n = Math.max(1, parseInt(inp.value) || 1);
+        if (n > 0) units[inp.dataset.uid] = n;
+      });
+      try {
+        await api('/api/scout', { method: 'POST', body: { targetCol: col, targetRow: row, units } });
+        toast('Разведчики отправлены!', 'ok');
+        await refreshState();
+      } catch(e) { toast(e.message, 'err'); }
+    }, close: true },
+  ]});
+}
+
+// ── АВТОЛОГИН
+(async()=>{
+  initAuth();
+  try{S=await api('/api/state');await enterGame();}catch(e){}
+})();
+</script>
+</body>
+</html>

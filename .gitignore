@@ -1,0 +1,6 @@
+server_src/
+graphics_sample/
+state.json
+state.json.backup
+node_modules/
+*.7z

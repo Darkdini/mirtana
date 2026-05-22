@@ -1,99 +1,78 @@
-# СРЕДНЕВЕКОВЬЕ — Браузерная стратегия
-
-## Что это
-
-**СРЕДНЕВЕКОВЬЕ** — многопользовательская браузерная стратегия в жанре «замок и армия».
-Стройте здания, собирайте ресурсы, обучайте войска и атакуйте замки других игроков на гексагональной карте мира.
-Игра работает целиком в браузере: бэкенд на FastAPI, фронтенд на чистом JS без сборщиков.
+# СРЕДНЕВЕКОВЬЕ — Война Королей
 
 ---
 
-## Установка в Termux (Android)
+## Установка Termux (один раз)
 
-### 1. Обновите пакеты и установите зависимости системы
-
-```bash
-pkg update && pkg upgrade -y
-pkg install -y git python clang libffi openssl python-cryptography
-```
-
-> `clang` нужен для компиляции `bcrypt`, `python-cryptography` — готовая сборка криптобиблиотеки (без Rust).
-
-### 2. Клонируйте репозиторий
+1. Установи **Termux** из [F-Droid](https://f-droid.org) (не из Play Store — там старая версия)
+2. Открой Termux и выполни:
 
 ```bash
-git clone https://github.com/Darkdini/mirtana.git
-cd mirtana
+pkg update -y && pkg upgrade -y && pkg install nodejs wget unzip -y && termux-setup-storage
 ```
 
-### 3. Установите Python-зависимости
-
-```bash
-pip install -r server/requirements.txt
-```
-
-Список библиотек:
-
-| Библиотека | Назначение |
-|---|---|
-| `fastapi` | Веб-фреймворк для построения REST API и WebSocket эндпоинтов |
-| `uvicorn[standard]` | ASGI-сервер — запускает FastAPI-приложение |
-| `websockets` | Поддержка WebSocket (real-time обновления ресурсов и боёв) |
-| `python-multipart` | Разбор form-data, загрузка файлов |
-| `passlib[bcrypt]` | Хэширование паролей пользователей через bcrypt |
-| `python-jose[cryptography]` | Генерация и проверка JWT-токенов авторизации |
-| `aiosqlite` | Асинхронная работа с базой данных SQLite |
+3. Появится запрос разрешения на доступ к файлам — нажми **Разрешить**
 
 ---
 
-## Первый запуск
+## Скачать / обновить проект
+
+Выполни в Termux одной командой:
 
 ```bash
-./start.sh
-```
-
-Или вручную:
-
-```bash
-cd server && python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Откройте в браузере: **http://localhost:8000**
-
-> На Android откройте браузер (Chrome/Firefox) и введите `http://127.0.0.1:8000`
-
----
-
-## Обновление игры
-
-```bash
-git pull origin main
-# Зависимости переустанавливать не нужно, если requirements.txt не изменился.
-./start.sh
-```
-
-Если `requirements.txt` обновился (увидите это в выводе `git pull`):
-
-```bash
-pip install -r server/requirements.txt
-./start.sh
+cd ~ && rm -rf proekt sreda-main sreda-main.zip && wget -O sreda-main.zip https://github.com/darkdini/sreda/archive/refs/heads/main.zip && unzip sreda-main.zip && mv sreda-main proekt && rm sreda-main.zip && echo "✓ Готово!"
 ```
 
 ---
 
-## Если порт занят
-
-Убить процесс uvicorn:
+## Запустить сервер
 
 ```bash
-pkill -f uvicorn
+cd ~/proekt && bash start.sh
 ```
 
-Или найти PID вручную и убить:
+После запуска в консоли появятся адреса для подключения.
+
+- **На этом телефоне:** `http://localhost:7777`
+- **Другие устройства (Wi-Fi):** адрес появится в консоли автоматически
+- Останови сервер: **Ctrl+C**
+
+---
+
+## Настройка администратора
+
+1. Открой файл `~/proekt/admins.txt`
+2. Добавь свой ник (один на строку), сохрани
+3. Перезапусти сервер
+4. Войди в игру → открой профиль 👑 → увидишь панель администратора
+
+---
+
+## Откат на предыдущую версию
+
+Если обновление сломало что-то — скачай конкретную версию по её коду (SHA):
 
 ```bash
-lsof -i :8000
-kill -9 <PID>
+# Замени SHA на нужный из таблицы ниже
+SHA=0c422c5
+cd ~ && rm -rf proekt sreda-${SHA}.zip && wget -O sreda-${SHA}.zip https://github.com/darkdini/sreda/archive/${SHA}.zip && unzip sreda-${SHA}.zip && mv sreda-${SHA:0:7}* proekt && rm sreda-${SHA}.zip && echo "✓ Откат выполнен!"
+```
+
+### Таблица версий
+
+| Версия | SHA | Что изменилось |
+|--------|-----|----------------|
+| **v1** | `0c422c5` | Первая версия: базовая игра, технологии, система администратора |
+| **v2** | `0d7c0ce` | Изометрическая графика, Орки, Альянсы, новые здания |
+
+> Когда выходит новая стабильная версия — SHA добавляется сюда.
+
+---
+
+## Сброс прогресса игры
+
+```bash
+rm ~/proekt/state.json
 ```
 
 ---
@@ -101,38 +80,18 @@ kill -9 <PID>
 ## Структура проекта
 
 ```
-mirtana/
-├── server/              # FastAPI бэкенд
-│   ├── main.py          # Точка входа, создание приложения
-│   ├── config.py        # Здания, юниты, игровые настройки
-│   ├── database.py      # SQLite схема и инициализация БД
-│   ├── game_logic.py    # Боевая система, добыча ресурсов
-│   └── routers/         # API маршруты (auth, buildings, battles…)
-├── client/              # Фронтенд (HTML/CSS/JS)
-│   ├── index.html       # Заставка и форма авторизации/регистрации
-│   ├── game.html        # Основной экран игры (три слоя карты)
-│   ├── assets/
-│   │   └── buildings/   # Графика зданий (PNG)
-│   ├── css/             # Стили интерфейса
-│   └── js/              # Логика игры (hex.js, layers.js, game.js…)
-└── start.sh             # Скрипт быстрого запуска сервера
+proekt/
+  server.js      — HTTP + WebSocket сервер
+  game.js        — игровая логика (расы, здания, юниты, бой)
+  ws.js          — WebSocket протокол
+  start.sh       — скрипт запуска
+  admins.txt     — список администраторов
+  public/
+    index.html   — клиент игры (браузер)
+    build/       — картинки зданий
+    units/       — картинки юнитов
+    smallunits/  — миниатюры юнитов
+    res/         — иконки ресурсов
+    ground/      — текстуры карты
+    border/      — элементы рамок UI
 ```
-
----
-
-## Игровые расы и их бонусы
-
-| Раса | Бонус |
-|---|---|
-| 🐉 Орки | +20% к атаке пехоты |
-| ⚔️ Люди | +10% ко всем характеристикам |
-| 🏹 Эльфы | +30% к эффективности дальнобойных юнитов |
-
----
-
-## Требования
-
-- **Python** 3.9 или новее
-- **Свободное место** ~100 МБ
-- **Браузер** любой современный (Chrome, Firefox, Safari, Brave)
-- **Termux** (Android): пакеты `git` и `python` из `pkg`
