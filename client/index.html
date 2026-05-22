@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>СРЕДНЕВЕКОВЬЕ</title>
+<link rel="stylesheet" href="/css/main.css">
+</head>
+<body class="auth-page">
+  <div class="auth-bg">
+    <div class="auth-container">
+      <div class="auth-logo">
+        <div class="logo-emblem">⚔️</div>
+        <h1>СРЕДНЕВЕКОВЬЕ</h1>
+        <p class="logo-sub">Стратегическая онлайн-игра</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="tab-btn active" data-tab="login">Войти</button>
+        <button class="tab-btn" data-tab="register">Создать аккаунт</button>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <div class="form-group">
+          <label>Имя игрока</label>
+          <input type="text" id="loginUsername" placeholder="Введите имя" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label>Пароль</label>
+          <input type="password" id="loginPassword" placeholder="Введите пароль" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn-primary btn-full">⚔️ В БОЙ!</button>
+        <div id="loginError" class="form-error"></div>
+      </form>
+
+      <form id="registerForm" class="auth-form hidden">
+        <div class="form-group">
+          <label>Имя игрока <span class="hint">(3-20 символов)</span></label>
+          <input type="text" id="regUsername" placeholder="Введите имя" minlength="3" maxlength="20" required>
+        </div>
+        <div class="form-group">
+          <label>Название замка</label>
+          <input type="text" id="regCastle" placeholder="Мой замок" maxlength="30">
+        </div>
+        <div class="form-group">
+          <label>Пароль <span class="hint">(минимум 6 символов)</span></label>
+          <input type="password" id="regPassword" placeholder="Придумайте пароль" minlength="6" required>
+        </div>
+        <div class="form-group">
+          <label>Повторите пароль</label>
+          <input type="password" id="regConfirm" placeholder="Повторите пароль" required>
+        </div>
+        <button type="submit" class="btn-primary btn-full">🏰 Основать замок!</button>
+        <div id="registerError" class="form-error"></div>
+      </form>
+
+      <div class="auth-footer">
+        <p>Мир разделён на королевства. Построй свою империю, собери армию и завоюй мир!</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab-btn');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+
+    tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        if (btn.dataset.tab === 'login') {
+          loginForm.classList.remove('hidden');
+          registerForm.classList.add('hidden');
+        } else {
+          loginForm.classList.add('hidden');
+          registerForm.classList.remove('hidden');
+        }
+      });
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = document.getElementById('loginError');
+      err.textContent = '';
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            username: document.getElementById('loginUsername').value,
+            password: document.getElementById('loginPassword').value,
+          }),
+          credentials: 'include',
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Ошибка');
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('player_id', data.player_id);
+        localStorage.setItem('username', data.username);
+        window.location.href = '/game';
+      } catch (ex) {
+        err.textContent = ex.message;
+      }
+    });
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = document.getElementById('registerError');
+      err.textContent = '';
+      const pass = document.getElementById('regPassword').value;
+      const confirm = document.getElementById('regConfirm').value;
+      if (pass !== confirm) { err.textContent = 'Пароли не совпадают'; return; }
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            username: document.getElementById('regUsername').value,
+            password: pass,
+            castle_name: document.getElementById('regCastle').value || 'Мой замок',
+          }),
+          credentials: 'include',
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Ошибка');
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('player_id', data.player_id);
+        localStorage.setItem('username', data.username);
+        window.location.href = '/game';
+      } catch (ex) {
+        err.textContent = ex.message;
+      }
+    });
+
+    if (localStorage.getItem('auth_token')) {
+      window.location.href = '/game';
+    }
+  </script>
+</body>
+</html>

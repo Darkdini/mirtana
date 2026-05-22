@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>СРЕДНЕВЕКОВЬЕ</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/game.css">
+</head>
+<body class="game-page">
+
+  <!-- TOP BAR -->
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <div class="game-logo">⚔️ СРЕДНЕВЕКОВЬЕ</div>
+    </div>
+    <div class="resources-bar">
+      <div class="res-item" title="Золото">
+        <img src="/assets/ui/gold.png" class="res-icon" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
+        <span class="res-emoji" style="display:none">🪙</span>
+        <span id="res-gold">0</span>
+        <span class="res-prod" id="prod-gold"></span>
+      </div>
+      <div class="res-item" title="Еда">
+        <img src="/assets/ui/food.png" class="res-icon" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
+        <span class="res-emoji" style="display:none">🌾</span>
+        <span id="res-food">0</span>
+        <span class="res-prod" id="prod-food"></span>
+      </div>
+      <div class="res-item" title="Дерево">
+        <img src="/assets/ui/wood.png" class="res-icon" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
+        <span class="res-emoji" style="display:none">🪵</span>
+        <span id="res-wood">0</span>
+        <span class="res-prod" id="prod-wood"></span>
+      </div>
+      <div class="res-item" title="Камень">
+        <img src="/assets/ui/stone.png" class="res-icon" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
+        <span class="res-emoji" style="display:none">🪨</span>
+        <span id="res-stone">0</span>
+        <span class="res-prod" id="prod-stone"></span>
+      </div>
+    </div>
+    <div class="top-bar-right">
+      <span id="online-count" class="online-badge">🟢 0 онлайн</span>
+      <span class="player-name" id="player-name-display">...</span>
+      <button class="btn-icon" id="btn-logout" title="Выйти">🚪</button>
+    </div>
+  </header>
+
+  <!-- MAIN LAYOUT -->
+  <main class="game-layout">
+
+    <!-- LEFT NAV -->
+    <nav class="side-nav">
+      <button class="nav-btn active" data-view="city" title="Замок">🏰<span>Замок</span></button>
+      <button class="nav-btn" data-view="map" title="Карта">🗺️<span>Карта</span></button>
+      <button class="nav-btn" data-view="army" title="Армия">⚔️<span>Армия</span></button>
+      <button class="nav-btn" data-view="combat" title="Атаки">🛡️<span>Атаки</span></button>
+      <button class="nav-btn" data-view="alliance" title="Альянс">🤝<span>Альянс</span></button>
+      <button class="nav-btn" data-view="ranking" title="Рейтинг">🏆<span>Рейтинг</span></button>
+      <button class="nav-btn" data-view="chat" title="Чат">💬<span>Чат</span></button>
+    </nav>
+
+    <!-- CONTENT AREA -->
+    <section class="game-content" id="game-content">
+
+      <!-- CITY VIEW -->
+      <div class="view active" id="view-city">
+        <div class="view-header">
+          <h2>🏰 <span id="castle-name-display">Замок</span></h2>
+          <button class="btn-sm" id="btn-build">+ Строить</button>
+        </div>
+        <div class="buildings-grid" id="buildings-grid"></div>
+        <div class="training-section">
+          <h3>⚔️ Очередь обучения</h3>
+          <div id="training-queue"></div>
+        </div>
+      </div>
+
+      <!-- MAP VIEW -->
+      <div class="view" id="view-map">
+        <div class="view-header"><h2>🗺️ Карта мира</h2></div>
+        <div class="map-container">
+          <canvas id="map-canvas"></canvas>
+          <div class="map-tooltip" id="map-tooltip"></div>
+        </div>
+        <div class="map-controls">
+          <button id="btn-map-home">🏠 Мой замок</button>
+          <span class="map-coords" id="map-coords">0:0</span>
+        </div>
+      </div>
+
+      <!-- ARMY VIEW -->
+      <div class="view" id="view-army">
+        <div class="view-header"><h2>⚔️ Армия</h2></div>
+        <div class="units-grid" id="units-grid"></div>
+        <div class="train-panel">
+          <h3>Обучить войска</h3>
+          <div class="train-grid" id="train-grid"></div>
+        </div>
+      </div>
+
+      <!-- COMBAT VIEW -->
+      <div class="view" id="view-combat">
+        <div class="view-header"><h2>🛡️ Военные операции</h2></div>
+        <div class="combat-section">
+          <h3>Исходящие атаки</h3>
+          <div id="outgoing-attacks"></div>
+        </div>
+        <div class="combat-section">
+          <h3>Входящие атаки</h3>
+          <div id="incoming-attacks"></div>
+        </div>
+        <div class="combat-section">
+          <h3>История сражений</h3>
+          <div id="battle-history"></div>
+        </div>
+      </div>
+
+      <!-- ALLIANCE VIEW -->
+      <div class="view" id="view-alliance">
+        <div class="view-header"><h2>🤝 Альянс</h2></div>
+        <div id="alliance-content"></div>
+      </div>
+
+      <!-- RANKING VIEW -->
+      <div class="view" id="view-ranking">
+        <div class="view-header">
+          <h2>🏆 Рейтинг</h2>
+          <div class="tab-group">
+            <button class="tab-sm active" data-rtab="players">Игроки</button>
+            <button class="tab-sm" data-rtab="alliances">Альянсы</button>
+          </div>
+        </div>
+        <div id="ranking-players"></div>
+        <div id="ranking-alliances" class="hidden"></div>
+      </div>
+
+      <!-- CHAT VIEW -->
+      <div class="view" id="view-chat">
+        <div class="view-header"><h2>💬 Общий чат</h2></div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" placeholder="Написать сообщение..." maxlength="200">
+          <button id="btn-chat-send" class="btn-primary">Отправить</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL (context info) -->
+    <aside class="right-panel" id="right-panel">
+      <div id="right-panel-content"></div>
+    </aside>
+  </main>
+
+  <!-- MODALS -->
+  <div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal" id="modal">
+      <button class="modal-close" id="modal-close">✕</button>
+      <div class="modal-content" id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATION -->
+  <div class="notifications" id="notifications"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/ws.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/map.js"></script>
+  <script src="/js/city.js"></script>
+  <script src="/js/army.js"></script>
+  <script src="/js/combat.js"></script>
+  <script src="/js/alliance.js"></script>
+  <script src="/js/ranking.js"></script>
+  <script src="/js/chat.js"></script>
+  <script src="/js/game.js"></script>
+</body>
+</html>
