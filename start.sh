@@ -1,80 +1,115 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# ╔══════════════════════════════════════╗
-# ║   СРЕДНЕВЕКОВЬЕ — скрипт запуска    ║
-# ╚══════════════════════════════════════╝
 
 cd "$(dirname "$0")"
 
-# Цвета
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m' # сброс цвета
+# ── Цвета и стили ─────────────────────────────────────────
+R='\033[0;31m'    # красный
+G='\033[0;32m'    # зелёный
+Y='\033[1;33m'    # жёлтый (золото)
+B='\033[0;34m'    # синий
+C='\033[0;36m'    # голубой
+M='\033[0;35m'    # фиолетовый
+W='\033[1;37m'    # белый жирный
+D='\033[2;37m'    # серый dim
+NC='\033[0m'      # сброс
+BG='\033[48;5;52m'   # тёмно-красный фон
+GOLD='\033[38;5;214m' # золотой
+
+clear
+
+# ── Заставка ──────────────────────────────────────────────
+echo ""
+echo -e "${GOLD}        ██████╗██████╗ ███████╗██████╗  █████╗ ${NC}"
+echo -e "${GOLD}       ██╔════╝██╔══██╗██╔════╝██╔══██╗██╔══██╗${NC}"
+echo -e "${GOLD}       ╚█████╗ ██████╔╝█████╗  ██║  ██║███████║${NC}"
+echo -e "${GOLD}        ╚═══██╗██╔══██╗██╔══╝  ██║  ██║██╔══██║${NC}"
+echo -e "${GOLD}       ██████╔╝██║  ██║███████╗██████╔╝██║  ██║${NC}"
+echo -e "${GOLD}       ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═════╝ ╚═╝  ╚═╝${NC}"
+echo ""
+echo -e "${D}          ⚔  В О Й Н А   К О Р О Л Е Й  ⚔${NC}"
+echo ""
+echo -e "${Y}  ════════════════════════════════════════════════${NC}"
+
+# ── Анимация загрузки ─────────────────────────────────────
+loading() {
+  local msg="$1"
+  local delay=0.04
+  printf "${C}  %-28s${NC} " "$msg"
+  for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+    printf "${GOLD}▓${NC}"
+    sleep $delay
+  done
+  printf " ${G}✓${NC}\n"
+}
 
 echo ""
-echo -e "${YELLOW}╔══════════════════════════════════════╗${NC}"
-echo -e "${YELLOW}║    ⚔  СРЕДНЕВЕКОВЬЕ  ⚔               ║${NC}"
-echo -e "${YELLOW}╚══════════════════════════════════════╝${NC}"
-echo ""
+loading "Инициализация..."
+sleep 0.1
+loading "Загрузка мира..."
+sleep 0.1
+loading "Подготовка армий..."
+sleep 0.1
+loading "Открытие ворот..."
+sleep 0.1
 
-# Проверяем Node.js
+echo ""
+echo -e "${Y}  ════════════════════════════════════════════════${NC}"
+
+# ── Проверка Node.js ──────────────────────────────────────
 if ! command -v node &> /dev/null; then
-  echo -e "${RED}❌ Node.js не установлен!${NC}"
   echo ""
-  echo "Установите командой:"
-  echo -e "${CYAN}  pkg install nodejs -y${NC}"
+  echo -e "  ${R}✗ Node.js не найден!${NC}"
+  echo ""
+  echo -e "  Установи одной командой:"
+  echo -e "  ${GOLD}pkg install nodejs -y${NC}"
+  echo ""
   exit 1
 fi
 
 NODE_VER=$(node --version)
-echo -e "${GREEN}✓ Node.js ${NODE_VER}${NC}"
+echo ""
+echo -e "  ${G}✓${NC} ${W}Node.js${NC} ${D}${NODE_VER}${NC}"
 
-# Определяем IP
+# ── Определяем IP ─────────────────────────────────────────
 LOCAL_IP=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K[\d.]+' | head -1)
-if [ -z "$LOCAL_IP" ]; then
-  LOCAL_IP=$(ip addr show wlan0 2>/dev/null | grep -oP '(?<=inet )\d+\.\d+\.\d+\.\d+' | head -1)
-fi
-if [ -z "$LOCAL_IP" ]; then
-  LOCAL_IP=$(ifconfig 2>/dev/null | grep -oP '(?<=inet )\d+\.\d+\.\d+\.\d+' | grep -v '127.0.0.1' | head -1)
-fi
+[ -z "$LOCAL_IP" ] && LOCAL_IP=$(ip addr show wlan0 2>/dev/null | grep -oP '(?<=inet )\d+\.\d+\.\d+\.\d+' | head -1)
+[ -z "$LOCAL_IP" ] && LOCAL_IP=$(ifconfig 2>/dev/null | grep -oP '(?<=inet )\d+\.\d+\.\d+\.\d+' | grep -v '127.0.0.1' | head -1)
 
 PORT=${PORT:-7777}
 
-echo ""
-if [ -n "$LOCAL_IP" ]; then
-  echo -e "${GREEN}✓ Wi-Fi IP: ${LOCAL_IP}${NC}"
-  echo ""
-  echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo -e "${CYAN}  На этом телефоне:${NC}"
-  echo -e "${GREEN}  👉 http://localhost:${PORT}${NC}"
-  echo ""
-  echo -e "${CYAN}  Жена / другие устройства (Wi-Fi):${NC}"
-  echo -e "${GREEN}  📱 http://${LOCAL_IP}:${PORT}${NC}"
-  echo ""
-  echo -e "${CYAN}  Внешний IP (если настроен проброс):${NC}"
-  echo -e "${BLUE}  🌐 http://128.71.88.77:${PORT}${NC}"
-  echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-else
-  echo -e "${RED}⚠  Wi-Fi не подключён${NC}"
-  echo ""
-  echo -e "${CYAN}  На этом телефоне:${NC}"
-  echo -e "${GREEN}  👉 http://localhost:${PORT}${NC}"
-  echo ""
-  echo "  Подключитесь к Wi-Fi чтобы играть вдвоём"
-  echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-fi
-
-echo ""
-echo -e "${CYAN}Запускаю сервер... (Ctrl+C для остановки)${NC}"
-echo ""
-
-# Не засыпать (если есть termux-wake-lock)
 if command -v termux-wake-lock &> /dev/null; then
-  termux-wake-lock
-  echo -e "${GREEN}✓ Блокировка сна активирована${NC}"
+  termux-wake-lock 2>/dev/null
+  echo -e "  ${G}✓${NC} ${W}Экран не заснёт${NC}"
 fi
 
-# Запускаем
+echo ""
+echo -e "${Y}  ════════════════════════════════════════════════${NC}"
+echo ""
+
+# ── Адреса для входа ──────────────────────────────────────
+echo -e "  ${GOLD}🏰 ССЫЛКИ ДЛЯ ВХОДА В ИГРУ:${NC}"
+echo ""
+echo -e "  ${D}┌─────────────────────────────────────────────┐${NC}"
+echo -e "  ${D}│${NC}  ${W}📱 Этот телефон:${NC}"
+echo -e "  ${D}│${NC}     ${GOLD}http://localhost:${PORT}${NC}"
+
+if [ -n "$LOCAL_IP" ]; then
+  echo -e "  ${D}│${NC}"
+  echo -e "  ${D}│${NC}  ${W}🌐 Другие устройства (Wi-Fi):${NC}"
+  echo -e "  ${D}│${NC}     ${GOLD}http://${LOCAL_IP}:${PORT}${NC}"
+  echo -e "  ${D}│${NC}"
+  echo -e "  ${D}│${NC}  ${G}✓ Wi-Fi подключён${NC} ${D}— можно играть вдвоём${NC}"
+else
+  echo -e "  ${D}│${NC}"
+  echo -e "  ${D}│${NC}  ${R}✗ Wi-Fi не найден${NC} ${D}— только одиночная игра${NC}"
+fi
+
+echo -e "  ${D}└─────────────────────────────────────────────┘${NC}"
+echo ""
+echo -e "${Y}  ════════════════════════════════════════════════${NC}"
+echo ""
+echo -e "  ${D}Ctrl+C — остановить сервер${NC}"
+echo ""
+
+# ── Запуск ────────────────────────────────────────────────
 node server.js
