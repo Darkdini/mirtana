@@ -4,6 +4,20 @@
  * Coordinate system: pointy-top hexagons, axial (q, r).
  * Pixel origin sits at canvas center (pan offset applied on top).
  */
+
+// ── Shared image cache ────────────────────────────────────────────────────────
+const _imgCache = new Map();
+
+function _preloadImages(paths) {
+  for (const src of paths) {
+    if (!_imgCache.has(src)) {
+      const img = new Image();
+      img.src = src;
+      _imgCache.set(src, img);
+    }
+  }
+}
+
 class HexGrid {
   constructor(canvas, options = {}) {
     this.canvas  = canvas;
@@ -147,110 +161,141 @@ class HexGrid {
     ctx.restore();
   }
 
-  _drawHex(hex) {
-    const ctx = this.ctx;
-    const { x, y } = this._hexToPixel(hex.q, hex.r);
-    const s = this.options.size;
-    const key = `${hex.q},${hex.r}`;
-
-    const isSelected = this.selected && this.selected.q === hex.q && this.selected.r === hex.r;
-    const isHovered  = this.hovered  && this.hovered.q  === hex.q && this.hovered.r  === hex.r;
-
-    // Build hex path (pointy-top)
-    ctx.beginPath();
+  _hexPath(x, y, s) {
+    this.ctx.beginPath();
     for (let i = 0; i < 6; i++) {
       const angle = Math.PI / 180 * (60 * i - 30);
       const hx = x + s * Math.cos(angle);
       const hy = y + s * Math.sin(angle);
-      if (i === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+      if (i === 0) this.ctx.moveTo(hx, hy); else this.ctx.lineTo(hx, hy);
     }
-    ctx.closePath();
+    this.ctx.closePath();
+  }
 
-    // Fill
-    const fillColor = hex.color || '#2D4A20';
-    ctx.fillStyle = fillColor;
+  _drawHex(hex) {
+    const ctx = this.ctx;
+    const { x, y } = this._hexToPixel(hex.q, hex.r);
+    const s = this.options.size;
+
+    const isSelected = this.selected && this.selected.q === hex.q && this.selected.r === hex.r;
+    const isHovered  = this.hovered  && this.hovered.q  === hex.q && this.hovered.r  === hex.r;
+
+    // ── 1. Base fill ──────────────────────────────────────────────────────────
+    this._hexPath(x, y, s);
+    ctx.fillStyle = hex.color || '#2D4A20';
     ctx.fill();
 
-    // Hover overlay
+    // ── 2. Building image (clipped to hex) ────────────────────────────────────
+    const effectivePx = s * this.zoom;
+    const img = hex.image ? _imgCache.get(hex.image) : null;
+    if (img && img.complete && img.naturalWidth > 0 && effectivePx >= 18) {
+      ctx.save();
+      this._hexPath(x, y, s);
+      ctx.clip();
+
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      // Scale image to cover the hex bounding box with slight padding
+      const hexW = s * 1.85;
+      const hexH = s * 1.85;
+      const scale = Math.max(hexW / iw, hexH / ih);
+      const dw = iw * scale;
+      const dh = ih * scale;
+      // Draw centered, nudged up slightly (buildings look better anchored to bottom)
+      ctx.drawImage(img, x - dw / 2, y - dh / 2 - s * 0.08, dw, dh);
+
+      // Darken unbuilt slots
+      if (hex.type === 'building' && hex.built === false) {
+        this._hexPath(x, y, s);
+        ctx.fillStyle = 'rgba(0,0,0,0.58)';
+        ctx.fill();
+      }
+      ctx.restore();
+    } else if (hex.icon && effectivePx >= 14) {
+      // ── Fallback emoji ────────────────────────────────────────────────────
+      const fontSize = Math.max(10, s * 0.65);
+      ctx.font = `${fontSize}px serif`;
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle    = 'rgba(255,255,255,0.92)';
+      ctx.shadowColor  = 'rgba(0,0,0,0.85)';
+      ctx.shadowBlur   = 4;
+      ctx.fillText(hex.icon, x, y - (hex.label ? fontSize * 0.3 : 0));
+      ctx.shadowBlur   = 0;
+    }
+
+    // ── 3. Hover overlay ──────────────────────────────────────────────────────
     if (isHovered && !isSelected) {
-      ctx.fillStyle = 'rgba(255, 220, 80, 0.12)';
+      this._hexPath(x, y, s);
+      ctx.fillStyle = 'rgba(255, 220, 80, 0.13)';
       ctx.fill();
     }
 
-    // Selected glow (pulsing)
+    // ── 4. Selected glow ──────────────────────────────────────────────────────
     if (isSelected) {
       const pulse = 0.5 + 0.5 * Math.sin(this._pulseT * 3);
-      const alpha = 0.25 + 0.25 * pulse;
-      const glowR = s + 6 * pulse;
 
-      // Outer glow
-      const grad = ctx.createRadialGradient(x, y, 0, x, y, glowR * 2);
-      grad.addColorStop(0,   `rgba(255, 200, 50, ${alpha * 0.6})`);
-      grad.addColorStop(0.5, `rgba(255, 160, 20, ${alpha * 0.3})`);
-      grad.addColorStop(1,   'rgba(255, 140, 0, 0)');
+      // Radial glow outside hex
+      this._hexPath(x, y, s * (1.15 + 0.1 * pulse));
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, s * 2);
+      grad.addColorStop(0,   `rgba(255, 200, 50, ${0.18 + 0.12 * pulse})`);
+      grad.addColorStop(0.6, `rgba(255, 160, 20, ${0.1 + 0.08 * pulse})`);
+      grad.addColorStop(1,   'rgba(255, 120, 0, 0)');
       ctx.fillStyle = grad;
       ctx.fill();
 
-      // Fill tint
-      ctx.fillStyle = `rgba(255, 200, 50, ${0.1 + 0.08 * pulse})`;
+      // Inner tint
+      this._hexPath(x, y, s);
+      ctx.fillStyle = `rgba(255, 210, 60, ${0.12 + 0.1 * pulse})`;
       ctx.fill();
     }
 
-    // Border stroke
+    // ── 5. Border stroke ──────────────────────────────────────────────────────
+    this._hexPath(x, y, s);
     let strokeColor, strokeWidth;
     if (isSelected) {
       const pulse = 0.5 + 0.5 * Math.sin(this._pulseT * 3);
-      strokeColor = `rgba(255, ${Math.round(210 + 45 * pulse)}, 50, ${0.7 + 0.3 * pulse})`;
+      strokeColor = `rgba(255, ${Math.round(210 + 45 * pulse)}, 50, ${0.75 + 0.25 * pulse})`;
       strokeWidth = 2.5;
     } else if (isHovered) {
-      strokeColor = 'rgba(255, 200, 80, 0.55)';
-      strokeWidth = 1.8;
+      strokeColor = 'rgba(255, 210, 90, 0.6)';
+      strokeWidth = 2.0;
     } else {
-      strokeColor = 'rgba(212, 175, 55, 0.22)';
+      strokeColor = 'rgba(212, 175, 55, 0.25)';
       strokeWidth = 1;
     }
     ctx.strokeStyle = strokeColor;
     ctx.lineWidth   = strokeWidth / this.zoom;
     ctx.stroke();
 
-    // Emoji icon (centered)
-    if (hex.icon) {
-      const fontSize = Math.max(10, s * 0.7);
-      ctx.font = `${fontSize}px serif`;
-      ctx.textAlign    = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle    = 'rgba(255,255,255,0.95)';
-      // Slight shadow for readability
-      ctx.shadowColor  = 'rgba(0,0,0,0.8)';
-      ctx.shadowBlur   = 4;
-      ctx.fillText(hex.icon, x, y - (hex.label ? fontSize * 0.35 : 0));
-      ctx.shadowBlur   = 0;
-    }
-
-    // Label below icon
-    if (hex.label) {
-      const labelSize = Math.max(8, s * 0.22);
+    // ── 6. Label ──────────────────────────────────────────────────────────────
+    if (hex.label && effectivePx >= 28) {
+      const labelSize = Math.max(8, s * 0.20);
       ctx.font         = `700 ${labelSize}px 'Cinzel', serif`;
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'top';
-      ctx.fillStyle    = '#C9A96E';
-      ctx.shadowColor  = 'rgba(0,0,0,0.9)';
+      ctx.fillStyle    = isSelected ? '#FFE87A' : '#D4B870';
+      ctx.shadowColor  = 'rgba(0,0,0,0.95)';
       ctx.shadowBlur   = 3;
-      const labelY = hex.icon ? y + s * 0.28 : y + s * 0.02;
-      ctx.fillText(hex.label, x, labelY);
+      ctx.fillText(hex.label, x, y + s * 0.52);
       ctx.shadowBlur   = 0;
     }
 
-    // Level indicator (top-right corner of hex)
-    if (hex.level && hex.level > 0) {
-      const lvlSize = Math.max(7, s * 0.20);
-      ctx.font         = `700 ${lvlSize}px 'Cinzel', serif`;
+    // ── 7. Level badge ────────────────────────────────────────────────────────
+    if (hex.level && hex.level > 0 && effectivePx >= 24) {
+      const lvlSize = Math.max(7, s * 0.22);
+      // Badge background
+      ctx.fillStyle = 'rgba(0,0,0,0.65)';
+      ctx.beginPath();
+      ctx.arc(x + s * 0.55, y - s * 0.58, lvlSize * 0.95, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font         = `900 ${lvlSize}px 'Cinzel', serif`;
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle    = '#FFD700';
       ctx.shadowColor  = 'rgba(0,0,0,0.9)';
-      ctx.shadowBlur   = 3;
-      ctx.fillText(`${hex.level}`, x + s * 0.55, y - s * 0.55);
+      ctx.shadowBlur   = 2;
+      ctx.fillText(`${hex.level}`, x + s * 0.55, y - s * 0.58);
       ctx.shadowBlur   = 0;
     }
   }

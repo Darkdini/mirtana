@@ -2,6 +2,29 @@
  * Layers — manages the three game layers (castle / field / world)
  * and generates hex data for each.
  */
+
+// ── Building → image mapping ──────────────────────────────────────────────────
+const BUILDING_IMAGES = {
+  castle:    '/assets/buildings/castlekeep_14.png',
+  barracks:  '/assets/buildings/castlekeep_05.png',
+  wall:      '/assets/buildings/castlekeep_07.png',
+  tower:     '/assets/buildings/tower_04a.png',
+  archery:   '/assets/buildings/tower_01a.png',
+  farm:      '/assets/buildings/field_12a.png',
+  sawmill:   '/assets/buildings/windmill_04a.png',
+  mine:      '/assets/buildings/cairn_01b.png',
+  quarry:    '/assets/buildings/cairn_01b.png',
+  stables:   '/assets/buildings/barn_07b.png',
+  warehouse: '/assets/buildings/barn_07b.png',
+  workshop:  '/assets/buildings/house_06a.png',
+  academy:   '/assets/buildings/manor_01a.png',
+  market:    '/assets/buildings/market_04a.png',
+  tavern:    '/assets/buildings/shop_5a.png',
+};
+
+// Preload all building images immediately
+_preloadImages(Object.values(BUILDING_IMAGES));
+
 const Layers = {
   current: 'castle',
   grid: null,         // current HexGrid instance
@@ -76,8 +99,10 @@ const Layers = {
     hexes.push({
       q: 0, r: 0,
       icon: '🏛️', label: 'Ратуша',
-      color: '#5A3A1A',
+      image: BUILDING_IMAGES['castle'],
+      color: '#4A2E10',
       type: 'building', building_type: 'castle',
+      built: true,
       level: bldMap['castle'] ? bldMap['castle'].level : 1,
       desc: 'Главное здание замка. Определяет уровень развития.',
     });
@@ -97,7 +122,8 @@ const Layers = {
         q: h.q, r: h.r,
         icon:  bld ? h.icon : '🔧',
         label: h.label,
-        color: bld ? h.color : '#1A1208',
+        image: bld ? BUILDING_IMAGES[h.type] : null,
+        color: bld ? h.color : '#141008',
         type:  'building', building_type: h.type,
         level: bld ? bld.level : 0,
         built: !!bld,
@@ -126,7 +152,8 @@ const Layers = {
         q: h.q, r: h.r,
         icon:  bld ? h.icon : (h.type ? '🔧' : '🏗️'),
         label: h.label,
-        color: bld ? h.color : '#1A1208',
+        image: (bld && h.type) ? BUILDING_IMAGES[h.type] : null,
+        color: bld ? h.color : '#141008',
         type:  'building',
         building_type: h.type,
         level: bld ? bld.level : 0,
@@ -172,12 +199,13 @@ const Layers = {
     for (let q = -radius; q <= radius; q++) {
       for (let r = Math.max(-radius, -q - radius); r <= Math.min(radius, -q + radius); r++) {
         if (q === 0 && r === 0) {
-          // Center = player castle
           hexes.push({
             q, r,
             icon: '🏰', label: 'Мой замок',
-            color: '#5A4010',
+            image: BUILDING_IMAGES['castle'],
+            color: '#4A3010',
             type: 'my_castle',
+            built: true,
             desc: 'Ваш замок',
           });
           continue;
@@ -254,8 +282,10 @@ const Layers = {
           hexes.push({
             q, r,
             icon: '🏰', label: me ? me.username : 'Вы',
-            color: '#5A4010',
+            image: BUILDING_IMAGES['castle'],
+            color: '#4A3010',
             type: 'my_castle',
+            built: true,
             desc: me ? `${me.castle_name || 'Замок'}` : 'Ваш замок',
             player: me,
           });
@@ -268,8 +298,10 @@ const Layers = {
           hexes.push({
             q, r,
             icon: '🏰', label: otherPlayer.username,
+            image: BUILDING_IMAGES['castle'],
             color: '#3A1010',
             type: 'enemy_castle',
+            built: true,
             desc: otherPlayer.castle_name || `Замок ${otherPlayer.username}`,
             player: otherPlayer,
           });
