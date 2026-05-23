@@ -264,8 +264,8 @@ function createPlayer(race, kingdom) {
   const now = Date.now();
   return {
     race, kingdom, ts: now, created: now,
-    res:    { gold:5000, wood:3000, stone:3000, food:3000, iron:1500, people:100 },
-    resMax: { gold:10000,wood:5000, stone:5000, food:5000, iron:5000, people:200 },
+    res:    { gold:8000, wood:6000, stone:6000, food:5000, iron:3000, people:150 },
+    resMax: { gold:20000,wood:10000,stone:10000,food:10000,iron:8000, people:500 },
     castle: createCastleGrid(),
     lands:  createLandsGrid(strHash(kingdom)),
     queue: [], trainQueue: [], army: {}, marches: [],
@@ -280,6 +280,7 @@ function createPlayer(race, kingdom) {
     deadGenerals: [],                                   // [{uid, count, diedAt, resurrectCost}]
     // ── Генералы ──────────────────────────────────────────────────
     generals: {},                                       // {uid: {xp, level}}
+    generalNames: {},                                   // {uid: 'Кастомное имя'}
     // ── Артефакты ─────────────────────────────────────────────────
     artifacts: [],                                      // артефакты в инвентаре
     activeArtifacts: [],                                // активированные (макс. 5)
@@ -1253,6 +1254,16 @@ function cmdSendResources(state, p, { targetUsername, resources }) {
   addReport(p, `Отправлено союзнику ${targetUsername}: ${sent}`, 'info');
   addReport(tp, `Получено от ${p.username}: ${sent}`, 'info');
   return ok();
+}
+
+// ─── ПЕРЕИМЕНОВАНИЕ ГЕНЕРАЛА ─────────────────────────────────────────
+function cmdRenameGeneral(p, { uid, name }) {
+  if (!uid || !uid.endsWith('_general')) return err('Не генерал');
+  const trimmed = (name || '').trim().slice(0, 24);
+  if (!trimmed) return err('Имя не может быть пустым');
+  if (!p.generalNames) p.generalNames = {};
+  p.generalNames[uid] = trimmed;
+  return ok({ name: trimmed });
 }
 
 // ─── ВОСКРЕШЕНИЕ ГЕНЕРАЛА ────────────────────────────────────────────

@@ -2862,97 +2862,136 @@ function showMilitaryHQModal(cell) {
   const p = S.player;
   const army = p.army || {};
   const generals = p.generals || {};
+  const generalNames = p.generalNames || {};
   const dead = p.deadGenerals || [];
   const hasHQ = (p.castle || []).some(c => c.bldId === 'military_hq' && c.level > 0);
 
+  const genName = (uid) => generalNames[uid] || UNITS[uid]?.name || uid;
+
   // Подсчёт боевой силы
   let totalPower = 0;
-  for (const uid in army) {
-    const n = army[uid] || 0;
-    const u = UNITS[uid];
-    totalPower += n * (u?.atk || 0);
-  }
+  for (const uid in army) totalPower += (army[uid]||0) * (UNITS[uid]?.atk||0);
 
-  // Список воинов
-  let unitsHtml = '';
-  if (Object.keys(army).length) {
-    unitsHtml = '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;">';
-    for (const uid in army) {
-      const n = army[uid]; if (!n) continue;
+  // ── Карточки генералов ──────────────────────────────────────────
+  const myGenerals = Object.keys(army).filter(uid => uid.endsWith('_general') && army[uid] > 0);
+  let generalsHtml = '';
+  if (myGenerals.length) {
+    generalsHtml = `<div style="margin-bottom:10px;">
+      <div style="font-size:11px;color:#c0a060;font-weight:bold;letter-spacing:2px;margin-bottom:6px;">👑 ГЕНЕРАЛЫ</div>`;
+    for (const uid of myGenerals) {
       const u = UNITS[uid];
-      const isGeneral = uid.endsWith('_general');
-      const genData = generals[uid];
-      const s = u?.simg;
-      const genStyle = isGeneral ? 'border-color:#f0c958;background:rgba(60,40,0,.5);' : '';
-      const genInfo = isGeneral ? `
-        <div style="font-size:10px;color:#f0c958;margin-top:2px;">
-          Генерал · Ур.${genData?.level || 1} · XP: ${genData?.xp || 0}/${100 * Math.pow(genData?.level || 1, 2)}
-        </div>` : '';
-      unitsHtml += `<div style="display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.3);border:1px solid var(--gold3);${genStyle}border-radius:4px;padding:7px;">
-        ${s ? `<img src="${s}" width="22" height="22" style="image-rendering:pixelated;">` : '<span>⚔</span>'}
-        <div style="flex:1;">
-          <div style="font-weight:bold;color:${isGeneral ? '#f0c958' : 'var(--gold2)'};font-size:13px;">${u?.name || uid} ×${n}</div>
-          <div style="font-size:11px;color:#b0a080;">⚔${u?.atk} 🛡${u?.def} · Сила: ${n * (u?.atk || 0)}</div>
-          ${genInfo}
+      const g = generals[uid] || {xp:0,level:1};
+      const lvl = g.level||1;
+      const xp = g.xp||0;
+      const xpNext = 100*lvl*lvl;
+      const xpPct = Math.min(100, Math.round(xp/xpNext*100));
+      const cname = genName(uid);
+      const img = u?.img || u?.simg;
+      const activeGen = localStorage.getItem('activeGeneral');
+      const isActive = activeGen === uid;
+      generalsHtml += `
+      <div class="gen-card" data-uid="${uid}" style="
+        background:linear-gradient(135deg,rgba(60,40,5,.8),rgba(30,18,2,.9));
+        border:2px solid ${isActive?'#f0c958':'#7a5a20'};
+        border-radius:8px;padding:10px;margin-bottom:8px;position:relative;">
+        ${isActive?'<div style="position:absolute;top:5px;right:8px;font-size:10px;color:#f0c958;">★ АКТИВЕН</div>':''}
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:52px;height:52px;border:2px solid #f0c958;border-radius:6px;
+            background:#1a1008;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            ${img?`<img src="${img}" width="48" height="48" style="image-rendering:pixelated;object-fit:contain;">`:'<span style="font-size:28px;">⚔</span>'}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div class="gen-name-display" style="font-size:14px;font-weight:bold;color:#f0c958;">${cname}</div>
+            <div style="font-size:10px;color:#a08040;margin-top:1px;">Ур.${lvl} · ⚔${u?.atk} 🛡${u?.def} · HP${u?.hp}</div>
+            <div style="font-size:10px;color:#806030;margin-top:3px;">XP: ${xp}/${xpNext}</div>
+            <div style="height:4px;background:rgba(0,0,0,.5);border-radius:2px;margin-top:3px;overflow:hidden;">
+              <div style="height:100%;width:${xpPct}%;background:linear-gradient(90deg,#c07010,#f0c040);border-radius:2px;transition:width .3s;"></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:5px;margin-top:8px;">
+          <button class="mbtn${isActive?' gold':' gray'} gen-activate" data-uid="${uid}"
+            style="flex:1;padding:5px;font-size:10px;">${isActive?'✓ Командует':'Назначить'}</button>
+          <button class="mbtn gray gen-rename-btn" data-uid="${uid}"
+            style="padding:5px 10px;font-size:10px;">✏ Имя</button>
+        </div>
+        <div class="gen-rename-box" data-uid="${uid}" style="display:none;margin-top:6px;">
+          <div style="display:flex;gap:4px;">
+            <input class="gen-rename-inp" data-uid="${uid}" type="text" value="${cname}" maxlength="24"
+              style="flex:1;background:#0a0805;border:1px solid #7a5020;color:#f0d080;
+              padding:5px 8px;border-radius:4px;font-family:inherit;font-size:12px;">
+            <button class="mbtn gold gen-rename-save" data-uid="${uid}"
+              style="padding:5px 10px;font-size:11px;">✓</button>
+          </div>
         </div>
       </div>`;
     }
-    unitsHtml += '</div>';
-  } else {
-    unitsHtml = '<p style="text-align:center;color:#a08060;padding:8px;">Армия пуста. Постройте казарму.</p>';
+    generalsHtml += '</div>';
   }
 
-  // Павшие генералы
+  // ── Павшие генералы ─────────────────────────────────────────────
   let deadHtml = '';
   if (dead.length) {
-    deadHtml = `<div style="margin-top:8px;border-top:1px dashed var(--gold3);padding-top:8px;">
-      <div style="font-size:12px;font-weight:bold;color:#ff8080;margin-bottom:6px;">⚰ Павшие генералы:</div>`;
+    deadHtml = `<div style="margin-bottom:10px;">
+      <div style="font-size:11px;color:#c06060;font-weight:bold;letter-spacing:2px;margin-bottom:6px;">⚰ ПАВШИЕ ГЕНЕРАЛЫ</div>`;
     dead.forEach((g, i) => {
       const u = UNITS[g.uid];
-      const canAffordRes = (p.res.gold || 0) >= g.resurrectCost;
-      deadHtml += `<div style="display:flex;gap:7px;align-items:center;background:rgba(80,0,0,.4);padding:7px;border:1px solid #662020;border-radius:4px;margin-bottom:4px;">
-        <span style="font-size:20px;">⚰</span>
-        <div style="flex:1;font-size:12px;"><b style="color:#ff9090;">${u?.name || g.uid}</b>
-        <div style="color:#a08080;">Воскрешение: <b style="color:#ffd060;">${g.resurrectCost} 🪙</b></div></div>
-        <button class="mbtn${canAffordRes && hasHQ ? ' gold' : ' gray'} res-gen" data-idx="${i}"
-          style="font-size:11px;padding:4px 8px;min-width:auto;">${hasHQ ? 'Воскресить' : 'Нет штаба'}</button>
+      const cname = genName(g.uid);
+      const canAffordRes = (p.res.gold||0) >= g.resurrectCost;
+      deadHtml += `
+      <div style="display:flex;gap:8px;align-items:center;
+        background:linear-gradient(135deg,rgba(60,5,5,.7),rgba(20,0,0,.8));
+        border:1px solid #6a2020;border-radius:8px;padding:9px;margin-bottom:6px;">
+        <div style="width:42px;height:42px;border:1px solid #6a2020;border-radius:5px;
+          background:#1a0808;display:flex;align-items:center;justify-content:center;
+          filter:grayscale(1);opacity:.6;overflow:hidden;flex-shrink:0;">
+          ${u?.img?`<img src="${u.img}" width="38" height="38" style="image-rendering:pixelated;">`:'<span style="font-size:22px;">⚰</span>'}
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:bold;color:#c08080;">${cname}</div>
+          <div style="font-size:11px;color:#a06060;margin-top:2px;">Воскрешение: <b style="color:#ffd060;">🪙 ${g.resurrectCost}</b></div>
+        </div>
+        <button class="mbtn${canAffordRes&&hasHQ?' gold':' gray'} res-gen" data-idx="${i}"
+          style="font-size:11px;padding:6px 10px;">${hasHQ?'Воскресить':'Нет штаба'}</button>
       </div>`;
     });
     deadHtml += '</div>';
   }
 
-  // Активный генерал (localStorage)
-  const activeGeneral = localStorage.getItem('activeGeneral') || '';
-  const myGenerals = Object.keys(army).filter(uid => uid.endsWith('_general') && army[uid] > 0);
-  let pickGenHtml = '';
-  if (myGenerals.length > 0) {
-    pickGenHtml = `<div style="margin-top:8px;border-top:1px dashed var(--gold3);padding-top:8px;">
-      <div style="font-size:12px;font-weight:bold;color:var(--gold2);margin-bottom:5px;">⭐ Назначить генерала:</div>
-      <select id="gen-pick" style="width:100%;background:#0a1a0a;border:2px solid var(--gold3);color:#80ff80;padding:6px;border-radius:4px;font-family:inherit;font-size:12px;margin-bottom:6px;">
-        <option value="">— Без генерала —</option>
-        ${myGenerals.map(uid => {
-          const u = UNITS[uid];
-          const g = generals[uid];
-          return `<option value="${uid}" ${uid === activeGeneral ? 'selected' : ''}>${u?.name || uid} (Ур.${g?.level || 1})</option>`;
-        }).join('')}
-      </select>
-      <button class="mbtn gold" id="gen-save-btn" style="width:100%;padding:7px;font-size:11px;">Сохранить назначение</button>
-    </div>`;
+  // ── Обычные войска ──────────────────────────────────────────────
+  const regularUnits = Object.entries(army).filter(([uid,n])=>n>0&&!uid.endsWith('_general'));
+  let unitsHtml = '';
+  if (regularUnits.length) {
+    unitsHtml = `<div style="margin-bottom:10px;">
+      <div style="font-size:11px;color:#c0a060;font-weight:bold;letter-spacing:2px;margin-bottom:6px;">⚔ ВОЙСКА</div>
+      <div style="display:flex;flex-direction:column;gap:3px;">`;
+    for (const [uid,n] of regularUnits) {
+      const u = UNITS[uid];
+      unitsHtml += `<div style="display:flex;gap:7px;align-items:center;
+        background:rgba(0,0,0,.3);border:1px solid #4a3018;border-radius:4px;padding:5px 8px;">
+        ${u?.simg?`<img src="${u.simg}" width="20" height="20" style="image-rendering:pixelated;">`:'<span>⚔</span>'}
+        <span style="flex:1;font-size:12px;color:#d0b080;">${u?.name||uid}</span>
+        <span style="font-size:12px;color:#f0d060;">×${n}</span>
+        <span style="font-size:11px;color:#808060;">Сила ${n*(u?.atk||0)}</span>
+      </div>`;
+    }
+    unitsHtml += '</div></div>';
   }
 
-  // Кнопка разведки
-  const scoutUnits = Object.entries(army).filter(([uid, n]) => uid.includes('scout') && n > 0);
+  // ── Разведка ────────────────────────────────────────────────────
+  const scoutUnits = Object.entries(army).filter(([uid,n])=>uid.includes('scout')&&n>0);
   const scoutHtml = scoutUnits.length ? `
-    <div style="margin-top:8px;border-top:1px dashed var(--gold3);padding-top:8px;">
-      <button class="mbtn gray" id="scout-btn" style="width:100%;padding:8px;font-size:12px;">🔭 Разведка</button>
-    </div>` : '';
+    <button class="mbtn gray" id="scout-btn" style="width:100%;padding:8px;font-size:12px;margin-bottom:8px;">🔭 Отправить разведку</button>` : '';
 
   const bd = `
-    <div style="background:rgba(0,0,0,.3);border:1px dashed var(--gold);border-radius:5px;padding:8px;margin-bottom:10px;text-align:center;">
-      <div style="font-size:14px;color:var(--gold2);font-weight:bold;">⚔ Военный штаб ур.${cell.level}</div>
-      <div style="font-size:12px;color:#a09060;margin-top:3px;">Общая боевая сила: <b style="color:#5cff7a;">${totalPower}</b></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;
+      background:rgba(0,0,0,.3);border:1px solid #7a5020;border-radius:6px;
+      padding:8px 12px;margin-bottom:12px;">
+      <div style="font-size:13px;color:#d4a236;font-weight:bold;">⚔ Штаб ур.${cell.level}</div>
+      <div style="font-size:12px;color:#5cff7a;">Сила: <b>${totalPower}</b></div>
     </div>
-    ${unitsHtml}${deadHtml}${pickGenHtml}${scoutHtml}`;
+    ${scoutHtml}${generalsHtml}${deadHtml}${unitsHtml}
+    ${!myGenerals.length&&!dead.length?'<p style="text-align:center;color:#806040;padding:8px;font-size:12px;">Генералов нет. Обучите в казарме.</p>':''}`;
 
   // Дополнительные действия — улучшение здания
   const clvl = getCLvl();
@@ -3005,30 +3044,54 @@ function showMilitaryHQModal(cell) {
       try {
         const r = await api('/api/resurrect', { method: 'POST', body: { idx } });
         toast(`✅ ${r.name} воскрешён!`, 'ok');
-        bg.remove();
-        await refreshState();
+        bg.remove(); await refreshState();
       } catch(e) { toast(e.message, 'err'); }
     };
   });
 
-  // Сохранить генерала
-  const genSaveBtn = bg.querySelector('#gen-save-btn');
-  if (genSaveBtn) {
-    genSaveBtn.onclick = () => {
-      const pick = bg.querySelector('#gen-pick')?.value || '';
-      localStorage.setItem('activeGeneral', pick);
-      toast(pick ? `Генерал ${UNITS[pick]?.name || pick} назначен` : 'Генерал снят', 'ok');
+  // Назначить активного генерала
+  bg.querySelectorAll('.gen-activate').forEach(btn => {
+    btn.onclick = () => {
+      const uid = btn.dataset.uid;
+      const cur = localStorage.getItem('activeGeneral');
+      if (cur === uid) {
+        localStorage.removeItem('activeGeneral');
+        toast('Генерал снят с командования', 'ok');
+      } else {
+        localStorage.setItem('activeGeneral', uid);
+        toast(`${(p.generalNames||{})[uid]||UNITS[uid]?.name||uid} назначен командующим!`, 'ok');
+      }
+      bg.remove(); showMilitaryHQModal(cell);
     };
-  }
+  });
 
-  // Кнопка разведки
-  const scoutBtn = bg.querySelector('#scout-btn');
-  if (scoutBtn) {
-    scoutBtn.onclick = () => {
-      bg.remove();
-      showScoutModal();
+  // Кнопка "Переименовать" — показать/скрыть поле ввода
+  bg.querySelectorAll('.gen-rename-btn').forEach(btn => {
+    btn.onclick = () => {
+      const uid = btn.dataset.uid;
+      const box = bg.querySelector(`.gen-rename-box[data-uid="${uid}"]`);
+      if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
     };
-  }
+  });
+
+  // Сохранить новое имя
+  bg.querySelectorAll('.gen-rename-save').forEach(btn => {
+    btn.onclick = async () => {
+      const uid = btn.dataset.uid;
+      const inp = bg.querySelector(`.gen-rename-inp[data-uid="${uid}"]`);
+      const name = inp?.value?.trim();
+      if (!name) return toast('Введи имя', 'err');
+      try {
+        await api('/api/rename-general', { method: 'POST', body: { uid, name } });
+        toast(`Имя изменено: ${name}`, 'ok');
+        bg.remove(); await refreshState(); showMilitaryHQModal(cell);
+      } catch(e) { toast(e.message, 'err'); }
+    };
+  });
+
+  // Разведка
+  const scoutBtn = bg.querySelector('#scout-btn');
+  if (scoutBtn) { scoutBtn.onclick = () => { bg.remove(); showScoutModal(); }; }
 }
 
 function showScoutModal() {

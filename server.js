@@ -400,6 +400,15 @@ async function router(req, res) {
     saveState(); return send(res, 200, result);
   }
 
+  // ── Переименование генерала ──────────────────────────────────────
+  if (pathname === '/api/rename-general' && req.method === 'POST') {
+    const { uid, name } = await readBody(req);
+    const result = G.cmdRenameGeneral(p, { uid, name });
+    if (!result.ok) return send(res, 400, { error: result.error });
+    saveState();
+    return send(res, 200, result);
+  }
+
   // ── Воскрешение генерала ─────────────────────────────────────────
   if (pathname === '/api/resurrect' && req.method === 'POST') {
     const { idx } = await readBody(req);
