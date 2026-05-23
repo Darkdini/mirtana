@@ -116,6 +116,21 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 .parch .sw a{color:#c89040;cursor:pointer;border-bottom:1px solid #6a4020;}
 /* Регистрация — приветствие */
 .reg-welcome{font-size:12px;color:#b08040;text-align:center;margin-bottom:14px;line-height:1.5;font-style:italic;}
+/* Капча */
+.captcha-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.captcha-q{
+  background:rgba(0,0,0,.5);border:1px solid #5a3510;border-radius:8px;
+  padding:10px 12px;font-size:15px;font-weight:bold;color:#f0c040;
+  white-space:nowrap;flex-shrink:0;letter-spacing:1px;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.5);
+}
+.captcha-refresh{
+  flex-shrink:0;width:34px;height:38px;border-radius:8px;
+  background:rgba(0,0,0,.4);border:1px solid #5a3510;
+  color:#a07030;font-size:18px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:color .15s,border-color .15s;
+}
+.captcha-refresh:hover{color:#f0c040;border-color:#d4a236;}
 /* Карточки рас */
 .race-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:10px;}
 .rcard{
@@ -423,6 +438,15 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
       </div>
       <h3 data-i18n="labelRace">Народ</h3>
       <div class="race-grid" id="racePick"></div>
+      <h3 data-i18n="labelCaptcha">Проверка</h3>
+      <div class="captcha-row">
+        <span id="captcha-q" class="captcha-q"></span>
+        <div class="inp-wrap" style="flex:1;margin-bottom:0;">
+          <span class="inp-icon">🔢</span>
+          <input type="number" id="captcha-a" data-i18n-ph="phCaptcha" placeholder="Ответ" maxlength="3" inputmode="numeric">
+        </div>
+        <button type="button" class="captcha-refresh" id="captcha-new" title="Новый пример">↺</button>
+      </div>
       <div class="err" id="reE"></div>
       <button class="btn-g" id="reBtn" data-i18n="btnReg">👑 ОСНОВАТЬ КОРОЛЕВСТВО</button>
     </div>
@@ -2198,7 +2222,8 @@ const LANGS={
     phUser:'Имя правителя',phPass:'Твой пароль',phPassNew:'Придумай пароль',phKingdom:'Название королевства',
     btnLogin:'⚔ ВОЙТИ В КОРОЛЕВСТВО',btnReg:'👑 ОСНОВАТЬ КОРОЛЕВСТВО',
     regWelcome:'Правитель, укажи свои данные<br>и выбери народ для управления!',
-    errNoRace:'Выберите народ',
+    errNoRace:'Выберите народ',errCaptcha:'Неверный ответ',
+    labelCaptcha:'Проверка',phCaptcha:'Ответ',
   },
   en:{
     title:'MEDIEVAL',subtitle:'War of Kings',
@@ -2207,7 +2232,8 @@ const LANGS={
     phUser:'Your ruler name',phPass:'Your password',phPassNew:'Choose a password',phKingdom:'Kingdom name',
     btnLogin:'⚔ ENTER THE KINGDOM',btnReg:'👑 FOUND A KINGDOM',
     regWelcome:'Ruler, enter your details<br>and choose a race to lead!',
-    errNoRace:'Choose a race',
+    errNoRace:'Choose a race',errCaptcha:'Wrong answer',
+    labelCaptcha:'Verification',phCaptcha:'Answer',
   }
 };
 let LANG=localStorage.getItem('lang')||'ru';
@@ -2236,7 +2262,17 @@ function initAuth(){
     $('#tab-reg').classList.toggle('active',!isLogin);
   }
   $('#tab-login').onclick=()=>showTab('login');
-  $('#tab-reg').onclick=()=>showTab('reg');
+  $('#tab-reg').onclick=()=>{showTab('reg');newCaptcha();};
+
+  let captchaAns=0;
+  function newCaptcha(){
+    const a=Math.floor(Math.random()*9)+1,b=Math.floor(Math.random()*9)+1;
+    captchaAns=a+b;
+    $('#captcha-q').textContent=`${a} + ${b} = ?`;
+    $('#captcha-a').value='';
+  }
+  newCaptcha();
+  $('#captcha-new').onclick=newCaptcha;
 
   let selRace=null;
   const rp=$('#racePick');
@@ -2259,6 +2295,7 @@ function initAuth(){
   $('#reBtn').onclick=async()=>{
     $('#reE').textContent='';
     if(!selRace){$('#reE').textContent=LANGS[LANG].errNoRace;return;}
+    if(parseInt($('#captcha-a').value)!==captchaAns){$('#reE').textContent=LANGS[LANG].errCaptcha;newCaptcha();return;}
     try{
       await api('/api/register',{method:'POST',body:{username:$('#reU').value.trim(),password:$('#reP').value,race:selRace,kingdom:$('#reK').value.trim()}});
       await enterGame();
