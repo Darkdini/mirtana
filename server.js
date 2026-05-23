@@ -520,6 +520,7 @@ async function router(req, res) {
   if (pathname.startsWith('/api/admin/') && req.method === 'POST') {
     if (!ADMINS.has(p.username)) return send(res, 403, { error: 'Нет прав администратора' });
     const action = pathname.slice('/api/admin/'.length);
+    const body = await readBody(req);
     let result;
     if      (action === 'fill')          result = G.cmdAdminFill(p);
     else if (action === 'complete')      { result = G.cmdAdminComplete(p); G.tickPlayer(p, STATE.world, STATE.players, STATE); }
