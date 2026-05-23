@@ -148,6 +148,7 @@ function serializePlayer(p) {
     protectedUntil:  p.protectedUntil || 0,
     deadGenerals:    p.deadGenerals   || [],
     generals:        p.generals       || {},
+    mailUnread:      (p.mail||[]).filter(m=>!m.read).length,
     artifacts:       p.artifacts      || [],
     activeArtifacts: p.activeArtifacts || [],
     expedition:      p.expedition     || null,
@@ -408,6 +409,64 @@ async function router(req, res) {
     const result = G.cmdAllianceTransfer(STATE, p, body);
     if (!result.ok) return send(res, 400, { error: result.error });
     saveState(); return send(res, 200, result);
+  }
+
+  // ── Публичный профиль игрока ─────────────────────────────────────
+  if (pathname.startsWith('/api/player/') && req.method === 'GET') {
+    const name = decodeURIComponent(pathname.slice('/api/player/'.length));
+    const tp = STATE.players[name];
+    if (!tp) return send(res, 404, { error: 'Игрок не найден' });
+    const pa = tp.allianceId && STATE.alliances?.[tp.allianceId];
+    const castleCell = (tp.castle || []).find(c => c.bldId === 'castle');
+    const power = Object.entries(tp.army || {}).reduce((s,[uid,n])=>{
+      const u = G.UNITS[uid]; return s + n*(u?(u.atk+u.def):10);
+    },0);
+    return send(res, 200, {
+      username:    tp.username,
+      kingdom:     tp.kingdom || tp.username,
+      race:        tp.race,
+      avatar:      tp.avatar || null,
+      avatarBg:    tp.avatarBg || null,
+      photo:       tp.photo || null,
+      allianceTag: pa?.tag || null,
+      allianceName:pa?.name || null,
+      castleLevel: castleCell?.level || 1,
+      rating:      G.calcRating(tp),
+      power:       power,
+      worldPos:    tp.worldPos || null,
+    });
+  }
+
+  // ── Письма ───────────────────────────────────────────────────────
+  if (pathname === '/api/mail' && req.method === 'GET') {
+    if (!p.mail) p.mail = [];
+    return send(res, 200, { mail: p.mail });
+  }
+  if (pathname === '/api/mail/send' && req.method === 'POST') {
+    const { to, text } = await readBody(req);
+    if (!to || !text) return send(res, 400, { error: 'Укажи получателя и текст' });
+    const target = STATE.players[to];
+    if (!target) return send(res, 404, { error: 'Игрок не найден' });
+    if (to === p.username) return send(res, 400, { error: 'Нельзя писать самому себе' });
+    const msg = { from: p.username, text: String(text).slice(0, 500), time: Date.now(), read: false };
+    if (!target.mail) target.mail = [];
+    target.mail.push(msg);
+    if (target.mail.length > 100) target.mail = target.mail.slice(-100);
+    saveState();
+    return send(res, 200, { ok: true });
+  }
+  if (pathname === '/api/mail/read' && req.method === 'POST') {
+    if (!p.mail) p.mail = [];
+    p.mail.forEach(m => m.read = true);
+    saveState();
+    return send(res, 200, { ok: true });
+  }
+  if (pathname === '/api/mail/delete' && req.method === 'POST') {
+    const { idx } = await readBody(req);
+    if (!p.mail) p.mail = [];
+    if (idx >= 0 && idx < p.mail.length) p.mail.splice(idx, 1);
+    saveState();
+    return send(res, 200, { ok: true });
   }
 
   // ── Переименование генерала ──────────────────────────────────────
