@@ -1994,6 +1994,14 @@ function showProfileModal(){
           🚀 ПОЛНЫЙ ТЕСТ — все здания + генерал + оазисы + ресурсы
           <div style="font-size:10px;color:#60c060;margin-top:2px;">Все здания макс. ур. · Генерал · 3 оазиса · Все технологии · Защита снята</div>
         </button>
+        <div style="display:flex;gap:6px;align-items:stretch;">
+          <input id="admin-units-n" type="number" min="1" max="99999" value="500"
+            style="flex:1;background:rgba(0,0,0,.5);border:1px solid #903030;border-radius:6px;
+                   color:#faa;font-size:13px;padding:8px 10px;font-family:inherit;outline:none;min-width:0;">
+          <button data-admin="give-units" style="flex:2;padding:10px 14px;background:linear-gradient(180deg,#1a1a5a,#080828);border:1px solid #4040c0;border-radius:6px;color:#aaaaff;font-size:12px;font-weight:bold;cursor:pointer;text-align:left;">
+            ⚔ Выдать юнитов своей расы
+          </button>
+        </div>
       </div>
     </div>`:''}`;
 
@@ -2017,7 +2025,8 @@ function showProfileModal(){
         const action=btn.dataset.admin;
         btn.disabled=true;btn.style.opacity='.5';
         try{
-          await api('/api/admin/'+action,{method:'POST',body:{}});
+          const body=action==='give-units'?{amount:parseInt($('#admin-units-n')?.value)||500}:{};
+          await api('/api/admin/'+action,{method:'POST',body});
           await refreshState();renderTopbar();renderMap();
           toast('✓ Выполнено','ok');
         }catch(e){toast(e.message,'err');}

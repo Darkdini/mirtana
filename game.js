@@ -1304,7 +1304,23 @@ function tickBandits(world, allPlayers) {
 }
 
 // ─── ADMIN-КОМАНДЫ ──────────────────────────────────────────────────
-function cmdAdminFill(p) {
+function cmdAdminGiveUnits(p, { amount } = {}) {
+  const n = Math.max(1, Math.min(99999, parseInt(amount) || 500));
+  for (const uid in UNITS) {
+    if (UNITS[uid].race !== p.race) continue;
+    if (uid.endsWith('_general')) {
+      // Генерал — только 1, + запись XP если нет
+      p.army[uid] = Math.max(p.army[uid] || 0, 1);
+      if (!p.generals) p.generals = {};
+      if (!p.generals[uid]) p.generals[uid] = { xp: 0, level: 1 };
+    } else {
+      p.army[uid] = (p.army[uid] || 0) + n;
+    }
+  }
+  addReport(p, `⚔ Выдано ${n} каждого юнита расы ${p.race}.`, 'info');
+  return ok();
+}
+
   for (const k of RES) { p.res[k] = 999999; p.resMax[k] = 999999; }
   for (const tid of Object.keys(TECHS)) p.techs[tid] = true;
   return ok();
@@ -1723,7 +1739,7 @@ module.exports = {
   cmdBuild, cmdDemolish, cmdTrain, cmdAttack, cmdResearch, cmdResurrectGeneral, cmdRenameGeneral, respawnBandits, tickBandits,
   cmdScout, cmdReinforce,
   cmdStartExpedition, cmdActivateArtifact, cmdDeactivateArtifact, cmdCraftSuperArtifact,
-  cmdAdminFill, cmdAdminComplete, cmdAdminMaxBuildings, cmdAdminFullSetup,
+  cmdAdminFill, cmdAdminComplete, cmdAdminMaxBuildings, cmdAdminFullSetup, cmdAdminGiveUnits,
   cmdAllianceCreate, cmdAllianceInvite, cmdAllianceJoin, cmdAllianceLeave,
   cmdAllianceKick, cmdAllianceTransfer, cmdSendResources,
   nextBuildCost, nextBuildTime, getCastleLevel, reqMet, hasUnique,

@@ -525,6 +525,7 @@ async function router(req, res) {
     else if (action === 'complete')      { result = G.cmdAdminComplete(p); G.tickPlayer(p, STATE.world, STATE.players, STATE); }
     else if (action === 'max-buildings') result = G.cmdAdminMaxBuildings(p);
     else if (action === 'full-setup')    { result = G.cmdAdminFullSetup(p); G.tickPlayer(p, STATE.world, STATE.players, STATE); }
+    else if (action === 'give-units')    result = G.cmdAdminGiveUnits(p, body);
     else return send(res, 404, { error: 'Unknown admin action' });
     if (!result.ok) return send(res, 400, { error: result.error });
     saveState();
