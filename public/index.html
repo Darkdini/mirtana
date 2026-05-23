@@ -18,135 +18,117 @@ html,body{height:100%;overflow:hidden;font-family:'Times New Roman',serif;
 button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer;}
 
 /* ===== AUTH ===== */
-@keyframes authFlicker{
-  0%,100%{opacity:1;}50%{opacity:.93;}
-  25%{opacity:.97;}75%{opacity:.96;}
-}
 @keyframes titleGlow{
-  0%,100%{filter:drop-shadow(0 3px 8px rgba(220,120,0,.5)) drop-shadow(0 6px 0 #180800);}
-  50%{filter:drop-shadow(0 3px 18px rgba(255,170,40,.9)) drop-shadow(0 6px 0 #180800);}
+  0%,100%{filter:drop-shadow(0 2px 10px rgba(220,140,0,.6));}
+  50%{filter:drop-shadow(0 2px 22px rgba(255,180,40,1));}
 }
-@keyframes embersRise{
-  0%{transform:translateY(0) translateX(0) scale(1);opacity:.8;}
-  100%{transform:translateY(-120px) translateX(var(--dx,10px)) scale(.2);opacity:0;}
-}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
 #auth{
   position:fixed;inset:0;
-  background:radial-gradient(ellipse 100% 60% at 50% 100%, #3a1a06 0%, #1c0c03 40%, #0a0502 100%);
-  display:flex;flex-direction:column;align-items:center;
-  padding:10px 16px 24px;overflow-y:auto;z-index:200;overflow-x:hidden;
-}
-#auth::after{
-  content:'';position:fixed;inset:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse 70% 25% at 15% 95%, rgba(200,90,10,.18) 0%, transparent 70%),
-    radial-gradient(ellipse 70% 25% at 85% 95%, rgba(180,70,10,.14) 0%, transparent 70%),
-    radial-gradient(ellipse 100% 50% at 50% 110%, rgba(160,60,5,.22) 0%, transparent 60%);
-  animation:authFlicker 4s ease-in-out infinite;
+  background:radial-gradient(ellipse 120% 80% at 50% 110%, #3a1805 0%, #180a02 45%, #080402 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:12px 16px;overflow-y:auto;z-index:200;
 }
 #auth-embers{position:fixed;inset:0;pointer-events:none;z-index:1;}
-.auth-logo{margin-top:20px;text-align:center;position:relative;z-index:2;}
+/* Кнопка языка */
+#lang-btn{
+  position:fixed;top:12px;right:14px;z-index:10;
+  background:rgba(30,15,4,.85);border:1px solid #7a5020;
+  color:#d4a236;font-size:12px;font-weight:bold;
+  padding:5px 10px;border-radius:20px;cursor:pointer;
+  letter-spacing:1px;backdrop-filter:blur(4px);
+  transition:border-color .2s,color .2s;
+}
+#lang-btn:hover{border-color:#d4a236;color:#f0c958;}
+/* Лого */
+.auth-logo{text-align:center;position:relative;z-index:2;margin-bottom:6px;}
 .auth-logo .t1{
-  display:block;font-size:clamp(30px,9vw,64px);
-  background:linear-gradient(180deg,#fff8c0 0%,#f5c840 30%,#d08020 65%,#7a3800 100%);
+  display:block;font-size:clamp(26px,8vw,52px);
+  background:linear-gradient(180deg,#fff5a0 0%,#f0c030 35%,#c07010 70%,#6a3000 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
-  font-weight:900;font-variant:small-caps;letter-spacing:4px;
+  font-weight:900;font-variant:small-caps;letter-spacing:5px;
   animation:titleGlow 3s ease-in-out infinite;
 }
 .auth-logo .t2{
-  display:block;font-size:clamp(10px,3vw,13px);color:#c09050;
-  letter-spacing:7px;text-transform:uppercase;margin-top:6px;
-  text-shadow:0 0 10px rgba(180,110,30,.5);
+  display:block;font-size:11px;color:#a07030;letter-spacing:6px;
+  text-transform:uppercase;margin-top:4px;
 }
-.auth-sep{
-  color:#8a5a20;font-size:13px;letter-spacing:10px;
-  margin:10px 0 0;position:relative;z-index:2;
-  text-shadow:0 0 8px rgba(180,100,20,.4);
-}
+/* Карточка */
 .parch{
-  background:linear-gradient(155deg,#5c3a18 0%,#3e2410 45%,#271508 100%);
-  border:1px solid #7a5020;border-radius:10px;
-  padding:22px 18px 22px;max-width:360px;width:100%;
-  margin-top:14px;position:relative;z-index:2;
-  box-shadow:
-    0 0 0 1px #2a1408,
-    0 0 40px rgba(160,80,10,.2),
-    0 20px 60px rgba(0,0,0,.85),
-    inset 0 1px 0 rgba(255,210,100,.12),
-    inset 0 0 50px rgba(0,0,0,.25);
+  background:
+    linear-gradient(160deg,rgba(255,200,80,.03) 0%,transparent 40%),
+    linear-gradient(180deg,#3a2210 0%,#221208 100%);
+  border:1px solid #6a4018;border-radius:14px;
+  padding:0;max-width:340px;width:100%;
+  position:relative;z-index:2;
+  box-shadow:0 0 0 1px #1a0c04,0 24px 60px rgba(0,0,0,.9),0 0 40px rgba(140,70,10,.15);
+  animation:cardIn .35s ease;
+  overflow:hidden;
 }
-.parch::before{
-  content:'✦ ⚔ ✦';position:absolute;top:-11px;left:50%;
-  transform:translateX(-50%);font-size:15px;color:#d4a236;
-  white-space:nowrap;background:#271508;padding:0 10px;
-  text-shadow:0 0 10px rgba(220,160,40,.6);
+/* Вкладки логин/регистрация */
+.auth-tabs{display:flex;border-bottom:1px solid #4a2810;}
+.auth-tab{
+  flex:1;padding:12px;text-align:center;font-size:12px;font-weight:bold;
+  letter-spacing:2px;text-transform:uppercase;color:#7a5030;cursor:pointer;
+  transition:color .2s,background .2s;
 }
-.parch::after{
-  content:'';position:absolute;inset:0;border-radius:10px;pointer-events:none;
-  background:linear-gradient(135deg,rgba(255,200,80,.04) 0%,transparent 50%,rgba(0,0,0,.1) 100%);
-}
-.parch .rl,.parch .rr{display:none;}
+.auth-tab.active{color:#f0c040;background:rgba(0,0,0,.2);border-bottom:2px solid #d4a236;}
+.auth-tab:hover:not(.active){color:#c09050;}
+/* Тело карточки */
+.auth-body{padding:20px 18px 18px;}
 .parch h3{
-  font-size:10px;color:#c89040;margin:10px 0 5px;
+  font-size:9px;color:#a07030;margin:12px 0 5px;
   text-transform:uppercase;letter-spacing:3px;
-  text-shadow:0 0 6px rgba(180,120,20,.3);
+}
+.parch h3:first-child{margin-top:0;}
+/* Поля ввода */
+.inp-wrap{position:relative;margin-bottom:10px;}
+.inp-wrap .inp-icon{
+  position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  font-size:14px;opacity:.5;pointer-events:none;
 }
 .parch input{
-  width:100%;background:linear-gradient(180deg,#140c04,#0e0803);
-  border:1px solid #6a3e18;color:#f0d070;
-  padding:11px 14px;font-size:14px;border-radius:7px;
-  margin-bottom:8px;font-family:inherit;outline:none;
-  box-shadow:inset 0 2px 8px rgba(0,0,0,.6);
+  width:100%;background:rgba(0,0,0,.45);
+  border:1px solid #5a3510;color:#f0d060;
+  padding:11px 14px 11px 34px;font-size:14px;border-radius:8px;
+  font-family:inherit;outline:none;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.5);
   transition:border-color .2s,box-shadow .2s;
 }
-.parch input:focus{
-  border-color:#d4a236;
-  box-shadow:inset 0 2px 8px rgba(0,0,0,.6),0 0 10px rgba(212,162,54,.25);
-}
-.parch input::placeholder{color:#4a2e10;}
-.parch .err{color:#ff9060;font-size:12px;min-height:16px;margin-bottom:6px;text-align:center;text-shadow:0 0 6px rgba(255,80,20,.3);}
-.parch .sw{font-size:12px;color:#906a30;margin-top:8px;text-align:center;}
-.parch .sw a{color:#e0b050;border-bottom:1px solid #7a5020;cursor:pointer;}
-.reg-welcome{font-size:13px;color:#d4a060;text-align:center;margin-bottom:14px;line-height:1.6;font-style:italic;opacity:.9;}
+.parch input:focus{border-color:#c8902a;box-shadow:inset 0 2px 6px rgba(0,0,0,.5),0 0 8px rgba(200,140,40,.2);}
+.parch input::placeholder{color:#4a3018;}
+.parch .err{color:#ff8050;font-size:11px;min-height:14px;margin:4px 0 6px;text-align:center;}
+/* Кнопка войти */
 .btn-g{
-  display:block;width:100%;padding:13px;
-  background:linear-gradient(180deg,#c87820,#8a4c0e);
-  border:1px solid #e8a040;border-radius:7px;color:#fff5d0;
-  font-weight:bold;font-size:14px;letter-spacing:3px;text-transform:uppercase;
-  text-align:center;margin-bottom:8px;cursor:pointer;
-  box-shadow:0 4px 0 #2e1604,0 0 16px rgba(200,110,20,.25);
-  text-shadow:0 1px 4px rgba(0,0,0,.7);
-  transition:filter .15s,transform .1s,box-shadow .1s;
-}
-.btn-g:active{transform:translateY(2px);box-shadow:0 2px 0 #2e1604;}
-.btn-g:hover{filter:brightness(1.2);}
-.btn-r{
-  display:block;width:100%;padding:10px;
-  background:linear-gradient(180deg,#6a1e1e,#421010);
-  border:1px solid #a03030;border-radius:7px;color:#ffb0a0;
-  font-weight:bold;font-size:12px;letter-spacing:2px;text-transform:uppercase;
+  display:block;width:100%;padding:13px;margin-top:4px;
+  background:linear-gradient(180deg,#b86c18,#7a3e08);
+  border:1px solid #d4922a;border-radius:8px;color:#fff8d8;
+  font-weight:bold;font-size:13px;letter-spacing:3px;text-transform:uppercase;
   text-align:center;cursor:pointer;
-  box-shadow:0 3px 0 #180606;
+  box-shadow:0 3px 0 #2a1002,0 0 14px rgba(180,100,20,.2);
   transition:filter .15s,transform .1s;
+  text-shadow:0 1px 3px rgba(0,0,0,.6);
 }
-.btn-r:active{transform:translateY(1px);}
-.btn-r:hover{filter:brightness(1.2);}
-.race-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:8px;}
+.btn-g:active{transform:translateY(2px);box-shadow:0 1px 0 #2a1002;}
+.btn-g:hover{filter:brightness(1.15);}
+/* Ссылка-переключатель */
+.parch .sw{font-size:12px;color:#7a5530;margin-top:12px;text-align:center;padding-bottom:2px;}
+.parch .sw a{color:#c89040;cursor:pointer;border-bottom:1px solid #6a4020;}
+/* Регистрация — приветствие */
+.reg-welcome{font-size:12px;color:#b08040;text-align:center;margin-bottom:14px;line-height:1.5;font-style:italic;}
+/* Карточки рас */
+.race-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:10px;}
 .rcard{
-  padding:9px 6px 8px;
-  background:linear-gradient(180deg,#1c1006,#120a04);
-  border:1px solid #4a2e14;border-radius:7px;cursor:pointer;text-align:center;
-  transition:border-color .15s,box-shadow .15s,background .15s;
+  padding:8px 5px;background:rgba(0,0,0,.35);
+  border:1px solid #4a2e14;border-radius:8px;cursor:pointer;text-align:center;
+  transition:border-color .15s,box-shadow .15s;
 }
-.rcard:hover{border-color:#7a5020;background:linear-gradient(180deg,#261408,#180e06);}
-.rcard.sel{
-  border-color:var(--gold2);
-  background:linear-gradient(180deg,#3a2010,#22120a);
-  box-shadow:0 0 12px rgba(240,200,88,.25),inset 0 0 10px rgba(200,140,40,.08);
-}
-.rcard .rg{font-size:26px;line-height:1;margin-bottom:4px;}
-.rcard .rn{font-size:11px;font-weight:bold;color:var(--gold2);text-shadow:0 0 4px rgba(200,160,40,.3);}
-.rcard .rb{font-size:9px;color:#806040;margin-top:2px;line-height:1.3;}
+.rcard:hover{border-color:#8a5a20;}
+.rcard.sel{border-color:#f0c040;box-shadow:0 0 10px rgba(240,190,60,.2);}
+.rcard .rg{font-size:24px;line-height:1;margin-bottom:3px;}
+.rcard .rn{font-size:10px;font-weight:bold;color:#d4a236;}
+.rcard .rb{font-size:8px;color:#705030;margin-top:2px;line-height:1.3;}
+.parch .rl,.parch .rr{display:none;}
 
 /* ===== ИГРА ===== */
 #app{position:fixed;inset:0;display:grid;grid-template-rows:auto auto 1fr auto;}
@@ -394,36 +376,56 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 <body>
 
 <!-- AUTH -->
+<button id="lang-btn">RU</button>
 <div id="auth">
   <canvas id="auth-embers"></canvas>
   <div class="auth-logo">
-    <span class="t1">СРЕДНЕВЕКОВЬЕ</span>
-    <span class="t2">Война Королей</span>
+    <span class="t1" data-i18n="title">СРЕДНЕВЕКОВЬЕ</span>
+    <span class="t2" data-i18n="subtitle">Война Королей</span>
   </div>
-  <div class="auth-sep">⸻ ✦ ⸻</div>
-  <div class="parch" id="aLogin">
-    <h3>Имя правителя</h3>
-    <input type="text" id="liU" placeholder="Введи свой логин" autocomplete="username">
-    <h3>Пароль</h3>
-    <input type="password" id="liP" placeholder="Введи пароль" autocomplete="current-password">
-    <div class="err" id="liE"></div>
-    <button class="btn-g" id="liBtn">⚔ ВОЙТИ В КОРОЛЕВСТВО</button>
-    <button class="btn-r" id="toReg">🏰 СОЗДАТЬ КОРОЛЕВСТВО</button>
-    <div class="sw">Нет аккаунта? <a id="sw1">Основать королевство</a></div>
-  </div>
-  <div class="parch" id="aReg" style="display:none;">
-    <div class="reg-welcome">Правитель, укажи свои данные<br>и выбери народ для управления!</div>
-    <h3>Имя правителя</h3>
-    <input type="text" id="reU" placeholder="Имя игрока (мин. 3)" maxlength="20" autocomplete="username">
-    <h3>Пароль</h3>
-    <input type="password" id="reP" placeholder="Пароль (мин. 4)" maxlength="40" autocomplete="new-password">
-    <h3>Название королевства</h3>
-    <input type="text" id="reK" placeholder="Как называть твоё королевство" maxlength="20">
-    <h3>Выбери народ</h3>
-    <div class="race-grid" id="racePick"></div>
-    <div class="err" id="reE"></div>
-    <button class="btn-g" id="reBtn">👑 ОСНОВАТЬ КОРОЛЕВСТВО</button>
-    <button class="btn-r" id="sw2">← НАЗАД</button>
+  <div class="parch">
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" data-i18n="tabLogin">ВОЙТИ</div>
+      <div class="auth-tab" id="tab-reg" data-i18n="tabReg">ОСНОВАТЬ</div>
+    </div>
+    <!-- Вход -->
+    <div class="auth-body" id="aLogin">
+      <h3 data-i18n="labelUser">Правитель</h3>
+      <div class="inp-wrap">
+        <span class="inp-icon">⚔</span>
+        <input type="text" id="liU" data-i18n-ph="phUser" placeholder="Имя правителя" autocomplete="username">
+      </div>
+      <h3 data-i18n="labelPass">Пароль</h3>
+      <div class="inp-wrap">
+        <span class="inp-icon">🔑</span>
+        <input type="password" id="liP" data-i18n-ph="phPass" placeholder="Твой пароль" autocomplete="current-password">
+      </div>
+      <div class="err" id="liE"></div>
+      <button class="btn-g" id="liBtn" data-i18n="btnLogin">⚔ ВОЙТИ В КОРОЛЕВСТВО</button>
+    </div>
+    <!-- Регистрация -->
+    <div class="auth-body" id="aReg" style="display:none;">
+      <div class="reg-welcome" data-i18n="regWelcome">Правитель, укажи свои данные<br>и выбери народ для управления!</div>
+      <h3 data-i18n="labelUser">Правитель</h3>
+      <div class="inp-wrap">
+        <span class="inp-icon">⚔</span>
+        <input type="text" id="reU" data-i18n-ph="phUser" placeholder="Имя правителя" maxlength="20" autocomplete="username">
+      </div>
+      <h3 data-i18n="labelPass">Пароль</h3>
+      <div class="inp-wrap">
+        <span class="inp-icon">🔑</span>
+        <input type="password" id="reP" data-i18n-ph="phPassNew" placeholder="Придумай пароль" maxlength="40" autocomplete="new-password">
+      </div>
+      <h3 data-i18n="labelKingdom">Королевство</h3>
+      <div class="inp-wrap">
+        <span class="inp-icon">🏰</span>
+        <input type="text" id="reK" data-i18n-ph="phKingdom" placeholder="Название королевства" maxlength="20">
+      </div>
+      <h3 data-i18n="labelRace">Народ</h3>
+      <div class="race-grid" id="racePick"></div>
+      <div class="err" id="reE"></div>
+      <button class="btn-g" id="reBtn" data-i18n="btnReg">👑 ОСНОВАТЬ КОРОЛЕВСТВО</button>
+    </div>
   </div>
 </div>
 
@@ -2187,10 +2189,55 @@ function initChat(){
   tick();
 })();
 
+// ── ЯЗЫКИ ───────────────────────────────────────────────
+const LANGS={
+  ru:{
+    title:'СРЕДНЕВЕКОВЬЕ',subtitle:'Война Королей',
+    tabLogin:'ВОЙТИ',tabReg:'ОСНОВАТЬ',
+    labelUser:'Правитель',labelPass:'Пароль',labelKingdom:'Королевство',labelRace:'Народ',
+    phUser:'Имя правителя',phPass:'Твой пароль',phPassNew:'Придумай пароль',phKingdom:'Название королевства',
+    btnLogin:'⚔ ВОЙТИ В КОРОЛЕВСТВО',btnReg:'👑 ОСНОВАТЬ КОРОЛЕВСТВО',
+    regWelcome:'Правитель, укажи свои данные<br>и выбери народ для управления!',
+    errNoRace:'Выберите народ',
+  },
+  en:{
+    title:'MEDIEVAL',subtitle:'War of Kings',
+    tabLogin:'LOGIN',tabReg:'FOUND',
+    labelUser:'Ruler',labelPass:'Password',labelKingdom:'Kingdom',labelRace:'Race',
+    phUser:'Your ruler name',phPass:'Your password',phPassNew:'Choose a password',phKingdom:'Kingdom name',
+    btnLogin:'⚔ ENTER THE KINGDOM',btnReg:'👑 FOUND A KINGDOM',
+    regWelcome:'Ruler, enter your details<br>and choose a race to lead!',
+    errNoRace:'Choose a race',
+  }
+};
+let LANG=localStorage.getItem('lang')||'ru';
+function applyLang(code){
+  LANG=code;localStorage.setItem('lang',code);
+  const L=LANGS[code];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.dataset.i18n;if(L[k]!==undefined)el.innerHTML=L[k];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const k=el.dataset.i18nPh;if(L[k]!==undefined)el.placeholder=L[k];
+  });
+  const lb=$('#lang-btn');if(lb)lb.textContent=code.toUpperCase();
+}
+
 // ── AUTH ────────────────────────────────────────────────
 function initAuth(){
-  $('#sw1').onclick=$('#toReg').onclick=()=>{$('#aLogin').style.display='none';$('#aReg').style.display='block';};
-  $('#sw2').onclick=()=>{$('#aReg').style.display='none';$('#aLogin').style.display='block';};
+  applyLang(LANG);
+  $('#lang-btn').onclick=()=>applyLang(LANG==='ru'?'en':'ru');
+
+  function showTab(t){
+    const isLogin=t==='login';
+    $('#aLogin').style.display=isLogin?'block':'none';
+    $('#aReg').style.display=isLogin?'none':'block';
+    $('#tab-login').classList.toggle('active',isLogin);
+    $('#tab-reg').classList.toggle('active',!isLogin);
+  }
+  $('#tab-login').onclick=()=>showTab('login');
+  $('#tab-reg').onclick=()=>showTab('reg');
+
   let selRace=null;
   const rp=$('#racePick');
   rp.innerHTML=Object.entries(RACES).map(([id,r])=>`
@@ -2211,7 +2258,7 @@ function initAuth(){
   };
   $('#reBtn').onclick=async()=>{
     $('#reE').textContent='';
-    if(!selRace){$('#reE').textContent='Выберите расу';return;}
+    if(!selRace){$('#reE').textContent=LANGS[LANG].errNoRace;return;}
     try{
       await api('/api/register',{method:'POST',body:{username:$('#reU').value.trim(),password:$('#reP').value,race:selRace,kingdom:$('#reK').value.trim()}});
       await enterGame();
@@ -2221,6 +2268,7 @@ function initAuth(){
 
 async function enterGame(){
   $('#auth').style.display='none';
+  $('#lang-btn').style.display='none';
   $('#app').style.display='grid';
   preload();
   await refreshState();
