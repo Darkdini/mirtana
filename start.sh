@@ -57,22 +57,6 @@ if ! command -v node &>/dev/null; then
 fi
 NODE_VER=$(node --version)
 
-# ── Git pull ──────────────────────────────────────────────
-echo -e "   ${DIM}────────────────────────────────────────────────${NC}"
-echo ""
-if git remote -v &>/dev/null; then
-  git pull origin main --quiet &>/tmp/git_pull_log &
-  GPID=$!
-  spin $GPID "Обновление из репозитория"
-  wait $GPID
-  STATUS=$?
-  if [ $STATUS -ne 0 ]; then
-    echo -e "   ${D}(нет сети — запуск текущей версии)${NC}"
-  fi
-else
-  echo -e "   ${D}(git не найден — пропуск обновления)${NC}"
-fi
-
 # ── Анимация загрузки ─────────────────────────────────────
 echo ""
 bar "Инициализация сервера"
