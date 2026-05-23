@@ -1321,6 +1321,7 @@ function cmdAdminGiveUnits(p, { amount } = {}) {
   return ok();
 }
 
+function cmdAdminFill(p) {
   for (const k of RES) { p.res[k] = 999999; p.resMax[k] = 999999; }
   for (const tid of Object.keys(TECHS)) p.techs[tid] = true;
   return ok();
