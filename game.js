@@ -1720,7 +1720,7 @@ module.exports = {
   isCastleWall, isLandsWall,
   createPlayer, createWorldGrid, initProvince, initRelics, placePlayerOnWorld,
   tickPlayer, recomputeMaxes, computeRates,
-  cmdBuild, cmdDemolish, cmdTrain, cmdAttack, cmdResearch, cmdResurrectGeneral, respawnBandits, tickBandits,
+  cmdBuild, cmdDemolish, cmdTrain, cmdAttack, cmdResearch, cmdResurrectGeneral, cmdRenameGeneral, respawnBandits, tickBandits,
   cmdScout, cmdReinforce,
   cmdStartExpedition, cmdActivateArtifact, cmdDeactivateArtifact, cmdCraftSuperArtifact,
   cmdAdminFill, cmdAdminComplete, cmdAdminMaxBuildings, cmdAdminFullSetup,

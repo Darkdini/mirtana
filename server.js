@@ -47,6 +47,7 @@ function loadState() {
     G.initRelics(STATE.world);
   }
   ensureAdminAccount();
+  fixAdminWorldPos();
 }
 
 function ensureAdminAccount() {
@@ -57,7 +58,16 @@ function ensureAdminAccount() {
   admin.passwordSalt = salt;
   admin.passwordHash = hashPw('@1234', salt);
   STATE.players['Admin'] = admin;
+  if (STATE.world) admin.worldPos = G.placePlayerOnWorld(STATE.world, 'Admin', 'human');
   console.log('[admin] Создан встроенный аккаунт Admin (@1234)');
+}
+
+function fixAdminWorldPos() {
+  const admin = STATE.players['Admin'];
+  if (admin && !admin.worldPos && STATE.world) {
+    admin.worldPos = G.placePlayerOnWorld(STATE.world, 'Admin', 'human');
+    console.log('[admin] Admin размещён на карте мира');
+  }
 }
 
 let _saveTimer = null;
