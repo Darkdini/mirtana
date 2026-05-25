@@ -245,6 +245,41 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
   display:none;border:2px solid #0a0604;
 }
 
+/* Поиск по координатам */
+#world-search{
+  display:none;position:absolute;top:8px;right:8px;z-index:11;
+  display:flex;align-items:center;gap:4px;
+}
+.loc-world #world-search{display:flex;}
+#world-search-btn{
+  width:34px;height:34px;
+  background:rgba(20,8,2,.85);border:1px solid #c8a030;border-radius:8px;
+  color:#f0c040;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.7);
+}
+#world-search-form{
+  display:flex;align-items:center;gap:4px;
+  background:rgba(20,8,2,.92);border:1px solid #c8a030;
+  border-radius:8px;padding:4px 6px;
+  box-shadow:0 2px 8px rgba(0,0,0,.7);
+}
+#ws-x,#ws-y{
+  width:52px;padding:4px 6px;border-radius:5px;
+  background:#1a0c04;border:1px solid #8a6020;
+  color:#f0c040;font-size:13px;font-weight:bold;
+  font-family:inherit;outline:none;text-align:center;
+}
+#ws-go{
+  width:28px;height:28px;background:linear-gradient(180deg,#c83020,#8b1010);
+  border:1px solid #e05050;border-radius:5px;
+  color:#fff;font-size:14px;font-weight:bold;cursor:pointer;
+}
+#ws-close{
+  width:24px;height:24px;background:rgba(100,60,20,.6);
+  border:1px solid #8a6020;border-radius:5px;
+  color:#f0c040;font-size:12px;cursor:pointer;
+}
 /* Координаты карты мира */
 #world-coords{
   display:none;position:absolute;top:8px;left:50%;transform:translateX(-50%);
@@ -503,6 +538,16 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
     <div id="timebar">--:--:--</div>
     <!-- Карта мира: координаты вверху -->
     <div id="world-coords"></div>
+    <!-- Карта мира: поиск по координатам -->
+    <div id="world-search">
+      <button id="world-search-btn" title="Перейти к координатам">🔍</button>
+      <div id="world-search-form" style="display:none;">
+        <input id="ws-x" type="number" placeholder="X" min="0" max="999">
+        <input id="ws-y" type="number" placeholder="Y" min="0" max="999">
+        <button id="ws-go">→</button>
+        <button id="ws-close">✕</button>
+      </div>
+    </div>
     <!-- Карта мира: компас внизу -->
     <div id="world-compass">
       <svg width="54" height="54" viewBox="0 0 54 54">
@@ -2531,6 +2576,38 @@ function setLoc(loc){
   if(loc==='world')updateWorldCoords();
 }
 
+function jumpToCoords(col,row){
+  col=Math.max(0,Math.min(19,+col||0));
+  row=Math.max(0,Math.min(19,+row||0));
+  const R=33,W=R*2,H=Math.round(R*Math.sqrt(3));
+  const hx=col*(W*0.75),hy=row*H+(col%2)*(H/2);
+  const gridW=20*(R*1.5)+R*0.5,gridH=20*H+H*0.5;
+  const mw=$('#main').clientWidth||window.innerWidth;
+  const mh=$('#main').clientHeight||window.innerHeight;
+  vpX=mw/2-(mw-gridW)/2-hx-R;
+  vpY=mh/2-(mh-gridH)/2-hy-H/2;
+  renderMap();
+}
+
+function initWorldSearch(){
+  const btn=$('#world-search-btn');
+  const form=$('#world-search-form');
+  if(!btn||!form)return;
+  btn.onclick=()=>{
+    form.style.display=form.style.display==='none'?'flex':'none';
+    if(form.style.display==='flex')$('#ws-x').focus();
+  };
+  $('#ws-close').onclick=()=>{form.style.display='none';};
+  $('#ws-go').onclick=()=>{
+    const x=$('#ws-x').value,y=$('#ws-y').value;
+    if(!x&&!y){toast('Введи X и Y координаты','err');return;}
+    jumpToCoords(x,y);
+    form.style.display='none';
+    toast(`Переход → X:${x} Y:${y}`,'ok');
+  };
+  $('#ws-x').onkeydown=$('#ws-y').onkeydown=e=>{if(e.key==='Enter')$('#ws-go').click();};
+}
+
 function updateWorldCoords(){
   if(LOC!=='world')return;
   const el=$('#world-coords');if(!el)return;
@@ -2705,7 +2782,7 @@ async function enterGame(){
   // 7-вкладочная нижняя панель
   $$('.cb-tab').forEach(b=>b.onclick=()=>switchCab(b.dataset.cab));
 
-  connectWS();initChat();initDrag();startAnim();
+  connectWS();initChat();initDrag();startAnim();initWorldSearch();
 
   // Таймеры
   setInterval(()=>{
