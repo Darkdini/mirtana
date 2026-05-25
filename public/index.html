@@ -245,6 +245,19 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
   display:none;border:2px solid #0a0604;
 }
 
+/* Координаты карты мира */
+#world-coords{
+  display:none;position:absolute;top:8px;left:50%;transform:translateX(-50%);
+  background:rgba(20,8,2,.85);border:1px solid #c8a030;border-radius:16px;
+  color:#f0c040;font-size:12px;font-weight:bold;padding:4px 14px;
+  z-index:10;white-space:nowrap;pointer-events:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.7);
+}
+#world-compass{
+  display:none;position:absolute;bottom:72px;left:50%;transform:translateX(-50%);
+  z-index:10;pointer-events:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.8));
+}
+.loc-world #world-coords,.loc-world #world-compass{display:block;}
 #timebar{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
   background:rgba(0,0,0,.8);color:#fff;padding:2px 10px;border-radius:10px;
   font-size:12px;font-family:monospace;font-weight:bold;z-index:5;
@@ -323,6 +336,16 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 .mbtn.red{background:linear-gradient(180deg,#c43a3a,#5a1414);border-color:#e05050;color:#fff;}
 .mbtn.gold{background:linear-gradient(180deg,#d4a030,#8a6010);border-color:#f0c040;color:#1a0800;}
 .mbtn.gray{background:linear-gradient(180deg,#5a4a30,#2a2010);border-color:#8a7050;color:#d0c0a0;}
+/* Кнопки-иконки в карточке замка на карте мира */
+.wm-action-btn{
+  background:linear-gradient(180deg,#f0dea0,#d4b870);
+  border:2px solid #c8a030;border-radius:8px;
+  padding:8px 4px;text-align:center;cursor:pointer;
+  color:#3a1a08;font-size:10px;font-weight:bold;
+  transition:filter .15s;box-shadow:0 2px 4px rgba(0,0,0,.2);
+}
+.wm-action-btn:active{filter:brightness(.9);}
+.wm-action-btn.wm-disabled{opacity:.4;cursor:not-allowed;}
 .bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;}
 .bcard{background:linear-gradient(180deg,#5a3018,#2a1008);
   border:2px solid var(--gold3);border-radius:4px;padding:7px 5px;
@@ -478,6 +501,23 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
   <div id="main">
     <div id="mapwrap"><canvas id="canvas"></canvas></div>
     <div id="timebar">--:--:--</div>
+    <!-- Карта мира: координаты вверху -->
+    <div id="world-coords"></div>
+    <!-- Карта мира: компас внизу -->
+    <div id="world-compass">
+      <svg width="54" height="54" viewBox="0 0 54 54">
+        <circle cx="27" cy="27" r="25" fill="rgba(30,14,4,.75)" stroke="#c8a030" stroke-width="2"/>
+        <polygon points="27,5 31,23 27,20 23,23" fill="#e03030"/>
+        <polygon points="27,49 31,31 27,34 23,31" fill="#f0e0b0"/>
+        <polygon points="5,27 23,23 20,27 23,31" fill="#f0e0b0"/>
+        <polygon points="49,27 31,23 34,27 31,31" fill="#f0e0b0"/>
+        <circle cx="27" cy="27" r="3" fill="#f0c040"/>
+        <text x="27" y="13" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold">С</text>
+        <text x="27" y="47" text-anchor="middle" fill="#d0c0a0" font-size="7">Ю</text>
+        <text x="9" y="30" text-anchor="middle" fill="#d0c0a0" font-size="7">З</text>
+        <text x="46" y="30" text-anchor="middle" fill="#d0c0a0" font-size="7">В</text>
+      </svg>
+    </div>
   </div>
   <!-- Уведомления вверху -->
   <div id="topnotif">
@@ -911,10 +951,11 @@ let hitHexes=[];
 
 function renderMap(){
   if(!S?.player)return;
-  $('#main').className='loc-'+LOC;
+  const main=$('#main');
+  if(main)main.className=LOC==='world'?'loc-world':'';
   if(LOC==='castle')drawHexGrid(S.player.castle,CASTLE_COLS,CASTLE_ROWS,'castle');
   else if(LOC==='lands')drawHexGrid(S.player.lands,LANDS_COLS,LANDS_ROWS,'lands');
-  else drawWorldHex();
+  else{drawWorldHex();updateWorldCoords();}
 }
 
 function calcHexSize(cols,rows,W,H){
@@ -1554,25 +1595,67 @@ function showWorldModal(c){
   if(c.type==='player'){
     if(c.player===myName){
       title='🏰 Ваш замок';
-      bd=`<p>Королевство: <b>${S.player.kingdom}</b></p>
-          <p>Раса: <b>${RACES[c.race]?.name||c.race}</b></p>
-          <p>Координаты: <b>${c.col}-${c.row}</b></p>
-          <p style="color:var(--gold2);">Войско: <b>${armyTotal()}</b> воинов</p>`;
-      actions.push({label:'Армия',kind:'gold',handler:showArmyModal,close:true});
+      const wp=S.worldPlayers?.[c.player]||{};
+      bd=`<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
+        <div style="font-size:48px;line-height:1;flex-shrink:0;">🏰</div>
+        <div>
+          <div style="font-weight:bold;font-size:14px;color:#3a1a08;">Замок ${S.player.kingdom}</div>
+          <div style="color:#7a5020;font-size:12px;">X: ${c.col}  Y: ${c.row}</div>
+          <div style="color:#7a5020;font-size:12px;">Рейтинг: 🏛 ${wp.rating||S.player.rating||0}</div>
+          <div style="color:#5a3010;font-size:12px;">Раса: ${RACES[c.race]?.name||c.race}</div>
+        </div>
+      </div>
+      <div style="color:#5a3010;font-size:13px;margin-bottom:6px;">Войско: <b>${armyTotal()}</b> воинов</div>`;
+      actions.push({label:'⚔ Армия',kind:'gold',handler:showArmyModal,close:true});
+      actions.push({label:'👤 Профиль',kind:'gray',handler:()=>showProfileModal(myName),close:true});
     }else{
-      title=`🏯 ${c.player}`;
+      title='Замок';
       const wp=S.worldPlayers?.[c.player]||{};
       const alliTag=wp.allianceTag?` [${wp.allianceTag}]`:'';
-      bd=`<p>Игрок: <b>${c.player}${alliTag}</b></p>
-          <p>Раса: <b>${RACES[c.race]?.name||'?'}</b></p>
-          <p style="color:var(--gold);">Сила обороны: ~${(c.lvl||1)*200}</p>
-          <p style="font-size:11px;color:#a09070;">🏃 Набег — только грабёж · ⚔ Нападение — бой+здание · 🔥 Штурм — максимальный урон</p>`;
-      actions.push({label:'👤 Профиль',kind:'gold',handler:()=>showPlayerProfile(c.player),close:true});
-      actions.push({label:'✉ Написать',kind:'gray',handler:()=>showCompose(c.player),close:true});
-      if(armyTotal()>0)actions.push({label:'⚔ Атаковать',kind:'red',handler:()=>showAttackModal(c),close:true});
-      else actions.push({label:'⚔ Нет войск',disabled:true,handler:()=>{}});
-      const hasResident = (S.player.castle||[]).some(c2=>c2.bldId==='resident'&&c2.level>0);
-      if (hasResident) actions.push({label:'🕵 Шпионаж',kind:'gray',handler:()=>showSpyModal(c.player),close:true});
+      const raceG=RACE_G?.[c.race]||'👑';
+      bd=`<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;">
+        <div style="font-size:48px;line-height:1;flex-shrink:0;">🏯</div>
+        <div>
+          <div style="font-weight:bold;font-size:14px;color:#3a1a08;">Замок ${c.player}</div>
+          <div style="color:#7a5020;font-size:12px;">X: ${c.col}  Y: ${c.row}</div>
+          <div style="color:#7a5020;font-size:12px;">Рейтинг: 🏛 ${wp.rating||0}</div>
+        </div>
+      </div>
+      <div style="color:#5a3010;font-size:13px;margin-bottom:12px;">
+        Игрок: <b>${c.player}${alliTag}</b><br>
+        Раса: <b>${raceG} ${RACES[c.race]?.name||'?'}</b>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;">
+        <div class="wm-action-btn" data-act="msg">
+          <div style="font-size:28px;">✉️</div><div>Сообщение</div>
+        </div>
+        <div class="wm-action-btn" data-act="trade">
+          <div style="font-size:28px;">🤝</div><div>Торговля</div>
+        </div>
+        <div class="wm-action-btn ${armyTotal()===0?'wm-disabled':''}\" data-act="war">
+          <div style="font-size:28px;">⚔️</div><div>Война</div>
+        </div>
+      </div>
+      <div class="wm-action-btn" data-act="bookmark" style="display:flex;align-items:center;gap:8px;border-radius:6px;padding:8px 12px;">
+        <span style="font-size:18px;">📌</span><span>Запомнить место</span>
+      </div>`;
+
+      const bg=modal({title,body:bd,actions:[
+        {label:'👤 Профиль',kind:'gray',handler:()=>showPlayerProfile(c.player),close:true}
+      ]});
+      // Вешаем обработчики на кнопки-иконки
+      bg.querySelectorAll('.wm-action-btn[data-act]').forEach(btn=>{
+        if(btn.classList.contains('wm-disabled'))return;
+        btn.onclick=()=>{
+          const act=btn.dataset.act;
+          bg.remove();
+          if(act==='msg')showCompose(c.player);
+          else if(act==='trade')showMarketModal();
+          else if(act==='war')showAttackModal(c);
+          else if(act==='bookmark')toast(`📌 Замок ${c.player} запомнен  X:${c.col} Y:${c.row}`,'ok');
+        };
+      });
+      return;
     }
   }else if(c.type==='caravan'){
     title='🚚 Торговый обоз';
@@ -2441,8 +2524,27 @@ function setLoc(loc){
     const gridW=20*(R*1.5)+R*0.5,gridH=20*H+H*0.5;
     vpX=gridW/2-hx-R;vpY=gridH/2-hy-H/2;
   }else{vpX=0;vpY=0;}
+  const main=$('#main');
+  if(main){main.className=loc==='world'?'loc-world':'';}
   renderMap();
   $$('.rn-btn[data-loc]').forEach(x=>x.classList.toggle('active',x.dataset.loc===loc));
+  if(loc==='world')updateWorldCoords();
+}
+
+function updateWorldCoords(){
+  if(LOC!=='world')return;
+  const el=$('#world-coords');if(!el)return;
+  // Вычисляем центральную клетку
+  const mw=$('#main').clientWidth||window.innerWidth;
+  const mh=$('#main').clientHeight||window.innerHeight;
+  const R=33,W=R*2,H=Math.round(R*Math.sqrt(3));
+  const gridW=20*(R*1.5)+R*0.5,gridH=20*H+H*0.5;
+  const ox=(mw-gridW)/2+vpX;
+  const oy=(mh-gridH)/2+vpY;
+  const cx=(mw/2-ox-R)/(W*0.75);
+  const cy=(mh/2-oy-H/2)/H;
+  const col=Math.round(cx),row=Math.round(cy);
+  el.textContent=`X: ${Math.max(0,col)}  Y: ${Math.max(0,row)}`;
 }
 
 // ── Кабинет (7-вкладочное меню) ──────────────────────────
