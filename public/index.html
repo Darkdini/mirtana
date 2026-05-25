@@ -146,108 +146,99 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 .parch .rl,.parch .rr{display:none;}
 
 /* ===== ИГРА ===== */
-#app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;}
-#sbar{height:30px;background:linear-gradient(180deg,var(--red2),var(--red));
+#app{position:fixed;inset:0;display:grid;grid-template-rows:42px 38px 1fr 54px;}
+/* ── РЕСУРС-БАР (верхняя полоска) ── */
+#resbar{
+  background:linear-gradient(180deg,#1e0c06,#150804);
   border-bottom:2px solid var(--gold3);
-  display:flex;align-items:center;justify-content:space-between;padding:0 10px;}
-#sbar .stitle{color:var(--gold2);font-weight:bold;font-size:14px;letter-spacing:2px;}
-#sbar .conn{font-size:11px;font-weight:bold;}
-#sbar .conn.on{color:#5cff7a;}
-#sbar .conn.off{color:#ff5050;}
-/* topbar скрыт — ресурсы перенесены в боковую панель */
-#topbar{display:none;}
-.ri{display:flex;align-items:center;gap:6px;
-  background:rgba(0,0,0,.5);border:1px solid var(--gold3);
-  border-radius:5px;padding:5px 8px;font-size:12px;}
-.ri img{width:15px;height:15px;image-rendering:pixelated;flex-shrink:0;}
-.ri span{font-weight:bold;}
-.ri.low span{color:#ff8080;}
-.ri.full span{color:#ffd44a;}
+  display:flex;align-items:center;padding:0 6px;gap:4px;overflow:hidden;
+}
+#resbar-res{
+  flex:1;display:flex;align-items:center;gap:0;overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+#resbar-res::-webkit-scrollbar{display:none;}
+.rb-res{
+  display:flex;align-items:center;gap:3px;padding:4px 7px;
+  font-size:12px;font-weight:bold;color:var(--gold2);white-space:nowrap;
+  flex-shrink:0;cursor:pointer;border-right:1px solid rgba(140,96,32,.3);
+}
+.rb-res:last-child{border-right:none;}
+.rb-res img{width:14px;height:14px;image-rendering:pixelated;flex-shrink:0;}
+.rb-res.low{color:#ff8080;}
+.rb-res.full{color:#ffd44a;}
+.rb-sep{width:1px;background:var(--gold3);opacity:.3;height:20px;flex-shrink:0;}
+#rb-conn{font-size:10px;font-weight:bold;padding:0 4px;flex-shrink:0;}
+#rb-conn.on{color:#5cff7a;}
+#rb-conn.off{color:#ff5050;}
+#rb-profile{font-size:18px;padding:2px 4px;flex-shrink:0;opacity:.8;transition:opacity .15s;}
+#rb-profile:active{opacity:1;}
+
+/* ── ПОЛОСКА ЛОКАЦИЙ ── */
+#locbar{
+  background:linear-gradient(180deg,#160a04,#100604);
+  border-bottom:2px solid var(--gold3);
+  display:flex;align-items:stretch;
+}
+.loc-tab{
+  flex:1;padding:0 2px;background:none;border:none;
+  color:#6a4020;font-size:11px;font-weight:bold;letter-spacing:.5px;
+  display:flex;align-items:center;justify-content:center;gap:3px;
+  border-bottom:2px solid transparent;margin-bottom:-2px;
+  cursor:pointer;transition:color .15s,border-color .15s,background .15s;
+}
+.loc-tab .lt-ico{font-size:16px;}
+.loc-tab.active{color:var(--gold2);border-color:var(--gold);}
+.loc-tab:active{background:rgba(255,180,30,.08);}
+#locbar-notifs{
+  display:flex;align-items:center;padding:0 4px;gap:2px;flex-shrink:0;
+  border-left:1px solid rgba(140,96,32,.3);
+}
+.notif-btn{
+  position:relative;background:none;border:none;
+  font-size:17px;cursor:pointer;padding:3px 5px;
+  opacity:.5;transition:opacity .15s;
+}
+.notif-btn.has-notif{opacity:1;}
+.notif-badge{
+  position:absolute;top:0;right:0;
+  background:#e03030;color:#fff;font-size:8px;font-weight:bold;
+  border-radius:6px;padding:1px 3px;min-width:12px;text-align:center;
+  display:none;line-height:1.2;
+}
+.notif-badge.vis{display:block;}
+
 #main{position:relative;overflow:hidden;}
 #mapwrap{position:absolute;inset:0;overflow:hidden;touch-action:none;}
 #canvas{display:block;}
-
-/* ── ПРАВАЯ НАВИГАЦИОННАЯ ПАНЕЛЬ ── */
-#slide-wrap{
-  position:absolute;top:50%;right:0;
-  transform:translateY(-50%);
-  display:flex;align-items:center;
-  z-index:15;pointer-events:none;
-}
-#slidepanel{
-  overflow:hidden;max-width:0;
-  background:linear-gradient(180deg,#2e1608,#120804);
-  border:0 solid var(--gold);border-right:0;
-  border-radius:14px 0 0 14px;
-  pointer-events:all;
-  display:flex;flex-direction:column;gap:0;padding:0;
-  transition:max-width .3s cubic-bezier(.4,0,.2,1),
-             border-width .3s, padding .3s, gap .3s;
-  box-shadow:-4px 0 16px rgba(0,0,0,.7);
-}
-#slidepanel.open{
-  max-width:90px;
-  border-width:2px;
-  padding:10px 8px;
-  gap:8px;
-}
-/* Иконка-кнопка навигации */
-.snav{
-  width:70px;height:70px;flex-shrink:0;
-  background:linear-gradient(180deg,#5a3010,#2a1206);
-  border:2px solid var(--gold3);border-radius:12px;
-  cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  transition:border-color .15s,filter .15s;
-  font-size:10px;font-weight:bold;color:var(--gold);
-}
-.snav:active{filter:brightness(1.4);}
-.snav.active{border-color:var(--gold2);background:linear-gradient(180deg,#7a4818,#3a1a08);
-  box-shadow:0 0 10px rgba(220,160,40,.3);}
-.snav .sni{font-size:26px;line-height:1;}
-/* Язычок */
-#slidebtn{
-  width:30px;height:70px;flex-shrink:0;
-  background:linear-gradient(180deg,#b07828,#7a4a18);
-  border:2px solid var(--gold);border-left:0;
-  border-radius:0 10px 10px 0;
-  color:var(--gold2);font-size:18px;
-  display:flex;align-items:center;justify-content:center;
-  pointer-events:all;cursor:pointer;
-  transition:filter .15s;
-}
-#slidebtn:active{filter:brightness(1.3);}
-
 #timebar{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
   background:rgba(0,0,0,.8);color:#fff;padding:2px 10px;border-radius:10px;
   font-size:12px;font-family:monospace;font-weight:bold;z-index:5;
   border:1px solid rgba(255,255,255,.15);pointer-events:none;}
 
-/* Нижняя панель */
-#bottombar{
-  background:transparent;
-  display:flex;justify-content:space-between;align-items:flex-end;
-  padding:0 10px 8px;z-index:10;pointer-events:none;
-  position:absolute;bottom:0;left:0;right:0;
+/* ── НИЖНЯЯ ПАНЕЛЬ ДЕЙСТВИЙ ── */
+#botbar{
+  background:linear-gradient(180deg,#1a0a04,#120602);
+  border-top:2px solid var(--gold3);
+  display:flex;align-items:stretch;
 }
-#chat-bar-btn,#menu-bar-btn{
-  width:64px;height:64px;
-  background:linear-gradient(180deg,#5a3010,#2a1206);
-  border:2px solid var(--gold);border-radius:14px;
-  color:var(--gold2);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  font-size:10px;font-weight:bold;letter-spacing:.5px;
-  cursor:pointer;pointer-events:all;
-  box-shadow:0 4px 14px rgba(0,0,0,.7);
-  transition:filter .15s;position:relative;
+.bb-btn{
+  flex:1;background:none;border:none;
+  color:#6a4020;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;font-size:9px;font-weight:bold;letter-spacing:.5px;
+  position:relative;transition:color .15s,background .15s;
+  border-right:1px solid rgba(140,96,32,.25);
 }
-#chat-bar-btn:active,#menu-bar-btn:active{filter:brightness(1.35);}
-#chat-bar-btn .bico,#menu-bar-btn .bico{font-size:26px;line-height:1;}
+.bb-btn:last-child{border-right:none;}
+.bb-btn:active{background:rgba(255,180,30,.1);}
+.bb-btn.active{color:var(--gold2);}
+.bb-ico{font-size:20px;line-height:1;}
 #chat-nb{
-  position:absolute;top:-5px;right:-5px;
-  background:#e03030;color:#fff;font-size:9px;font-weight:bold;
-  border-radius:8px;padding:1px 4px;min-width:16px;text-align:center;
-  display:none;border:2px solid #0a0604;
+  position:absolute;top:4px;right:calc(50% - 18px);
+  background:#e03030;color:#fff;font-size:8px;font-weight:bold;
+  border-radius:6px;padding:1px 3px;min-width:12px;text-align:center;
+  display:none;line-height:1.2;
 }
 
 /* Тосты */
@@ -371,8 +362,10 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 #chat-send:active{transform:scale(.9);}
 
 @media(max-width:360px){
-  #chat-bar-btn,#menu-bar-btn{font-size:12px;padding:7px 4px;}
-  .ri{font-size:10px;}
+  .rb-res{font-size:11px;padding:3px 5px;}
+  .loc-tab{font-size:10px;}
+  .bb-btn{font-size:8px;}
+  .bb-ico{font-size:18px;}
   .bgrid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));}
 }
 </style>
@@ -444,28 +437,34 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 
 <!-- ИГРА -->
 <div id="app" style="display:none;">
-  <div id="sbar">
-    <span class="stitle">СРЕДНЕВЕКОВЬЕ</span>
-    <span class="conn off" id="conn">● OFF</span>
+  <!-- Ресурс-бар -->
+  <div id="resbar">
+    <span id="rb-conn" class="off">●</span>
+    <div id="resbar-res"></div>
+    <button id="rb-profile" title="Мой профиль">👤</button>
   </div>
+  <!-- Локации + уведомления -->
+  <div id="locbar">
+    <button class="loc-tab active" data-loc="castle"><span class="lt-ico">🏰</span>Замок</button>
+    <button class="loc-tab" data-loc="lands"><span class="lt-ico">🌾</span>Земли</button>
+    <button class="loc-tab" data-loc="world"><span class="lt-ico">🌍</span>Мир</button>
+    <div id="locbar-notifs">
+      <button class="notif-btn" id="notif-mail" title="Почта">✉️<span class="notif-badge" id="mail-badge"></span></button>
+      <button class="notif-btn" id="notif-attack" title="Входящие атаки">⚔️<span class="notif-badge" id="atk-badge"></span></button>
+      <button class="notif-btn" id="notif-march" title="Марши">🚶<span class="notif-badge" id="march-badge"></span></button>
+    </div>
+  </div>
+  <!-- Карта/виды -->
   <div id="main">
     <div id="mapwrap"><canvas id="canvas"></canvas></div>
-    <div id="topbar"></div>
-    <!-- Правая навигационная панель -->
-    <div id="slide-wrap">
-      <div id="slidepanel">
-        <button class="snav" data-loc="castle"><span class="sni">🏰</span>Замок</button>
-        <button class="snav" data-loc="lands"><span class="sni">🌾</span>Земли</button>
-        <button class="snav" data-loc="world"><span class="sni">🌍</span>Мир</button>
-        <button class="snav" id="res-snav"><span class="sni">💰</span>Ресурсы</button>
-      </div>
-      <button id="slidebtn">◀</button>
-    </div>
     <div id="timebar">--:--:--</div>
   </div>
-  <div id="bottombar">
-    <button id="menu-bar-btn"><span class="bico">📜</span>Меню</button>
-    <button id="chat-bar-btn"><span class="bico">💬</span>Чат<span id="chat-nb"></span></button>
+  <!-- Нижняя панель -->
+  <div id="botbar">
+    <button class="bb-btn" id="bb-chat"><span class="bb-ico">💬</span>Чат<span id="chat-nb"></span></button>
+    <button class="bb-btn" id="bb-alliance"><span class="bb-ico">👥</span>Альянс</button>
+    <button class="bb-btn" id="bb-rating"><span class="bb-ico">🏆</span>Рейтинг</button>
+    <button class="bb-btn" id="bb-menu"><span class="bb-ico">☰</span>Меню</button>
   </div>
 </div>
 
@@ -770,38 +769,73 @@ function connectWS(){
     else if(m.type==='chat'){appendChat(m.msg);if(!chatOpen){chatUnread++;const b=$('#chat-nb');b.style.display='flex';b.textContent=chatUnread>99?'99+':chatUnread;}}
   };
 }
-function setConn(ok){const e=$('#conn');e.className='conn '+(ok?'on':'off');e.textContent=ok?'● ON':'● OFF';}
+function setConn(ok){const e=$('#rb-conn');if(!e)return;e.className=ok?'on':'off';e.title=ok?'Соединение активно':'Нет соединения';}
 
 // ── ТОПБАР ─────────────────────────────────────────────
-function renderTopbar(){
+function renderTopbar(){renderResbar();}
+
+function renderResbar(){
   if(!S?.player)return;
   const p=S.player;
   const oasisBonus={};
   for(const o of (p.oases||[])) oasisBonus[o.resource]=(oasisBonus[o.resource]||0)+25;
-  const loyalty=p.loyalty??100;
-  const lc=loyalty>=70?'#5cff7a':loyalty>=40?'#ffd44a':loyalty>=20?'#ff8a4a':'#ff4444';
-  const prot=p.protectedUntil>Date.now()?`🛡${fmtT(Math.ceil((p.protectedUntil-Date.now())/1000))} · `:'';
-  const loyTip=`${prot}Лояльность: ${Math.floor(loyalty)}%${loyalty<40?' ⚠️':''} · Храм и Пивоварня поднимают`;
-  // Полоска лояльности — абсолютно внутри #topbar, не добавляет новый grid-элемент
-  // Ресурсы в боковой панели
-  const pr=$('#panel-res');
-  if(pr){
-    pr.innerHTML=RES.map(r=>{
-      const v=p.res[r]||0,mx=p.resMax[r]||1;
+
+  // Ресурс-бар сверху
+  const container=$('#resbar-res');
+  if(container){
+    const showRes=['wood','stone','iron','food','gold'];
+    container.innerHTML=showRes.map(r=>{
+      const v=p.res[r]||0;
+      const mx=p.resMax[r]||Infinity;
       const cls=v>=mx?'full':v<mx*.1?'low':'';
       const si=spr(RES_I[r]);
-      const oaz=oasisBonus[r]?` <sup style="color:#5dff7a;font-size:9px;">+${oasisBonus[r]}%</sup>`:'';
-      return `<div class="ri ${cls}" title="${RES_L[r]}: ${Math.floor(v)}/${Math.floor(mx)}">
-        ${si?`<img src="${si}">`:'<span style="font-size:13px;">◆</span>'}
-        <span style="flex:1;">${RES_L[r]}</span>
-        <span>${fmtN(v)}${oaz}</span>
-      </div>`;
-    }).join('')+
-    `<div title="${loyTip}" style="margin-top:4px;height:4px;border-radius:2px;background:#1a1008;cursor:pointer;"
-      onclick="toast('${loyTip.replace(/'/g,'&apos;')}','${loyalty<40?'err':'ok'}')">
-      <div style="height:100%;width:${loyalty}%;border-radius:2px;background:${lc};transition:width .6s;"></div>
-    </div>`;
+      const oaz=oasisBonus[r]?`<sup style="color:#5dff7a;font-size:8px;">+${oasisBonus[r]}%</sup>`:'';
+      return `<span class="rb-res ${cls}" title="${RES_L[r]}: ${fmtN(Math.floor(v))}${mx<Infinity?' / '+fmtN(mx):''}" onclick="showResModal()">
+        ${si?`<img src="${si}">`:'◆'}${fmtN(Math.floor(v))}${oaz}
+      </span>`;
+    }).join('');
   }
+
+  // Статус соединения
+  const connEl=$('#rb-conn');
+  if(connEl){
+    const on=ws?.readyState===1;
+    connEl.className=on?'on':'off';
+    connEl.textContent=on?'●':'●';
+  }
+
+  // Уведомления
+  renderNotifs();
+}
+
+function renderNotifs(){
+  if(!S?.player)return;
+  const p=S.player;
+
+  // Почта
+  const mailN=(p.mail||[]).filter(m=>!m.read).length;
+  const mailBadge=$('#mail-badge');
+  const mailBtn=$('#notif-mail');
+  if(mailBadge){mailBadge.textContent=mailN;mailBadge.classList.toggle('vis',mailN>0);}
+  if(mailBtn)mailBtn.classList.toggle('has-notif',mailN>0);
+
+  // Атаки (непрочитанные боевые отчёты о потерях)
+  const atkN=(p.reports||[]).filter(r=>r.kind==='battle-loss'&&!r.read).length;
+  const atkBadge=$('#atk-badge');
+  const atkBtn=$('#notif-attack');
+  if(atkBadge){atkBadge.textContent=atkN;atkBadge.classList.toggle('vis',atkN>0);}
+  if(atkBtn)atkBtn.classList.toggle('has-notif',atkN>0);
+
+  // Марши
+  const marchN=(p.marches||[]).length;
+  const marchBadge=$('#march-badge');
+  const marchBtn=$('#notif-march');
+  if(marchBadge){marchBadge.textContent=marchN;marchBadge.classList.toggle('vis',marchN>0);}
+  if(marchBtn)marchBtn.classList.toggle('has-notif',marchN>0);
+
+  // Чат-значок
+  const chatNb=$('#chat-nb');
+  if(chatNb){chatNb.textContent=chatUnread||'';chatNb.style.display=chatUnread?'block':'none';}
 }
 
 // ══════════════════════════════════════════════════════
@@ -1882,8 +1916,9 @@ async function showInboxModal(){
   }catch(e){con.innerHTML=`<p style="color:#ff8080;text-align:center;">${escH(e.message)}</p>`;}
 }
 
-function showReportsModal(){
-  const reps=(S.player.reports||[]).slice().reverse();
+function showReportsModal(filterKind){
+  let reps=(S.player.reports||[]).slice().reverse();
+  if(filterKind)reps=reps.filter(r=>r.kind===filterKind);
   const con = document.createElement('div');
   if (!reps.length) {
     con.innerHTML = '<p style="text-align:center;color:#a89070;padding:16px;">Нет отчётов</p>';
@@ -1976,7 +2011,8 @@ function ratingTitle(pts){
 const AVATARS=['⚔','🏹','⛏','🧙','🛡','🐉','🦅','🌟','💎','🔥','❄️','⚡','🌙','☀️','🗡️','🏰','🐺','🦁'];
 const AVATAR_BGS=['#3a2a10','#1a3a2a','#1a1a3a','#2a1a2a','#3a1a1a','#1a2a3a','#2a3a1a','#3a2a2a'];
 
-function showProfileModal(){
+function showProfileModal(username){
+  if(username&&username!==S?.player?.username){showPlayerProfile(username);return;}
   const p=S.player;
   const pts=p.rating||clientRating(p);
   const techCount=Object.keys(p.techs||{}).length;
@@ -2413,7 +2449,7 @@ function setLoc(loc){
     vpX=gridW/2-hx-R;vpY=gridH/2-hy-H/2;
   }else{vpX=0;vpY=0;}
   renderMap();
-  $$('.snav[data-loc]').forEach(x=>x.classList.toggle('active',x.dataset.loc===loc));
+  $$('.loc-tab').forEach(x=>x.classList.toggle('active',x.dataset.loc===loc));
 }
 
 function showResModal(){
@@ -2461,29 +2497,26 @@ async function enterGame(){
   $('#app').style.display='grid';
   preload();
   await refreshState();
-  // Запрашиваем разрешение на уведомления
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission().catch(()=>{});
   }
 
-  // Правая навигационная панель
-  const spanel=$('#slidepanel'),sbtn=$('#slidebtn');
-  function closePanel(){spanel.classList.remove('open');sbtn.textContent='◀';}
-  sbtn.onclick=()=>{
-    const open=spanel.classList.toggle('open');
-    sbtn.textContent=open?'▶':'◀';
-  };
-  $$('#slidepanel .snav[data-loc]').forEach(b=>b.addEventListener('click',()=>{
-    closePanel();
-    setLoc(b.dataset.loc);
-  }));
-  $('#res-snav').onclick=()=>{closePanel();showResModal();};
-  function updateNavActive(){$$('.snav[data-loc]').forEach(x=>x.classList.toggle('active',x.dataset.loc===LOC));}
-  updateNavActive();
+  // Вкладки локаций
+  $$('.loc-tab').forEach(b=>b.addEventListener('click',()=>setLoc(b.dataset.loc)));
+
+  // Уведомления-кнопки
+  $('#notif-mail').onclick=showInboxModal;
+  $('#notif-attack').onclick=()=>showReportsModal('battle-loss');
+  $('#notif-march').onclick=()=>showMenu();
+
+  // Профиль
+  $('#rb-profile').onclick=()=>showProfileModal(S?.player?.username);
 
   // Нижняя панель
-  $('#menu-bar-btn').onclick=showMenu;
-  $('#chat-bar-btn').onclick=()=>chatOpen?closeChat():openChat();
+  $('#bb-chat').onclick=()=>chatOpen?closeChat():openChat();
+  $('#bb-alliance').onclick=showAllianceModal;
+  $('#bb-rating').onclick=showRatingModal;
+  $('#bb-menu').onclick=showMenu;
 
   connectWS();initChat();initDrag();startAnim();
 
@@ -2659,23 +2692,10 @@ async function showAllianceModal(){
 
 function showMenu(){
   const bd=document.createElement('div');
-  // Навигация по локациям
-  const navRow=document.createElement('div');
-  navRow.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #4a2810;';
-  [['🏰','Замок','castle'],['🌾','Земли','lands'],['🌍','Мир','world']].forEach(([i,n,loc])=>{
-    const c=document.createElement('div');
-    const isActive=LOC===loc;
-    c.style.cssText=`padding:10px 4px;background:linear-gradient(180deg,${isActive?'#6a4020,#3a1808':'#3a1f10,#1a0a05'});border:2px solid ${isActive?'var(--gold2)':'var(--gold3)'};border-radius:6px;text-align:center;cursor:pointer;transition:border-color .15s;`;
-    c.innerHTML=`<div style="font-size:26px;line-height:1;">${i}</div><div style="font-size:10px;color:var(--gold2);font-weight:bold;margin-top:3px;letter-spacing:1px;">${n}</div>`;
-    c.onclick=()=>{bg.remove();setLoc(loc);};
-    navRow.appendChild(c);
-  });
-  bd.appendChild(navRow);
-  // Все остальные кнопки
   const grid=document.createElement('div');
   grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;';
   [
-    ['👑','Профиль',showProfileModal],
+    ['👑','Профиль',()=>showProfileModal(S?.player?.username)],
     ['⚔','Армия',showArmyModal],
     ['✉','Письма',showInboxModal],
     ['📨','Отчёты',showReportsModal],
@@ -2684,17 +2704,20 @@ function showMenu(){
     ['📜','Задания',showQuestsModal],
     ['🏪','Рынок',showMarketModal],
     ['🏆','Рейтинг',()=>showRatingModal()],
+    ['⚗','Артефакты',showArtifactsModal],
+    ['💰','Ресурсы',showResModal],
     ['🚪','Выход',()=>{api('/api/logout',{method:'POST'}).then(()=>location.reload());}],
   ].forEach(([i,n,h])=>{
     const c=document.createElement('div');
-    c.style.cssText='padding:10px 4px;background:linear-gradient(180deg,#5a3018,#2a1008);border:2px solid var(--gold3);border-radius:4px;text-align:center;cursor:pointer;transition:border-color .15s;';
+    c.style.cssText='padding:10px 4px;background:linear-gradient(180deg,#5a3018,#2a1008);border:2px solid var(--gold3);border-radius:6px;text-align:center;cursor:pointer;transition:border-color .15s;';
     c.innerHTML=`<div style="font-size:28px;line-height:1;">${i}</div><div style="font-size:11px;color:var(--gold2);font-weight:bold;margin-top:4px;">${n}</div>`;
     c.onmouseenter=()=>c.style.borderColor='var(--gold2)';
     c.onmouseleave=()=>c.style.borderColor='var(--gold3)';
-    c.onclick=()=>{bg.remove();h();};grid.appendChild(c);
+    c.onclick=()=>{bg.remove();h();};
+    grid.appendChild(c);
   });
   bd.appendChild(grid);
-  const bg=modal({title:'📜 Меню',body:bd});
+  const bg=modal({title:'☰ Меню',body:bd});
 }
 
 // ── АРТЕФАКТЫ ──────────────────────────────────────────
