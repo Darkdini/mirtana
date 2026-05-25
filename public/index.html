@@ -178,7 +178,7 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
   overflow:hidden;max-width:0;
   background:linear-gradient(180deg,#2e1608,#120804);
   border:0 solid var(--gold);border-right:0;
-  border-radius:10px 0 0 10px;
+  border-radius:14px 0 0 14px;
   pointer-events:all;
   display:flex;flex-direction:column;gap:0;padding:0;
   transition:max-width .3s cubic-bezier(.4,0,.2,1),
@@ -195,7 +195,7 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 .snav{
   width:70px;height:70px;flex-shrink:0;
   background:linear-gradient(180deg,#5a3010,#2a1206);
-  border:2px solid var(--gold3);border-radius:10px;
+  border:2px solid var(--gold3);border-radius:12px;
   cursor:pointer;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
   transition:border-color .15s,filter .15s;
@@ -225,25 +225,30 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 
 /* Нижняя панель */
 #bottombar{
-  background:linear-gradient(0deg,#050302,#150902);
-  border-top:2px solid var(--gold);
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:4px;padding:5px 6px;z-index:10;
+  background:transparent;
+  display:flex;justify-content:space-between;align-items:flex-end;
+  padding:0 10px 8px;z-index:10;pointer-events:none;
+  position:absolute;bottom:0;left:0;right:0;
 }
 #chat-bar-btn,#menu-bar-btn{
-  padding:8px 6px;
-  background:linear-gradient(180deg,#3a1f10,#1a0a05);
-  border:2px solid var(--gold3);border-radius:6px;
-  color:var(--gold);font-size:13px;font-weight:bold;
-  text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;
-  letter-spacing:1px;position:relative;cursor:pointer;
-  transition:border-color .15s,background .15s;
+  width:64px;height:64px;
+  background:linear-gradient(180deg,#5a3010,#2a1206);
+  border:2px solid var(--gold);border-radius:14px;
+  color:var(--gold2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-size:10px;font-weight:bold;letter-spacing:.5px;
+  cursor:pointer;pointer-events:all;
+  box-shadow:0 4px 14px rgba(0,0,0,.7);
+  transition:filter .15s;position:relative;
 }
-#chat-bar-btn:active,#menu-bar-btn:active{filter:brightness(1.3);}
-#menu-bar-btn{background:linear-gradient(180deg,#4a2810,#200e04);border-color:var(--gold2);color:var(--gold2);}
-#chat-nb{background:#e03030;color:#fff;font-size:9px;font-weight:bold;
-  border-radius:8px;padding:1px 5px;min-width:16px;text-align:center;
-  display:none;border:1px solid var(--dark);}
+#chat-bar-btn:active,#menu-bar-btn:active{filter:brightness(1.35);}
+#chat-bar-btn .bico,#menu-bar-btn .bico{font-size:26px;line-height:1;}
+#chat-nb{
+  position:absolute;top:-5px;right:-5px;
+  background:#e03030;color:#fff;font-size:9px;font-weight:bold;
+  border-radius:8px;padding:1px 4px;min-width:16px;text-align:center;
+  display:none;border:2px solid #0a0604;
+}
 
 /* Тосты */
 #toasts{position:fixed;top:44px;left:50%;transform:translateX(-50%);
@@ -459,8 +464,8 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
     <div id="timebar">--:--:--</div>
   </div>
   <div id="bottombar">
-    <button id="menu-bar-btn">📜 Меню</button>
-    <button id="chat-bar-btn">💬 Чат<span id="chat-nb"></span></button>
+    <button id="menu-bar-btn"><span class="bico">📜</span>Меню</button>
+    <button id="chat-bar-btn"><span class="bico">💬</span>Чат<span id="chat-nb"></span></button>
   </div>
 </div>
 
