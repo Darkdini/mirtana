@@ -168,59 +168,6 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 #mapwrap{position:absolute;inset:0;overflow:hidden;touch-action:none;}
 #canvas{display:block;}
 
-/* ── БОКОВАЯ ПАНЕЛЬ ── */
-#side-wrap{
-  position:absolute;
-  top:50%;right:0;
-  transform:translateY(-50%);
-  display:flex;align-items:center;
-  z-index:8;pointer-events:none;
-}
-/* панель слева от кнопки — сворачивается до 0 ширины */
-#sidepanel{
-  overflow:hidden;
-  max-height:0;width:0;
-  background:linear-gradient(180deg,var(--wood2),var(--dark));
-  border:0 solid var(--gold);border-right:0;
-  border-radius:8px 0 0 8px;
-  transition:max-height .35s cubic-bezier(.4,0,.2,1),
-             width .35s cubic-bezier(.4,0,.2,1),
-             border-width .3s,padding .3s;
-  display:flex;flex-direction:column;gap:6px;
-  padding:0;pointer-events:all;
-  align-items:center;
-}
-#sidepanel.open{
-  max-height:380px;
-  width:56px;
-  border-width:2px;
-  padding:10px 6px;
-}
-#sidepanel .sb{
-  width:44px;height:44px;flex-shrink:0;
-  background:linear-gradient(180deg,#c08840,#8a5a20);
-  border:2px solid var(--gold);border-radius:6px;
-  font-size:22px;display:flex;align-items:center;justify-content:center;
-  transition:filter .15s,transform .1s;
-}
-#sidepanel .sb:active{filter:brightness(.85);transform:scale(.92);}
-/* кнопка-язычок, всегда прижата к правому краю */
-#sidebtn{
-  width:30px;height:66px;
-  background:linear-gradient(180deg,#b07828,#7a4a18);
-  border:2px solid var(--gold);border-left:0;
-  border-radius:0 8px 8px 0;
-  color:var(--gold2);font-size:15px;
-  display:flex;align-items:center;justify-content:center;
-  pointer-events:all;cursor:pointer;
-  flex-shrink:0;
-  box-shadow:3px 0 10px rgba(0,0,0,.6);
-  transition:filter .15s;
-  writing-mode:vertical-rl;
-  letter-spacing:2px;
-}
-#sidebtn:active{filter:brightness(.85);}
-
 #timebar{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
   background:rgba(0,0,0,.8);color:#fff;padding:2px 10px;border-radius:10px;
   font-size:12px;font-family:monospace;font-weight:bold;z-index:5;
@@ -230,23 +177,23 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 #bottombar{
   background:linear-gradient(0deg,#050302,#150902);
   border-top:2px solid var(--gold);
-  display:grid;grid-template-columns:repeat(5,1fr);
-  gap:2px;padding:3px;z-index:10;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:4px;padding:5px 6px;z-index:10;
 }
-.tab{padding:3px 1px 5px;
+#chat-bar-btn,#menu-bar-btn{
+  padding:8px 6px;
   background:linear-gradient(180deg,#3a1f10,#1a0a05);
-  border:2px solid var(--gold3);border-radius:4px;
-  color:var(--gold);font-size:9px;font-weight:bold;
-  text-align:center;display:flex;flex-direction:column;align-items:center;gap:1px;
-  text-transform:uppercase;position:relative;}
-.tab .ti{font-size:20px;line-height:1;}
-.tab.active{background:linear-gradient(180deg,#5a3018,#2a1408);
-  border-color:var(--gold2);color:var(--gold2);}
-.tab:active{filter:brightness(1.3);}
-.tab .badge{position:absolute;top:-5px;right:-3px;
-  background:#c00;color:#fff;font-size:9px;font-weight:bold;
-  border-radius:8px;padding:1px 4px;min-width:14px;text-align:center;
-  border:1px solid var(--dark);}
+  border:2px solid var(--gold3);border-radius:6px;
+  color:var(--gold);font-size:13px;font-weight:bold;
+  text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;
+  letter-spacing:1px;position:relative;cursor:pointer;
+  transition:border-color .15s,background .15s;
+}
+#chat-bar-btn:active,#menu-bar-btn:active{filter:brightness(1.3);}
+#menu-bar-btn{background:linear-gradient(180deg,#4a2810,#200e04);border-color:var(--gold2);color:var(--gold2);}
+#chat-nb{background:#e03030;color:#fff;font-size:9px;font-weight:bold;
+  border-radius:8px;padding:1px 5px;min-width:16px;text-align:center;
+  display:none;border:1px solid var(--dark);}
 
 /* Тосты */
 #toasts{position:fixed;top:44px;left:50%;transform:translateX(-50%);
@@ -326,21 +273,8 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 .tcard .td{font-size:10px;color:#a0b0c0;line-height:1.3;}
 
 /* ЧАТ */
-#chat-btn{
-  position:fixed;bottom:68px;right:8px;
-  width:46px;height:46px;
-  background:linear-gradient(180deg,#c08840,#7a4a10);
-  border:2px solid var(--gold2);border-radius:50%;
-  font-size:20px;display:none;align-items:center;justify-content:center;
-  z-index:20;box-shadow:0 3px 10px rgba(0,0,0,.5);}
-#chat-btn:active{transform:scale(.9);}
-#chat-nb{position:absolute;top:-4px;right:-4px;
-  background:#e03030;color:#fff;font-size:9px;font-weight:bold;
-  border-radius:50%;min-width:16px;height:16px;
-  display:none;align-items:center;justify-content:center;
-  border:2px solid var(--dark);padding:0 2px;}
 #chat-panel{
-  position:fixed;bottom:68px;right:8px;
+  position:fixed;bottom:62px;right:8px;
   width:min(320px,calc(100vw - 16px));
   height:min(460px,calc(100vh - 150px));
   background:linear-gradient(180deg,#1a0e05,#0a0604);
@@ -382,7 +316,7 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 #chat-send:active{transform:scale(.9);}
 
 @media(max-width:360px){
-  .tab{font-size:8px;}.tab .ti{font-size:17px;}
+  #chat-bar-btn,#menu-bar-btn{font-size:12px;padding:7px 4px;}
   .ri{font-size:10px;}
   .bgrid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));}
 }
@@ -462,31 +396,15 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
   <div id="topbar"></div>
   <div id="main">
     <div id="mapwrap"><canvas id="canvas"></canvas></div>
-    <div id="side-wrap">
-      <div id="sidepanel">
-        <button class="sb" data-a="army" title="Армия">⚔</button>
-        <button class="sb" data-a="alliance" title="Альянс">🛡</button>
-        <button class="sb" data-a="tech" title="Технологии">🔬</button>
-        <button class="sb" data-a="reports" title="Отчёты">📨</button>
-        <button class="sb" data-a="inbox" title="Письма" id="inbox-sb" style="position:relative;">✉<span id="mail-badge" style="display:none;position:absolute;top:2px;right:2px;background:#e03030;color:#fff;font-size:9px;font-weight:bold;border-radius:50%;min-width:14px;height:14px;line-height:14px;text-align:center;padding:0 2px;"></span></button>
-        <button class="sb" data-a="profile" title="Профиль">👑</button>
-        <button class="sb" data-a="logout" title="Выход">🚪</button>
-      </div>
-      <button id="sidebtn">▶</button>
-    </div>
     <div id="timebar">--:--:--</div>
   </div>
   <div id="bottombar">
-    <button class="tab active" data-loc="castle"><span class="ti">🏰</span>Замок</button>
-    <button class="tab" data-loc="lands"><span class="ti">🌾</span>Земли</button>
-    <button class="tab" data-loc="world"><span class="ti">🌍</span>Мир</button>
-    <button class="tab" data-loc="army"><span class="ti">⚔</span>Армия</button>
-    <button class="tab" data-loc="menu"><span class="ti">📜</span>Меню</button>
+    <button id="chat-bar-btn">💬 Чат<span id="chat-nb"></span></button>
+    <button id="menu-bar-btn">📜 Меню</button>
   </div>
 </div>
 
 <div id="toasts"></div>
-<button id="chat-btn">💬<span id="chat-nb"></span></button>
 <div id="chat-panel">
   <div id="chat-head"><span>💬 Мировой чат</span><button id="chat-close">✕</button></div>
   <div id="chat-msgs"></div>
@@ -2287,7 +2205,7 @@ async function openChat(){
 }
 function closeChat(){chatOpen=false;$('#chat-panel').classList.remove('open');}
 function initChat(){
-  const btn=$('#chat-btn');if(!btn)return;
+  const btn=$('#chat-bar-btn');if(!btn)return;
   btn.style.display='flex';
   btn.onclick=()=>chatOpen?closeChat():openChat();
   $('#chat-close').onclick=closeChat;
@@ -2432,43 +2350,22 @@ async function enterGame(){
     Notification.requestPermission().catch(()=>{});
   }
 
-  // Навигация
-  $$('.tab').forEach(t=>t.addEventListener('click',()=>{
-    const loc=t.dataset.loc;
-    if(loc==='menu'){showMenu();return;}
-    if(loc==='army'){showArmyModal();return;}
-    $$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  // Навигация через setLoc()
+  function setLoc(loc){
     LOC=loc;selectedWorldHex=null;selectedGridHex=null;
     if(loc==='world'&&S?.player?.worldPos){
-      // Центрируем на своём замке
       const R=33,W=R*2,H=Math.round(R*Math.sqrt(3));
       const {col,row}=S.player.worldPos;
-      const hx=col*(W*0.75), hy=row*H+(col%2)*(H/2);
-      const gridW=20*(R*1.5)+R*0.5, gridH=20*H+H*0.5;
-      const mw=$('#main').clientWidth, mh=$('#main').clientHeight;
-      vpX=gridW/2-hx-R; vpY=gridH/2-hy-H/2;
-    } else { vpX=0;vpY=0; }
+      const hx=col*(W*0.75),hy=row*H+(col%2)*(H/2);
+      const gridW=20*(R*1.5)+R*0.5,gridH=20*H+H*0.5;
+      vpX=gridW/2-hx-R;vpY=gridH/2-hy-H/2;
+    }else{vpX=0;vpY=0;}
     renderMap();
-  }));
+  }
 
-  // Боковая панель — теперь плавная
-  const sbtn=$('#sidebtn');
-  const spanel=$('#sidepanel');
-  sbtn.onclick=()=>{
-    const open=spanel.classList.toggle('open');
-    sbtn.textContent=open?'◀':'▶';
-  };
-  $$('#sidepanel .sb').forEach(b=>b.addEventListener('click',()=>{
-    const a=b.dataset.a;
-    spanel.classList.remove('open');sbtn.textContent='▶';
-    if(a==='logout'){api('/api/logout',{method:'POST'}).then(()=>location.reload());return;}
-    if(a==='army')showArmyModal();
-    else if(a==='alliance')showAllianceModal();
-    else if(a==='tech')showTechModal();
-    else if(a==='reports')showReportsModal();
-    else if(a==='inbox')showInboxModal();
-    else if(a==='profile')showProfileModal();
-  }));
+  // Нижняя панель
+  $('#menu-bar-btn').onclick=showMenu;
+  $('#chat-bar-btn').onclick=()=>chatOpen?closeChat():openChat();
 
   connectWS();initChat();initDrag();startAnim();
 
@@ -2644,17 +2541,30 @@ async function showAllianceModal(){
 
 function showMenu(){
   const bd=document.createElement('div');
-  bd.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;';
+  // Навигация по локациям
+  const navRow=document.createElement('div');
+  navRow.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #4a2810;';
+  [['🏰','Замок','castle'],['🌾','Земли','lands'],['🌍','Мир','world']].forEach(([i,n,loc])=>{
+    const c=document.createElement('div');
+    const isActive=LOC===loc;
+    c.style.cssText=`padding:10px 4px;background:linear-gradient(180deg,${isActive?'#6a4020,#3a1808':'#3a1f10,#1a0a05'});border:2px solid ${isActive?'var(--gold2)':'var(--gold3)'};border-radius:6px;text-align:center;cursor:pointer;transition:border-color .15s;`;
+    c.innerHTML=`<div style="font-size:26px;line-height:1;">${i}</div><div style="font-size:10px;color:var(--gold2);font-weight:bold;margin-top:3px;letter-spacing:1px;">${n}</div>`;
+    c.onclick=()=>{bg.remove();setLoc(loc);};
+    navRow.appendChild(c);
+  });
+  bd.appendChild(navRow);
+  // Все остальные кнопки
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;';
   [
     ['👑','Профиль',showProfileModal],
+    ['⚔','Армия',showArmyModal],
     ['✉','Письма',showInboxModal],
     ['📨','Отчёты',showReportsModal],
-    ['⚔','Армия',showArmyModal],
     ['🔬','Технологии',showTechModal],
     ['🛡','Альянс',()=>showAllianceModal()],
     ['📜','Задания',showQuestsModal],
     ['🏪','Рынок',showMarketModal],
-    ['💬','Чат',openChat],
     ['🏆','Рейтинг',()=>showRatingModal()],
     ['🚪','Выход',()=>{api('/api/logout',{method:'POST'}).then(()=>location.reload());}],
   ].forEach(([i,n,h])=>{
@@ -2663,8 +2573,9 @@ function showMenu(){
     c.innerHTML=`<div style="font-size:28px;line-height:1;">${i}</div><div style="font-size:11px;color:var(--gold2);font-weight:bold;margin-top:4px;">${n}</div>`;
     c.onmouseenter=()=>c.style.borderColor='var(--gold2)';
     c.onmouseleave=()=>c.style.borderColor='var(--gold3)';
-    c.onclick=()=>{bg.remove();h();};bd.appendChild(c);
+    c.onclick=()=>{bg.remove();h();};grid.appendChild(c);
   });
+  bd.appendChild(grid);
   const bg=modal({title:'📜 Меню',body:bd});
 }
 
