@@ -146,7 +146,7 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 .parch .rl,.parch .rr{display:none;}
 
 /* ===== ИГРА ===== */
-#app{position:fixed;inset:0;display:grid;grid-template-rows:auto auto 1fr auto;}
+#app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;}
 #sbar{height:30px;background:linear-gradient(180deg,var(--red2),var(--red));
   border-bottom:2px solid var(--gold3);
   display:flex;align-items:center;justify-content:space-between;padding:0 10px;}
@@ -154,19 +154,70 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 #sbar .conn{font-size:11px;font-weight:bold;}
 #sbar .conn.on{color:#5cff7a;}
 #sbar .conn.off{color:#ff5050;}
-#topbar{background:linear-gradient(180deg,#0a0604,#180a02);
-  border-bottom:2px solid var(--gold);padding:3px 4px;
-  display:flex;gap:1px;flex-wrap:nowrap;overflow:hidden;}
-.ri{flex:1;display:flex;align-items:center;gap:2px;
+/* topbar скрыт — ресурсы перенесены в боковую панель */
+#topbar{display:none;}
+.ri{display:flex;align-items:center;gap:6px;
   background:rgba(0,0,0,.5);border:1px solid var(--gold3);
-  border-radius:3px;padding:2px 4px;min-width:0;font-size:11px;}
-.ri img{width:13px;height:13px;image-rendering:pixelated;flex-shrink:0;}
-.ri span{font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  border-radius:5px;padding:5px 8px;font-size:12px;}
+.ri img{width:15px;height:15px;image-rendering:pixelated;flex-shrink:0;}
+.ri span{font-weight:bold;}
 .ri.low span{color:#ff8080;}
 .ri.full span{color:#ffd44a;}
 #main{position:relative;overflow:hidden;}
 #mapwrap{position:absolute;inset:0;overflow:hidden;touch-action:none;}
 #canvas{display:block;}
+
+/* ── ПРАВАЯ ВЫДВИЖНАЯ ПАНЕЛЬ ── */
+#slide-wrap{
+  position:absolute;top:50%;right:0;
+  transform:translateY(-50%);
+  display:flex;align-items:center;
+  z-index:15;pointer-events:none;
+}
+#slidepanel{
+  width:0;overflow:hidden;
+  background:linear-gradient(180deg,#2a1408,#0e0604);
+  border:0 solid var(--gold);border-right:0;
+  border-radius:10px 0 0 10px;
+  transition:width .3s cubic-bezier(.4,0,.2,1),
+             border-width .3s, padding .3s;
+  display:flex;flex-direction:column;gap:0;
+  padding:0;pointer-events:all;
+}
+#slidepanel.open{
+  width:160px;
+  border-width:2px;
+  padding:10px 8px;
+  gap:6px;
+}
+/* Ресурсы внутри панели */
+#panel-res{display:flex;flex-direction:column;gap:4px;
+  border-bottom:1px solid #4a2810;padding-bottom:8px;margin-bottom:2px;}
+/* Навигационные кнопки */
+.snav{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 10px;
+  background:linear-gradient(180deg,#4a2810,#1e0c04);
+  border:1px solid var(--gold3);border-radius:6px;cursor:pointer;
+  color:var(--gold);font-size:13px;font-weight:bold;
+  transition:border-color .15s,background .15s;
+  white-space:nowrap;
+}
+.snav:active{filter:brightness(1.3);}
+.snav.active{border-color:var(--gold2);background:linear-gradient(180deg,#6a3818,#2e1208);color:var(--gold2);}
+.snav .sni{font-size:20px;line-height:1;}
+/* Язычок-кнопка */
+#slidebtn{
+  width:28px;height:72px;flex-shrink:0;
+  background:linear-gradient(180deg,#b07828,#7a4a18);
+  border:2px solid var(--gold);border-left:0;
+  border-radius:0 8px 8px 0;
+  color:var(--gold2);font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:all;cursor:pointer;
+  transition:filter .15s;
+}
+#slidebtn:active{filter:brightness(1.25);}
 
 #timebar{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
   background:rgba(0,0,0,.8);color:#fff;padding:2px 10px;border-radius:10px;
@@ -393,9 +444,19 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
     <span class="stitle">СРЕДНЕВЕКОВЬЕ</span>
     <span class="conn off" id="conn">● OFF</span>
   </div>
-  <div id="topbar"></div>
   <div id="main">
     <div id="mapwrap"><canvas id="canvas"></canvas></div>
+    <div id="topbar"></div>
+    <!-- Правая выдвижная панель -->
+    <div id="slide-wrap">
+      <div id="slidepanel">
+        <div id="panel-res"></div>
+        <button class="snav" data-loc="castle"><span class="sni">🏰</span>Замок</button>
+        <button class="snav" data-loc="lands"><span class="sni">🌾</span>Земли</button>
+        <button class="snav" data-loc="world"><span class="sni">🌍</span>Мир</button>
+      </div>
+      <button id="slidebtn">◀</button>
+    </div>
     <div id="timebar">--:--:--</div>
   </div>
   <div id="bottombar">
@@ -718,26 +779,25 @@ function renderTopbar(){
   const prot=p.protectedUntil>Date.now()?`🛡${fmtT(Math.ceil((p.protectedUntil-Date.now())/1000))} · `:'';
   const loyTip=`${prot}Лояльность: ${Math.floor(loyalty)}%${loyalty<40?' ⚠️':''} · Храм и Пивоварня поднимают`;
   // Полоска лояльности — абсолютно внутри #topbar, не добавляет новый grid-элемент
-  const tb=$('#topbar');
-  tb.style.position='relative';
-  tb.innerHTML=RES.map(r=>{
-    const v=p.res[r]||0,mx=p.resMax[r]||1;
-    const cls=v>=mx?'full':v<mx*.1?'low':'';
-    const si=spr(RES_I[r]);
-    const oaz=oasisBonus[r]?`+${oasisBonus[r]}%`:'';
-    return `<div class="ri ${cls}" title="${RES_L[r]}: ${Math.floor(v)}/${Math.floor(mx)}${oaz?' 🌿'+oaz:''}">
-      ${si?`<img src="${si}">`:''}
-      <span>${fmtN(v)}${oaz?`<sup style="color:#5dff7a;font-size:9px;"> ${oaz}</sup>`:''}</span>
+  // Ресурсы в боковой панели
+  const pr=$('#panel-res');
+  if(pr){
+    pr.innerHTML=RES.map(r=>{
+      const v=p.res[r]||0,mx=p.resMax[r]||1;
+      const cls=v>=mx?'full':v<mx*.1?'low':'';
+      const si=spr(RES_I[r]);
+      const oaz=oasisBonus[r]?` <sup style="color:#5dff7a;font-size:9px;">+${oasisBonus[r]}%</sup>`:'';
+      return `<div class="ri ${cls}" title="${RES_L[r]}: ${Math.floor(v)}/${Math.floor(mx)}">
+        ${si?`<img src="${si}">`:'<span style="font-size:13px;">◆</span>'}
+        <span style="flex:1;">${RES_L[r]}</span>
+        <span>${fmtN(v)}${oaz}</span>
+      </div>`;
+    }).join('')+
+    `<div title="${loyTip}" style="margin-top:4px;height:4px;border-radius:2px;background:#1a1008;cursor:pointer;"
+      onclick="toast('${loyTip.replace(/'/g,'&apos;')}','${loyalty<40?'err':'ok'}')">
+      <div style="height:100%;width:${loyalty}%;border-radius:2px;background:${lc};transition:width .6s;"></div>
     </div>`;
-  }).join('')+
-  `<div id="loyaltybar" title="${loyTip}"
-    style="position:absolute;bottom:0;left:0;right:0;height:4px;background:#1a1008;cursor:pointer;"
-    onclick="toast('${loyTip.replace(/'/g,'&apos;')}','${loyalty<40?'err':'ok'}')">
-    <div style="height:100%;width:${loyalty}%;background:${lc};transition:width .6s,background .6s;"></div>
-  </div>`;
-  // Значок непрочитанных писем
-  const badge=$('#mail-badge');
-  if(badge){const u=p.mailUnread||0;badge.textContent=u;badge.style.display=u?'block':'none';}
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -2349,6 +2409,7 @@ function setLoc(loc){
     vpX=gridW/2-hx-R;vpY=gridH/2-hy-H/2;
   }else{vpX=0;vpY=0;}
   renderMap();
+  $$('.snav').forEach(x=>x.classList.toggle('active',x.dataset.loc===loc));
 }
 
 async function enterGame(){
@@ -2361,6 +2422,21 @@ async function enterGame(){
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission().catch(()=>{});
   }
+
+  // Правая выдвижная панель
+  const spanel=$('#slidepanel'),sbtn=$('#slidebtn');
+  sbtn.onclick=()=>{
+    const open=spanel.classList.toggle('open');
+    sbtn.textContent=open?'▶':'◀';
+  };
+  $$('#slidepanel .snav').forEach(b=>b.addEventListener('click',()=>{
+    spanel.classList.remove('open');sbtn.textContent='◀';
+    setLoc(b.dataset.loc);
+    $$('.snav').forEach(x=>x.classList.toggle('active',x.dataset.loc===b.dataset.loc));
+  }));
+  // Подсветить активную вкладку
+  function updateNavActive(){$$('.snav').forEach(x=>x.classList.toggle('active',x.dataset.loc===LOC));}
+  updateNavActive();
 
   // Нижняя панель
   $('#menu-bar-btn').onclick=showMenu;
