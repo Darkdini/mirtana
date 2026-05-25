@@ -146,100 +146,128 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 .parch .rl,.parch .rr{display:none;}
 
 /* ===== ИГРА ===== */
-#app{position:fixed;inset:0;display:grid;grid-template-rows:42px 38px 1fr 54px;}
-/* ── РЕСУРС-БАР (верхняя полоска) ── */
-#resbar{
-  background:linear-gradient(180deg,#1e0c06,#150804);
-  border-bottom:2px solid var(--gold3);
-  display:flex;align-items:center;padding:0 6px;gap:4px;overflow:hidden;
-}
-#resbar-res{
-  flex:1;display:flex;align-items:center;gap:0;overflow-x:auto;overflow-y:hidden;
-  scrollbar-width:none;-ms-overflow-style:none;
-}
-#resbar-res::-webkit-scrollbar{display:none;}
-.rb-res{
-  display:flex;align-items:center;gap:3px;padding:4px 7px;
-  font-size:12px;font-weight:bold;color:var(--gold2);white-space:nowrap;
-  flex-shrink:0;cursor:pointer;border-right:1px solid rgba(140,96,32,.3);
-}
-.rb-res:last-child{border-right:none;}
-.rb-res img{width:14px;height:14px;image-rendering:pixelated;flex-shrink:0;}
-.rb-res.low{color:#ff8080;}
-.rb-res.full{color:#ffd44a;}
-.rb-sep{width:1px;background:var(--gold3);opacity:.3;height:20px;flex-shrink:0;}
-#rb-conn{font-size:10px;font-weight:bold;padding:0 4px;flex-shrink:0;}
-#rb-conn.on{color:#5cff7a;}
-#rb-conn.off{color:#ff5050;}
-#rb-profile{font-size:18px;padding:2px 4px;flex-shrink:0;opacity:.8;transition:opacity .15s;}
-#rb-profile:active{opacity:1;}
-
-/* ── ПОЛОСКА ЛОКАЦИЙ ── */
-#locbar{
-  background:linear-gradient(180deg,#160a04,#100604);
-  border-bottom:2px solid var(--gold3);
-  display:flex;align-items:stretch;
-}
-.loc-tab{
-  flex:1;padding:0 2px;background:none;border:none;
-  color:#6a4020;font-size:11px;font-weight:bold;letter-spacing:.5px;
-  display:flex;align-items:center;justify-content:center;gap:3px;
-  border-bottom:2px solid transparent;margin-bottom:-2px;
-  cursor:pointer;transition:color .15s,border-color .15s,background .15s;
-}
-.loc-tab .lt-ico{font-size:16px;}
-.loc-tab.active{color:var(--gold2);border-color:var(--gold);}
-.loc-tab:active{background:rgba(255,180,30,.08);}
-#locbar-notifs{
-  display:flex;align-items:center;padding:0 4px;gap:2px;flex-shrink:0;
-  border-left:1px solid rgba(140,96,32,.3);
-}
-.notif-btn{
-  position:relative;background:none;border:none;
-  font-size:17px;cursor:pointer;padding:3px 5px;
-  opacity:.5;transition:opacity .15s;
-}
-.notif-btn.has-notif{opacity:1;}
-.notif-badge{
-  position:absolute;top:0;right:0;
-  background:#e03030;color:#fff;font-size:8px;font-weight:bold;
-  border-radius:6px;padding:1px 3px;min-width:12px;text-align:center;
-  display:none;line-height:1.2;
-}
-.notif-badge.vis{display:block;}
-
-#main{position:relative;overflow:hidden;}
+#app{position:fixed;inset:0;}
+#main{position:absolute;inset:0;}
 #mapwrap{position:absolute;inset:0;overflow:hidden;touch-action:none;}
 #canvas{display:block;}
+
+/* ── Уведомления вверху по центру ── */
+#topnotif{
+  position:absolute;top:6px;left:50%;transform:translateX(-50%);
+  display:flex;gap:5px;z-index:20;
+}
+.tn-btn{
+  width:38px;height:34px;position:relative;
+  background:linear-gradient(180deg,#c8901a,#7a5210);
+  border:2px solid #f0c040;border-radius:5px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.7);
+}
+.tn-btn .nb{
+  position:absolute;top:-5px;right:-5px;
+  background:#e03030;color:#fff;font-size:8px;font-weight:bold;
+  border-radius:5px;padding:0 3px;min-width:14px;text-align:center;
+  display:none;border:1px solid #0a0604;line-height:14px;
+}
+.tn-btn .nb.vis{display:block;}
+
+/* ── ПРАВАЯ НАВИГАЦИОННАЯ ПАНЕЛЬ ── */
+#rnav-wrap{
+  position:absolute;top:50%;right:0;
+  transform:translateY(-50%);
+  display:flex;align-items:center;
+  z-index:20;
+}
+#rnav-toggle{
+  width:36px;height:84px;
+  background:linear-gradient(180deg,#d4a030,#8a6018);
+  border:2px solid #f0c040;border-right:0;
+  border-radius:12px 0 0 12px;
+  color:#fff8d0;font-size:22px;font-weight:bold;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:filter .15s;
+  box-shadow:-3px 0 12px rgba(0,0,0,.6);
+}
+#rnav-toggle:active{filter:brightness(1.25);}
+#rnav{
+  display:flex;flex-direction:column;gap:6px;
+  padding:8px 8px 8px 6px;
+  background:linear-gradient(180deg,#3e1e0a,#1e0e04);
+  border:2px solid #8a6018;border-right:0;
+  border-radius:12px 0 0 12px;
+  overflow:hidden;max-width:0;
+  transition:max-width .3s cubic-bezier(.4,0,.2,1),padding .3s,gap .3s;
+  box-shadow:-4px 0 18px rgba(0,0,0,.8);
+}
+#rnav.open{max-width:90px;}
+.rn-btn{
+  width:72px;height:72px;flex-shrink:0;
+  background:linear-gradient(180deg,#6a3a18,#2e1206);
+  border:2px solid #a07828;border-radius:10px;
+  color:#f0c040;font-size:9px;font-weight:bold;letter-spacing:.3px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  cursor:pointer;transition:border-color .15s,filter .15s;
+  box-shadow:inset 0 1px 0 rgba(255,200,60,.1);
+}
+.rn-btn:active{filter:brightness(1.3);}
+.rn-btn.active{border-color:#f0c040;background:linear-gradient(180deg,#8a5020,#3e1a08);
+  box-shadow:0 0 12px rgba(220,160,30,.4);}
+.rn-btn .ri{font-size:28px;line-height:1;}
+
+/* ── Кнопки снизу ── */
+#btn-menu{
+  position:absolute;bottom:8px;left:8px;z-index:20;
+  width:62px;height:62px;
+  background:linear-gradient(180deg,#5a3010,#28100a);
+  border:2px solid #a07828;border-radius:10px;
+  color:#f0c040;font-size:9px;font-weight:bold;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.8);transition:filter .15s;
+}
+#btn-menu:active{filter:brightness(1.3);}
+#btn-menu .bi{font-size:26px;line-height:1;}
+#btn-chat{
+  position:absolute;bottom:8px;right:8px;z-index:20;
+  width:54px;height:54px;
+  background:linear-gradient(180deg,#1a3a1a,#0a1a0a);
+  border:2px solid #40a040;border-radius:10px;
+  color:#80ff80;font-size:22px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.8);transition:filter .15s;
+  position:absolute;bottom:8px;right:8px;
+}
+#btn-chat:active{filter:brightness(1.3);}
+#chat-nb{
+  position:absolute;bottom:62px;right:8px;z-index:21;
+  background:#e03030;color:#fff;font-size:9px;font-weight:bold;
+  border-radius:8px;padding:1px 5px;
+  display:none;border:2px solid #0a0604;
+}
+
 #timebar{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
   background:rgba(0,0,0,.8);color:#fff;padding:2px 10px;border-radius:10px;
   font-size:12px;font-family:monospace;font-weight:bold;z-index:5;
   border:1px solid rgba(255,255,255,.15);pointer-events:none;}
 
-/* ── НИЖНЯЯ ПАНЕЛЬ ДЕЙСТВИЙ ── */
-#botbar{
-  background:linear-gradient(180deg,#1a0a04,#120602);
-  border-top:2px solid var(--gold3);
-  display:flex;align-items:stretch;
+/* ── 7-вкладочная нижняя навигация (в меню-экранах) ── */
+#cabinet-bar{
+  position:fixed;bottom:0;left:0;right:0;height:56px;z-index:60;
+  background:linear-gradient(180deg,#2a1408,#160a04);
+  border-top:2px solid #8a6018;
+  display:none;
 }
-.bb-btn{
-  flex:1;background:none;border:none;
-  color:#6a4020;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:2px;font-size:9px;font-weight:bold;letter-spacing:.5px;
-  position:relative;transition:color .15s,background .15s;
-  border-right:1px solid rgba(140,96,32,.25);
+#cabinet-bar.vis{display:flex;}
+.cb-tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1px;background:none;border:none;border-top:2px solid transparent;
+  color:#7a5020;font-size:8px;font-weight:bold;letter-spacing:.3px;
+  cursor:pointer;transition:color .15s,border-color .15s;
+  margin-top:-2px;
 }
-.bb-btn:last-child{border-right:none;}
-.bb-btn:active{background:rgba(255,180,30,.1);}
-.bb-btn.active{color:var(--gold2);}
-.bb-ico{font-size:20px;line-height:1;}
-#chat-nb{
-  position:absolute;top:4px;right:calc(50% - 18px);
-  background:#e03030;color:#fff;font-size:8px;font-weight:bold;
-  border-radius:6px;padding:1px 3px;min-width:12px;text-align:center;
-  display:none;line-height:1.2;
-}
+.cb-tab .ci{font-size:18px;line-height:1;}
+.cb-tab.active{color:#f0c040;border-color:#f0c040;}
+.cb-tab:active{background:rgba(255,200,30,.08);}
 
 /* Тосты */
 #toasts{position:fixed;top:44px;left:50%;transform:translateX(-50%);
@@ -254,37 +282,47 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 @keyframes tsin{from{opacity:0;transform:translateY(-10px);}}
 @keyframes tout{to{opacity:0;}}
 
-/* Модалки */
-.mbg{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(3px);
+/* Модалки — стиль «пергамент» как в оригинале */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(2px);
   display:flex;align-items:center;justify-content:center;z-index:50;padding:8px;
   animation:fadein .15s;}
 @keyframes fadein{from{opacity:0;}}
-.mbox{background:var(--wood);border:2px solid var(--gold);
-  border-radius:6px;max-width:450px;width:100%;max-height:90vh;
+.mbox{
+  background:linear-gradient(180deg,#f5e8c8,#e8d4a0);
+  border:3px solid #c8a030;border-radius:8px;
+  max-width:440px;width:100%;max-height:90vh;
   display:flex;flex-direction:column;overflow:hidden;
-  box-shadow:0 8px 40px rgba(0,0,0,.9);}
-.mhead{background:linear-gradient(180deg,var(--red2),var(--red));
-  color:#fff;padding:8px 12px;font-size:14px;font-weight:bold;
-  text-align:center;border-bottom:2px solid var(--gold3);
-  position:relative;letter-spacing:1px;}
-.mhead .xb{position:absolute;top:50%;right:8px;transform:translateY(-50%);
-  width:26px;height:26px;background:linear-gradient(180deg,#c44,#722);
-  border:1px solid #fff;border-radius:3px;font-size:14px;
+  box-shadow:0 8px 40px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,200,.5);}
+.mhead{
+  background:linear-gradient(180deg,#c83030,#8b1010);
+  color:#fff;padding:9px 36px 9px 12px;font-size:14px;font-weight:bold;
+  text-align:center;border-bottom:2px solid #c8a030;
+  position:relative;letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,.5);}
+.mhead .xb{
+  position:absolute;top:50%;right:6px;transform:translateY(-50%);
+  width:28px;height:28px;
+  background:linear-gradient(180deg,#c44,#722);
+  border:2px solid rgba(255,255,255,.5);border-radius:5px;font-size:16px;
   color:#fff;font-weight:bold;display:flex;align-items:center;justify-content:center;}
-.mbody{flex:1;overflow-y:auto;padding:12px;
-  background:repeating-linear-gradient(0deg,var(--wood) 0 3px,#3a1a08 3px 6px);
-  color:#e8d0b0;font-size:13px;line-height:1.5;}
+.mbody{
+  flex:1;overflow-y:auto;padding:10px;
+  background:transparent;
+  color:#3a1a08;font-size:13px;line-height:1.5;}
 .mbody p{margin-bottom:5px;}
-.mfoot{padding:8px 12px;background:linear-gradient(0deg,var(--dark),var(--wood));
-  border-top:1px solid var(--gold3);display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
-.mbtn{padding:9px 14px;background:linear-gradient(180deg,#3a8a4a,var(--green2));
-  color:#fff;border:2px solid #5cff7a;border-radius:5px;font-weight:bold;
-  font-size:12px;letter-spacing:1px;text-transform:uppercase;min-width:90px;}
-.mbtn:active{transform:translateY(1px);}
-.mbtn:disabled{opacity:.4;cursor:not-allowed;border-color:#666;}
-.mbtn.red{background:linear-gradient(180deg,#c43a3a,#5a1414);border-color:#ff5050;}
-.mbtn.gold{background:linear-gradient(180deg,#c4a030,#7a5010);border-color:var(--gold2);color:#1a0800;text-shadow:none;}
-.mbtn.gray{background:linear-gradient(180deg,#5a4a30,#2a2010);border-color:#8a7050;}
+.mfoot{padding:8px 10px;background:rgba(200,160,40,.15);
+  border-top:1px solid rgba(200,160,40,.4);display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+/* Кнопки в пергаментном стиле */
+.mbtn{
+  padding:9px 16px;
+  background:linear-gradient(180deg,#6a3818,#3a1808);
+  color:#f0d080;border:2px solid #c8a030;border-radius:6px;
+  font-weight:bold;font-size:12px;letter-spacing:.5px;min-width:90px;
+  box-shadow:0 2px 0 #1a0804;transition:filter .15s;}
+.mbtn:active{transform:translateY(1px);box-shadow:none;}
+.mbtn:disabled{opacity:.4;cursor:not-allowed;}
+.mbtn.red{background:linear-gradient(180deg,#c43a3a,#5a1414);border-color:#e05050;color:#fff;}
+.mbtn.gold{background:linear-gradient(180deg,#d4a030,#8a6010);border-color:#f0c040;color:#1a0800;}
+.mbtn.gray{background:linear-gradient(180deg,#5a4a30,#2a2010);border-color:#8a7050;color:#d0c0a0;}
 .bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;}
 .bcard{background:linear-gradient(180deg,#5a3018,#2a1008);
   border:2px solid var(--gold3);border-radius:4px;padding:7px 5px;
@@ -437,35 +475,41 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 
 <!-- ИГРА -->
 <div id="app" style="display:none;">
-  <!-- Ресурс-бар -->
-  <div id="resbar">
-    <span id="rb-conn" class="off">●</span>
-    <div id="resbar-res"></div>
-    <button id="rb-profile" title="Мой профиль">👤</button>
-  </div>
-  <!-- Локации + уведомления -->
-  <div id="locbar">
-    <button class="loc-tab active" data-loc="castle"><span class="lt-ico">🏰</span>Замок</button>
-    <button class="loc-tab" data-loc="lands"><span class="lt-ico">🌾</span>Земли</button>
-    <button class="loc-tab" data-loc="world"><span class="lt-ico">🌍</span>Мир</button>
-    <div id="locbar-notifs">
-      <button class="notif-btn" id="notif-mail" title="Почта">✉️<span class="notif-badge" id="mail-badge"></span></button>
-      <button class="notif-btn" id="notif-attack" title="Входящие атаки">⚔️<span class="notif-badge" id="atk-badge"></span></button>
-      <button class="notif-btn" id="notif-march" title="Марши">🚶<span class="notif-badge" id="march-badge"></span></button>
-    </div>
-  </div>
-  <!-- Карта/виды -->
   <div id="main">
     <div id="mapwrap"><canvas id="canvas"></canvas></div>
     <div id="timebar">--:--:--</div>
   </div>
-  <!-- Нижняя панель -->
-  <div id="botbar">
-    <button class="bb-btn" id="bb-chat"><span class="bb-ico">💬</span>Чат<span id="chat-nb"></span></button>
-    <button class="bb-btn" id="bb-alliance"><span class="bb-ico">👥</span>Альянс</button>
-    <button class="bb-btn" id="bb-rating"><span class="bb-ico">🏆</span>Рейтинг</button>
-    <button class="bb-btn" id="bb-menu"><span class="bb-ico">☰</span>Меню</button>
+  <!-- Уведомления вверху -->
+  <div id="topnotif">
+    <button class="tn-btn" id="tn-mail" title="Почта">✉<span class="nb" id="tn-mail-n"></span></button>
+    <button class="tn-btn" id="tn-report" title="Отчёты">📋<span class="nb" id="tn-rep-n"></span></button>
   </div>
+  <!-- Правая навигационная панель -->
+  <div id="rnav-wrap">
+    <button id="rnav-toggle">›</button>
+    <div id="rnav">
+      <button class="rn-btn active" data-loc="castle"><span class="ri">🏰</span>Замок</button>
+      <button class="rn-btn" data-loc="lands"><span class="ri">🌾</span>Земли</button>
+      <button class="rn-btn" data-loc="world"><span class="ri">🌍</span>Мир</button>
+      <button class="rn-btn" id="rn-res"><span class="ri">🧺</span>Ресурсы</button>
+    </div>
+  </div>
+  <!-- Кнопка Меню -->
+  <button id="btn-menu"><span class="bi">📜</span>Меню</button>
+  <!-- Кнопка Чат -->
+  <button id="btn-chat">💬</button>
+  <span id="chat-nb"></span>
+</div>
+
+<!-- 7-вкладочная нижняя панель (в меню-режиме) -->
+<div id="cabinet-bar">
+  <button class="cb-tab active" data-cab="cabinet"><span class="ci">👑</span>КАБИНЕТ</button>
+  <button class="cb-tab" data-cab="locations"><span class="ci">🗺</span>ЛОКАЦИИ</button>
+  <button class="cb-tab" data-cab="alliance"><span class="ci">⚔</span>АЛЬЯНС</button>
+  <button class="cb-tab" data-cab="mail"><span class="ci">✉</span>ПОЧТА</button>
+  <button class="cb-tab" data-cab="games"><span class="ci">🎮</span>ИГРЫ</button>
+  <button class="cb-tab" data-cab="info"><span class="ci">ℹ</span>ИНФО</button>
+  <button class="cb-tab" data-cab="rating"><span class="ci">🏆</span>РЕЙТИНГ</button>
 </div>
 
 <div id="toasts"></div>
@@ -769,71 +813,20 @@ function connectWS(){
     else if(m.type==='chat'){appendChat(m.msg);if(!chatOpen){chatUnread++;const b=$('#chat-nb');b.style.display='flex';b.textContent=chatUnread>99?'99+':chatUnread;}}
   };
 }
-function setConn(ok){const e=$('#rb-conn');if(!e)return;e.className=ok?'on':'off';e.title=ok?'Соединение активно':'Нет соединения';}
+function setConn(ok){}
 
 // ── ТОПБАР ─────────────────────────────────────────────
-function renderTopbar(){renderResbar();}
-
-function renderResbar(){
-  if(!S?.player)return;
-  const p=S.player;
-  const oasisBonus={};
-  for(const o of (p.oases||[])) oasisBonus[o.resource]=(oasisBonus[o.resource]||0)+25;
-
-  // Ресурс-бар сверху
-  const container=$('#resbar-res');
-  if(container){
-    const showRes=['wood','stone','iron','food','gold'];
-    container.innerHTML=showRes.map(r=>{
-      const v=p.res[r]||0;
-      const mx=p.resMax[r]||Infinity;
-      const cls=v>=mx?'full':v<mx*.1?'low':'';
-      const si=spr(RES_I[r]);
-      const oaz=oasisBonus[r]?`<sup style="color:#5dff7a;font-size:8px;">+${oasisBonus[r]}%</sup>`:'';
-      return `<span class="rb-res ${cls}" title="${RES_L[r]}: ${fmtN(Math.floor(v))}${mx<Infinity?' / '+fmtN(mx):''}" onclick="showResModal()">
-        ${si?`<img src="${si}">`:'◆'}${fmtN(Math.floor(v))}${oaz}
-      </span>`;
-    }).join('');
-  }
-
-  // Статус соединения
-  const connEl=$('#rb-conn');
-  if(connEl){
-    const on=ws?.readyState===1;
-    connEl.className=on?'on':'off';
-    connEl.textContent=on?'●':'●';
-  }
-
-  // Уведомления
-  renderNotifs();
-}
+function renderTopbar(){renderNotifs();}
 
 function renderNotifs(){
   if(!S?.player)return;
   const p=S.player;
-
-  // Почта
   const mailN=(p.mail||[]).filter(m=>!m.read).length;
-  const mailBadge=$('#mail-badge');
-  const mailBtn=$('#notif-mail');
-  if(mailBadge){mailBadge.textContent=mailN;mailBadge.classList.toggle('vis',mailN>0);}
-  if(mailBtn)mailBtn.classList.toggle('has-notif',mailN>0);
-
-  // Атаки (непрочитанные боевые отчёты о потерях)
-  const atkN=(p.reports||[]).filter(r=>r.kind==='battle-loss'&&!r.read).length;
-  const atkBadge=$('#atk-badge');
-  const atkBtn=$('#notif-attack');
-  if(atkBadge){atkBadge.textContent=atkN;atkBadge.classList.toggle('vis',atkN>0);}
-  if(atkBtn)atkBtn.classList.toggle('has-notif',atkN>0);
-
-  // Марши
-  const marchN=(p.marches||[]).length;
-  const marchBadge=$('#march-badge');
-  const marchBtn=$('#notif-march');
-  if(marchBadge){marchBadge.textContent=marchN;marchBadge.classList.toggle('vis',marchN>0);}
-  if(marchBtn)marchBtn.classList.toggle('has-notif',marchN>0);
-
-  // Чат-значок
+  const nb1=$('#tn-mail-n');
+  if(nb1){nb1.textContent=mailN;nb1.classList.toggle('vis',mailN>0);}
+  const repN=(p.reports||[]).filter(r=>!r.read).length;
+  const nb2=$('#tn-rep-n');
+  if(nb2){nb2.textContent=repN;nb2.classList.toggle('vis',repN>0);}
   const chatNb=$('#chat-nb');
   if(chatNb){chatNb.textContent=chatUnread||'';chatNb.style.display=chatUnread?'block':'none';}
 }
@@ -2449,7 +2442,93 @@ function setLoc(loc){
     vpX=gridW/2-hx-R;vpY=gridH/2-hy-H/2;
   }else{vpX=0;vpY=0;}
   renderMap();
-  $$('.loc-tab').forEach(x=>x.classList.toggle('active',x.dataset.loc===loc));
+  $$('.rn-btn[data-loc]').forEach(x=>x.classList.toggle('active',x.dataset.loc===loc));
+}
+
+// ── Кабинет (7-вкладочное меню) ──────────────────────────
+let _cabBg=null;
+function showCabinet(startTab){
+  if(_cabBg){_cabBg.remove();_cabBg=null;}
+  const bg=document.createElement('div');
+  bg.style.cssText='position:fixed;inset:0 0 56px 0;background:linear-gradient(180deg,#f5e8c8,#e8d4a0);z-index:55;display:flex;flex-direction:column;overflow:hidden;';
+  document.body.appendChild(bg);
+  _cabBg=bg;
+  $('#cabinet-bar').classList.add('vis');
+  $$('.cb-tab').forEach(b=>b.classList.remove('active'));
+
+  function renderCab(tab){
+    $$('.cb-tab').forEach(b=>b.classList.toggle('active',b.dataset.cab===tab));
+    bg.innerHTML='';
+    // Красный заголовок
+    const hdr=document.createElement('div');
+    hdr.style.cssText='background:linear-gradient(180deg,#c83030,#8b0000);color:#fff;font-weight:bold;font-size:15px;padding:10px;text-align:center;border-bottom:2px solid #f0c040;flex-shrink:0;';
+    const tabNames={cabinet:'Кабинет',locations:'Локации',alliance:'Альянс',mail:'Почта',games:'Игры',info:'Информация',rating:'Рейтинг'};
+    hdr.textContent=tabNames[tab]||tab;
+    bg.appendChild(hdr);
+    // Контент
+    const body=document.createElement('div');
+    body.style.cssText='flex:1;overflow-y:auto;padding:0;';
+    bg.appendChild(body);
+    // Кнопка закрыть
+    const closeRow=document.createElement('div');
+    closeRow.style.cssText='flex-shrink:0;padding:6px 8px;';
+    const cbtn=document.createElement('button');
+    cbtn.style.cssText='width:100%;padding:10px;background:linear-gradient(180deg,#5a2010,#2e0e08);border:2px solid #a07028;border-radius:6px;color:#f0c040;font-size:13px;font-weight:bold;';
+    cbtn.innerHTML='✕ Закрыть';
+    cbtn.onclick=()=>{bg.remove();_cabBg=null;$('#cabinet-bar').classList.remove('vis');};
+    closeRow.appendChild(cbtn);
+    bg.appendChild(closeRow);
+
+    if(tab==='cabinet'){
+      const items=[
+        ['👑','Профиль',()=>showProfileModal(S?.player?.username)],
+        ['🧙','Советник',()=>toast('Советник скоро будет добавлен','ok')],
+        ['💰','Казна',showResModal],
+        ['⚔','Армия',showArmyModal],
+        ['🔬','Технологии',showTechModal],
+        ['🏺','Артефакты',showArtifactsModal],
+        ['📜','Задания',showQuestsModal],
+        ['🏪','Рынок',showMarketModal],
+        ['🚪','Выход',()=>{api('/api/logout',{method:'POST'}).then(()=>location.reload());}],
+      ];
+      body.innerHTML='<div style="padding:0;">' + items.map(([i,n])=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid rgba(160,120,40,.25);cursor:pointer;background:rgba(255,255,255,.4);" onclick="this.closest('[data-cab-ctx]')||true" data-act="${n}">
+          <span style="font-size:22px;width:28px;text-align:center;">${i}</span>
+          <span style="font-size:14px;color:#3a1a08;font-weight:bold;">${n}</span>
+          <span style="margin-left:auto;color:#8a6020;font-size:16px;">›</span>
+        </div>`).join('') + '</div>';
+      items.forEach(([,n,fn])=>{
+        [...body.querySelectorAll('[data-act]')].find(el=>el.dataset.act===n)?.addEventListener('click',()=>{cbtn.click();fn();});
+      });
+    } else if(tab==='locations'){
+      const locs=[['🏰','Замок','castle'],['🌾','Земли','lands'],['🌍','Мир','world']];
+      body.innerHTML='<div style="padding:0;">'+locs.map(([i,n,l])=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid rgba(160,120,40,.25);cursor:pointer;background:${LOC===l?'rgba(220,160,40,.2)':'rgba(255,255,255,.4)'};" data-loc="${l}">
+          <span style="font-size:22px;width:28px;text-align:center;">${i}</span>
+          <span style="font-size:14px;color:#3a1a08;font-weight:bold;">${n}</span>
+          ${LOC===l?'<span style="margin-left:auto;color:#c8a030;font-weight:bold;">● Текущая</span>':'<span style="margin-left:auto;color:#8a6020;font-size:16px;">›</span>'}
+        </div>`).join('')+'</div>';
+      body.querySelectorAll('[data-loc]').forEach(el=>el.onclick=()=>{cbtn.click();setLoc(el.dataset.loc);});
+    } else if(tab==='alliance'){
+      cbtn.click=()=>{bg.remove();_cabBg=null;$('#cabinet-bar').classList.remove('vis');};
+      setTimeout(()=>{cbtn.click();showAllianceModal();},0);
+    } else if(tab==='mail'){
+      setTimeout(()=>{cbtn.click();showInboxModal();},0);
+    } else if(tab==='rating'){
+      setTimeout(()=>{cbtn.click();showRatingModal();},0);
+    } else if(tab==='info'){
+      body.innerHTML='<div style="padding:0;">'+[['📰','Новости',()=>toast('Раздел новостей')],['❓','Справка',()=>toast('Справка')],['📞','Контакты',()=>toast('Контакты')]].map(([i,n])=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid rgba(160,120,40,.25);background:rgba(255,255,255,.4);cursor:pointer;" data-n="${n}">
+          <span style="font-size:22px;width:28px;text-align:center;">${i}</span>
+          <span style="font-size:14px;color:#3a1a08;font-weight:bold;">${n}</span>
+        </div>`).join('')+'</div>';
+    } else {
+      body.innerHTML='<p style="padding:20px;text-align:center;color:#8a6020;">Скоро</p>';
+    }
+  }
+
+  $$('.cb-tab').forEach(b=>b.onclick=()=>renderCab(b.dataset.cab));
+  renderCab(startTab||'cabinet');
 }
 
 function showResModal(){
@@ -2494,29 +2573,35 @@ function showResModal(){
 async function enterGame(){
   $('#auth').style.display='none';
   $('#lang-btn').style.display='none';
-  $('#app').style.display='grid';
+  $('#app').style.display='block';
   preload();
   await refreshState();
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission().catch(()=>{});
   }
 
-  // Вкладки локаций
-  $$('.loc-tab').forEach(b=>b.addEventListener('click',()=>setLoc(b.dataset.loc)));
+  // Правая навигационная панель
+  const rnav=$('#rnav'),rtoggle=$('#rnav-toggle');
+  rtoggle.onclick=()=>{
+    const open=rnav.classList.toggle('open');
+    rtoggle.textContent=open?'›':'‹';
+  };
+  // Открываем панель по умолчанию
+  rnav.classList.add('open');
 
-  // Уведомления-кнопки
-  $('#notif-mail').onclick=showInboxModal;
-  $('#notif-attack').onclick=()=>showReportsModal('battle-loss');
-  $('#notif-march').onclick=()=>showMenu();
+  $$('#rnav .rn-btn[data-loc]').forEach(b=>b.onclick=()=>setLoc(b.dataset.loc));
+  $('#rn-res').onclick=showResModal;
 
-  // Профиль
-  $('#rb-profile').onclick=()=>showProfileModal(S?.player?.username);
+  // Уведомления
+  $('#tn-mail').onclick=showInboxModal;
+  $('#tn-report').onclick=showReportsModal;
 
-  // Нижняя панель
-  $('#bb-chat').onclick=()=>chatOpen?closeChat():openChat();
-  $('#bb-alliance').onclick=showAllianceModal;
-  $('#bb-rating').onclick=showRatingModal;
-  $('#bb-menu').onclick=showMenu;
+  // Кнопки внизу
+  $('#btn-menu').onclick=showCabinet;
+  $('#btn-chat').onclick=()=>chatOpen?closeChat():openChat();
+
+  // 7-вкладочная нижняя панель
+  $$('.cb-tab').forEach(b=>b.onclick=()=>switchCab(b.dataset.cab));
 
   connectWS();initChat();initDrag();startAnim();
 
