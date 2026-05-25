@@ -730,14 +730,14 @@ function renderTopbar(){
       <span>${fmtN(v)}${oaz?`<sup style="color:#5dff7a;font-size:9px;"> ${oaz}</sup>`:''}</span>
     </div>`;
   }).join('')+
-  // Значок непрочитанных писем
-  const badge=$('#mail-badge');
-  if(badge){const u=p.mailUnread||0;badge.textContent=u;badge.style.display=u?'block':'none';}
   `<div id="loyaltybar" title="${loyTip}"
     style="position:absolute;bottom:0;left:0;right:0;height:4px;background:#1a1008;cursor:pointer;"
     onclick="toast('${loyTip.replace(/'/g,'&apos;')}','${loyalty<40?'err':'ok'}')">
     <div style="height:100%;width:${loyalty}%;background:${lc};transition:width .6s,background .6s;"></div>
   </div>`;
+  // Значок непрочитанных писем
+  const badge=$('#mail-badge');
+  if(badge){const u=p.mailUnread||0;badge.textContent=u;badge.style.display=u?'block':'none';}
 }
 
 // ══════════════════════════════════════════════════════
@@ -2339,6 +2339,18 @@ function initAuth(){
   };
 }
 
+function setLoc(loc){
+  LOC=loc;selectedWorldHex=null;selectedGridHex=null;
+  if(loc==='world'&&S?.player?.worldPos){
+    const R=33,W=R*2,H=Math.round(R*Math.sqrt(3));
+    const {col,row}=S.player.worldPos;
+    const hx=col*(W*0.75),hy=row*H+(col%2)*(H/2);
+    const gridW=20*(R*1.5)+R*0.5,gridH=20*H+H*0.5;
+    vpX=gridW/2-hx-R;vpY=gridH/2-hy-H/2;
+  }else{vpX=0;vpY=0;}
+  renderMap();
+}
+
 async function enterGame(){
   $('#auth').style.display='none';
   $('#lang-btn').style.display='none';
@@ -2348,19 +2360,6 @@ async function enterGame(){
   // Запрашиваем разрешение на уведомления
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission().catch(()=>{});
-  }
-
-  // Навигация через setLoc()
-  function setLoc(loc){
-    LOC=loc;selectedWorldHex=null;selectedGridHex=null;
-    if(loc==='world'&&S?.player?.worldPos){
-      const R=33,W=R*2,H=Math.round(R*Math.sqrt(3));
-      const {col,row}=S.player.worldPos;
-      const hx=col*(W*0.75),hy=row*H+(col%2)*(H/2);
-      const gridW=20*(R*1.5)+R*0.5,gridH=20*H+H*0.5;
-      vpX=gridW/2-hx-R;vpY=gridH/2-hy-H/2;
-    }else{vpX=0;vpY=0;}
-    renderMap();
   }
 
   // Нижняя панель
