@@ -139,6 +139,7 @@ function serializePlayer(p) {
     techs:           p.techs || {},
     alliance:        getAllianceInfo(p),
     rating:          G.calcRating(p),
+    reputation:      p.reputation || 0,
     avatar:          p.avatar   || null,
     avatarBg:        p.avatarBg || null,
     photo:           p.photo    || null,
@@ -317,7 +318,7 @@ async function router(req, res) {
     const rem = Math.max(0, Math.ceil((job.end - Date.now()) / 1000));
     const cost = Math.max(1, Math.ceil(rem / 60) * 2);
     if ((p.res.gold||0) < cost) return send(res, 400, { error: `Нужно ${cost} золота` });
-    p.res.gold -= cost;
+    p.res.gold -= cost; p.reputation = (p.reputation||0) + Math.floor(cost/10);
     job.end = Date.now();
     G.tickPlayer(p, STATE.world, STATE.players, STATE);
     saveState();
@@ -354,10 +355,13 @@ async function router(req, res) {
     if (!a) return send(res, 200, { alliance: null });
     const members = a.members.map(u => {
       const mp = STATE.players[u];
-      return { username: u, kingdom: mp?.kingdom, race: mp?.race, rating: mp ? G.calcRating(mp) : 0, isLeader: u === a.leader, allianceId: u };
+      const mRating = mp ? G.calcRating(mp) : 0;
+      const mRep = mp?.reputation || 0;
+      return { username: u, kingdom: mp?.kingdom, race: mp?.race, rating: mRating, reputation: mRep, power: mRating + mRep, isLeader: u === a.leader };
     });
+    const alliancePower = members.reduce((s, m) => s + m.power, 0);
     const invites = a.invites.map(u => ({ username: u, kingdom: STATE.players[u]?.kingdom }));
-    return send(res, 200, { alliance: { ...a, members, invites } });
+    return send(res, 200, { alliance: { ...a, members, invites, alliancePower } });
   }
 
   if (pathname === '/api/alliances' && req.method === 'GET') {
@@ -432,7 +436,9 @@ async function router(req, res) {
       allianceName:pa?.name || null,
       castleLevel: castleCell?.level || 1,
       rating:      G.calcRating(tp),
+      reputation:  tp.reputation || 0,
       power:       power,
+      armySize:    Object.values(tp.army||{}).reduce((a,b)=>a+(+b||0), 0),
       worldPos:    tp.worldPos || null,
     });
   }
@@ -554,20 +560,23 @@ async function router(req, res) {
 
   // ── Рейтинг ──────────────────────────────────────────────────────
   if (pathname === '/api/rating' && req.method === 'GET') {
-    const top = Object.values(STATE.players)
+    const allPlayers = Object.values(STATE.players);
+    const top = allPlayers
       .map(pl => ({
-        username:  pl.username,
-        kingdom:   pl.kingdom,
-        race:      pl.race,
-        rating:    G.calcRating(pl),
-        armySize:  Object.values(pl.army||{}).reduce((a,b)=>a+(+b||0), 0),
-        castleLvl: (pl.castle||[]).find(c=>c.bldId==='castle')?.level || 1,
-        avatar:    pl.avatar || null,
-        avatarBg:  pl.avatarBg || null,
+        username:   pl.username,
+        kingdom:    pl.kingdom,
+        race:       pl.race,
+        rating:     G.calcRating(pl),
+        reputation: pl.reputation || 0,
+        armySize:   Object.values(pl.army||{}).reduce((a,b)=>a+(+b||0), 0),
+        castleLvl:  (pl.castle||[]).find(c=>c.bldId==='castle')?.level || 1,
+        avatar:     pl.avatar || null,
+        avatarBg:   pl.avatarBg || null,
+        photo:      pl.photo   || null,
       }))
       .sort((a,b) => b.rating - a.rating)
       .slice(0, 50);
-    return send(res, 200, { top });
+    return send(res, 200, { top, total: allPlayers.length });
   }
 
   // ── История чата ─────────────────────────────────────────────────

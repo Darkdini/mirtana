@@ -426,7 +426,7 @@ function reqMet(p, bldId) {
 
 function hasUnique(p, bldId) { if (!BUILDINGS[bldId]?.unique) return false; return p.castle.some(c=>c.bldId===bldId&&c.level>0); }
 function canAfford(p, cost)  { for (const k in cost) if ((p.res[k]||0)<cost[k]) return false; return true; }
-function payCost(p, cost)    { for (const k in cost) p.res[k] -= cost[k]; }
+function payCost(p, cost)    { for (const k in cost) { p.res[k] -= cost[k]; } if (cost.gold) p.reputation = (p.reputation||0) + Math.floor((cost.gold||0)/10); }
 
 function computeRates(p) {
   const techs = p.techs || {};
@@ -793,7 +793,7 @@ function cmdStartExpedition(p) {
     return err('Экспедиция уже идёт');
   }
   if ((p.res.gold || 0) < 500) return err('Нужно 500 золота');
-  p.res.gold -= 500;
+  p.res.gold -= 500; p.reputation = (p.reputation||0) + 50;
   p.expedition = { startedAt: Date.now(), duration: 10 * 60 * 1000 };
   addReport(p, '🗺 Экспедиция запущена! Вернётся через 10 минут.', 'info');
   return ok();
@@ -1274,7 +1274,7 @@ function cmdResurrectGeneral(p, { idx }) {
   const entry = p.deadGenerals[idx];
   if (!entry) return err('Генерал не найден');
   if ((p.res.gold||0) < entry.resurrectCost) return err(`Нужно ${entry.resurrectCost} 🪙 золота`);
-  p.res.gold -= entry.resurrectCost;
+  p.res.gold -= entry.resurrectCost; p.reputation = (p.reputation||0) + Math.floor(entry.resurrectCost/10);
   p.army[entry.uid] = (p.army[entry.uid]||0) + entry.count;
   p.deadGenerals.splice(idx, 1);
   addReport(p, `✅ Генерал «${UNITS[entry.uid]?.name||entry.uid}» воскрешён!`, 'info');

@@ -176,7 +176,7 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 #rnav-wrap{
   position:absolute;top:50%;right:0;
   transform:translateY(-50%);
-  display:flex;align-items:center;
+  display:flex;flex-direction:row-reverse;align-items:center;
   z-index:20;
 }
 #rnav-toggle{
@@ -1958,12 +1958,13 @@ async function showPlayerProfile(name){
     const d=await api('/api/player/'+encodeURIComponent(name));
     const alliLine=d.allianceName?`<p>Альянс: <b style="color:#5cff7a;">[${d.allianceTag}] ${d.allianceName}</b></p>`:'<p style="color:#806050;">Без альянса</p>';
     const powerLabel=d.power>5000?'💀 Грозный':d.power>2000?'⚔ Сильный':d.power>500?'🛡 Средний':'🐣 Слабый';
-    let avatarHtml='';
-    if(d.photo)avatarHtml=`<img src="${d.photo}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);display:block;margin:0 auto 10px;">`;
-    else if(d.avatar)avatarHtml=`<div style="font-size:48px;text-align:center;margin-bottom:10px;">${d.avatar}</div>`;
+    const avi=d.photo
+      ?`<img src="${d.photo}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);display:block;margin:0 auto 10px;">`
+      :`<div style="width:72px;height:72px;border-radius:50%;background:${d.avatarBg||'#3a2a10'};border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 10px;">${d.avatar||RACE_G[d.race]||'👤'}</div>`;
+    const repColor=d.reputation>500?'#ff9090':d.reputation>200?'#ffd44a':'#a0c090';
     con.innerHTML=`
       <div style="padding:4px 0;">
-        ${avatarHtml}
+        ${avi}
         <p style="text-align:center;font-size:18px;font-weight:bold;color:var(--gold2);margin-bottom:10px;">${escH(d.kingdom)}</p>
         <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;">
           <p>Правитель: <b>${escH(d.username)}</b></p>
@@ -1971,6 +1972,7 @@ async function showPlayerProfile(name){
           ${alliLine}
           <p>Уровень замка: <b style="color:var(--gold);">Ур.${d.castleLevel}</b></p>
           <p>Рейтинг: <b style="color:#ffd44a;">${d.rating} очков</b></p>
+          <p>Репутация: <b style="color:${repColor};">⭐ ${d.reputation||0}</b></p>
           <p>Армия: <b style="color:#ff9090;">${d.armySize!=null?d.armySize+' воинов':'?'}</b></p>
           <p>Боевая мощь: <b>${powerLabel}</b></p>
         </div>
@@ -2221,6 +2223,7 @@ function showProfileModal(username){
         ['⚔','Армия',armyTotal()+' воинов'],
         ['🏗','Зданий',(p.castle||[]).filter(c=>c.bldId).length+(p.lands||[]).filter(c=>c.bldId).length],
         ['🔬','Технологий',techCount+' / '+Object.keys(TECHS).length],
+        ['⭐','Репутация',(p.reputation||0)+' (+1 за каждые 10 🪙)'],
         ['🛡','Альянс',p.alliance?`[${p.alliance.tag}] ${p.alliance.name}`:'Нет альянса'],
         ['🌍','Позиция',p.worldPos?p.worldPos.col+','+p.worldPos.row:'—'],
         ['⏳','Стройка в очереди',(p.queue||[]).length],
@@ -2395,17 +2398,21 @@ async function showRatingModal(){
       const isMeR=p.username===me;
       const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
       const {t:rt,c:rc}=ratingTitle(p.rating);
+      const avatarHtml=p.photo
+        ?`<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--gold3);flex-shrink:0;">`
+        :`<div style="width:36px;height:36px;border-radius:50%;background:${p.avatarBg||'#3a2a10'};border:2px solid var(--gold3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${p.avatar||RACE_G[p.race]||'👤'}</div>`;
       html+=`<div style="display:flex;align-items:center;gap:8px;padding:8px;
         background:${isMeR?'rgba(212,162,54,.15)':'rgba(0,0,0,.3)'};
         border:1px solid ${isMeR?'var(--gold2)':'var(--gold3)'};border-radius:5px;">
-        <span style="font-size:16px;width:28px;text-align:center;flex-shrink:0;">${medal}</span>
-        <span style="font-size:16px;">${RACE_G[p.race]||'👤'}</span>
+        <span style="font-size:16px;width:24px;text-align:center;flex-shrink:0;">${medal}</span>
+        ${avatarHtml}
         <div style="flex:1;min-width:0;">
           <div style="font-weight:bold;color:${isMeR?'var(--gold2)':'#e0d0b0'};font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.kingdom}</div>
           <div style="font-size:10px;color:${rc};">${rt}</div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
           <div style="font-weight:bold;color:var(--gold2);font-size:14px;">${fmtN(p.rating)}</div>
+          <div style="font-size:10px;color:#a0c080;">⭐${fmtN(p.reputation||0)}</div>
           <div style="font-size:10px;color:#a09060;">⚔${p.armySize}</div>
         </div>
       </div>`;
@@ -2877,8 +2884,9 @@ async function showAllianceModal(){
   const membersHtml=fullAlliance?fullAlliance.members.map(m=>`
     <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:4px;margin-bottom:4px;">
       <div>
-        <span style="font-weight:bold;color:var(--gold2);">${m.username=== fullAlliance.leader?'👑 ':''} ${m.kingdom||m.username}</span>
-        <div style="font-size:11px;color:#a08060;">@${m.username} · ${RACES[m.race]?.name||''} · ⭐${fmtN(m.rating||0)}</div>
+        <span style="font-weight:bold;color:var(--gold2);">${m.username===fullAlliance.leader?'👑 ':''} ${m.kingdom||m.username}</span>
+        <div style="font-size:11px;color:#a08060;">@${m.username} · ${RACES[m.race]?.name||''}</div>
+        <div style="font-size:10px;color:#c0a050;">⚔${fmtN(m.rating||0)} + ⭐${fmtN(m.reputation||0)} = <b style="color:#ffd44a;">${fmtN(m.power||0)}</b> силы</div>
       </div>
       ${isLeader&&m.username!==p.username?`<button class="mbtn red kick-btn" data-u="${m.username}" style="padding:3px 7px;font-size:10px;min-width:auto;">Исключить</button>`:''}
     </div>`).join(''):'<p style="color:#a08060;">Загрузка...</p>';
@@ -2909,6 +2917,7 @@ async function showAllianceModal(){
     <div style="background:linear-gradient(135deg,#1a1a2a,#0a0a1a);border:1px solid #4a5a7a;border-radius:6px;padding:10px;margin-bottom:10px;">
       <div style="font-size:16px;font-weight:bold;color:#7ad4ff;">[${alInfo.tag}] ${alInfo.name}</div>
       <div style="font-size:12px;color:#8a9aaa;margin-top:3px;">Лидер: ${alInfo.leader} · ${alInfo.memberCount} участников</div>
+      <div style="font-size:12px;color:#ffd44a;margin-top:4px;">⚔ Сила альянса: <b>${fmtN(fullAlliance?.alliancePower||0)}</b></div>
     </div>
     <div style="font-size:12px;font-weight:bold;color:var(--gold2);margin-bottom:6px;">👥 Участники:</div>
     <div style="max-height:180px;overflow-y:auto;" id="members-list">${membersHtml}</div>
