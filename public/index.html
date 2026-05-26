@@ -609,7 +609,6 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
   <button class="cb-tab" data-cab="locations"><span class="ci">🗺</span>ЛОКАЦИИ</button>
   <button class="cb-tab" data-cab="alliance"><span class="ci">⚔</span>АЛЬЯНС</button>
   <button class="cb-tab" data-cab="mail"><span class="ci">✉</span>ПОЧТА</button>
-  <button class="cb-tab" data-cab="games"><span class="ci">🎮</span>ИГРЫ</button>
   <button class="cb-tab" data-cab="info"><span class="ci">ℹ</span>ИНФО</button>
   <button class="cb-tab" data-cab="rating"><span class="ci">🏆</span>РЕЙТИНГ</button>
 </div>
@@ -965,6 +964,20 @@ function hexPoints(cx,cy,R){
   return pts;
 }
 
+function roundedHexPath(ctx,pts,r){
+  ctx.beginPath();
+  for(let i=0;i<6;i++){
+    const p0=pts[(i+5)%6],p1=pts[i],p2=pts[(i+1)%6];
+    const d1=Math.hypot(p1.x-p0.x,p1.y-p0.y),d2=Math.hypot(p2.x-p1.x,p2.y-p1.y);
+    const rr=Math.min(r,d1/2,d2/2);
+    const a1x=p1.x+(p0.x-p1.x)/d1*rr,a1y=p1.y+(p0.y-p1.y)/d1*rr;
+    const a2x=p1.x+(p2.x-p1.x)/d2*rr,a2y=p1.y+(p2.y-p1.y)/d2*rr;
+    if(i===0)ctx.moveTo(a1x,a1y);else ctx.lineTo(a1x,a1y);
+    ctx.arcTo(p1.x,p1.y,a2x,a2y,rr);
+  }
+  ctx.closePath();
+}
+
 // Полупрозрачная заливка для карты мира (трава просвечивает)
 function worldHexFill(c){
   if(c.type==='forest') return 'rgba(30,70,15,0.38)';
@@ -1075,22 +1088,20 @@ function drawHexGrid(cells,cols,rows,loc){
     const pts=hexPoints(cx2,cy2,R);
 
     // Заливка
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x,pts[0].y);
-    for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
-    ctx.closePath();
+    roundedHexPath(ctx,pts,R*0.18);
     ctx.fillStyle=hexFill(c,loc,c.col,c.row,cols,rows);
     ctx.fill();
     // Тонкая внутренняя тень
     if(loc==='castle'){
       ctx.save();
-      ctx.clip();
+      roundedHexPath(ctx,pts,R*0.18);ctx.clip();
       const grd=ctx.createRadialGradient(cx2,cy2,0,cx2,cy2,R);
       grd.addColorStop(0,'rgba(255,255,200,.08)');
       grd.addColorStop(1,'rgba(0,0,0,.25)');
       ctx.fillStyle=grd;ctx.fill();
       ctx.restore();
     }
+    roundedHexPath(ctx,pts,R*0.18);
     ctx.strokeStyle=hexStroke(c,loc,c.col,c.row,cols,rows);
     ctx.lineWidth=loc==='castle'?2:1.5;
     ctx.stroke();
@@ -1100,12 +1111,10 @@ function drawHexGrid(cells,cols,rows,loc){
     if(_isSel){
       ctx.save();
       for(let g=3;g>=1;g--){
-        ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
-        for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);ctx.closePath();
+        roundedHexPath(ctx,pts,R*0.18);
         ctx.strokeStyle=`rgba(255,215,60,${0.25*g})`;ctx.lineWidth=g*3;ctx.stroke();
       }
-      ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
-      for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);ctx.closePath();
+      roundedHexPath(ctx,pts,R*0.18);
       ctx.strokeStyle='rgba(255,230,80,0.95)';ctx.lineWidth=2;ctx.stroke();
       ctx.restore();
     }
@@ -1178,10 +1187,7 @@ function drawHexGrid(cells,cols,rows,loc){
     if(inQ){
       // Пульсирующий контур
       const a=0.4+0.3*Math.sin(now/400);
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x,pts[0].y);
-      for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
-      ctx.closePath();
+      roundedHexPath(ctx,pts,R*0.18);
       ctx.strokeStyle=`rgba(255,200,0,${a})`;ctx.lineWidth=3;ctx.stroke();
       // Иконка
       ctx.font=`${Math.round(R*0.5)}px serif`;ctx.textAlign='center';
@@ -1243,12 +1249,7 @@ function drawWorldHex(){
     const pts=hexPoints(cx2,cy2,R);
     const isSel=selectedWorldHex&&selectedWorldHex.col===c.col&&selectedWorldHex.row===c.row;
 
-    const hexPath=()=>{
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x,pts[0].y);
-      for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
-      ctx.closePath();
-    };
+    const hexPath=()=>roundedHexPath(ctx,pts,R*0.15);
 
     // Полупрозрачная заливка
     hexPath();
@@ -1288,9 +1289,7 @@ function drawWorldHex(){
       // Ободок: золото — я, зелёный — союзник
       if(isMe||isAlly){
         ctx.strokeStyle=isMe?'#f0c958':'#5cff7a';ctx.lineWidth=2.5;
-        ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
-        for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
-        ctx.closePath();ctx.stroke();
+        roundedHexPath(ctx,pts,R*0.15);ctx.stroke();
       }
       // Щит защиты новичка
       const defPlayer=S.player.username===c.player?S.player:null;
@@ -2708,6 +2707,11 @@ function showCabinet(startTab){
     bg.appendChild(closeRow);
 
     if(tab==='cabinet'){
+      const _rep=S?.player?.reputation||0;
+      const _repBanner=document.createElement('div');
+      _repBanner.style.cssText='padding:10px 14px;background:rgba(200,160,40,.15);border-bottom:1px solid rgba(160,120,40,.3);display:flex;align-items:center;gap:8px;';
+      _repBanner.innerHTML=`<span style="font-size:20px;">👑</span><div style="flex:1"><div style="font-size:13px;font-weight:bold;color:#3a1a08;">${S?.player?.kingdom||S?.player?.username||''}</div><div style="font-size:11px;color:#7a4010;">⭐ Репутация: <b>${_rep}</b> &nbsp;·&nbsp; +1 за каждые 10 🪙</div></div>`;
+      body.appendChild(_repBanner);
       const items=[
         ['👑','Профиль',()=>showProfileModal(S?.player?.username)],
         ['🧙','Советник',()=>toast('Советник скоро будет добавлен','ok')],
@@ -2829,7 +2833,7 @@ async function enterGame(){
   $('#tn-report').onclick=showReportsModal;
 
   // Кнопки внизу
-  $('#btn-menu').onclick=showCabinet;
+  $('#btn-menu').onclick=()=>showCabinet();
   $('#btn-chat').onclick=()=>chatOpen?closeChat():openChat();
 
   // 7-вкладочная нижняя панель
