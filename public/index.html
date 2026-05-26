@@ -247,8 +247,8 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 
 /* Поиск по координатам */
 #world-search{
-  display:none;position:absolute;top:8px;right:8px;z-index:11;
-  display:flex;align-items:center;gap:4px;
+  position:absolute;top:8px;right:8px;z-index:11;
+  display:none;align-items:center;gap:4px;
 }
 .loc-world #world-search{display:flex;}
 #world-search-btn{
@@ -884,7 +884,7 @@ function connectWS(){
   ws.onerror=()=>{};
   ws.onmessage=ev=>{
     let m;try{m=JSON.parse(ev.data);}catch{return;}
-    if(m.type==='state'){S.player=m.player;if(m.player.techs)playerTechs=m.player.techs;renderTopbar();renderMap();}
+    if(m.type==='state'){S.player=m.player;if(m.world)S.world=m.world;if(m.player.techs)playerTechs=m.player.techs;renderTopbar();renderMap();}
     else if(m.type==='reports'){
       for(const r of m.items){
         toast(r.txt,r.kind==='battle-loss'?'err':r.kind==='build'?'ok':'');
@@ -895,7 +895,7 @@ function connectWS(){
         else if(r.txt&&r.txt.includes('Экспедиция вернулась')){pushNotif('🗺 Экспедиция',r.txt);}
       }
     }
-    else if(m.type==='chat'){appendChat(m.msg);if(!chatOpen){chatUnread++;const b=$('#chat-nb');b.style.display='flex';b.textContent=chatUnread>99?'99+':chatUnread;}}
+    else if(m.type==='chat'){appendChat(m.msg);if(!chatOpen){chatUnread++;const b=$('#chat-nb');b.style.display='block';b.textContent=chatUnread>99?'99+':chatUnread;}}
   };
 }
 function setConn(ok){}
@@ -1217,6 +1217,7 @@ function drawWorldHex(){
   const myName=S.player.username;
   const castleS=gi('ground/castle_small.png');
   const banditS=gi('ground/bandit_camp.png');
+  if(!S?.world)return;
   const sorted=[...S.world].sort((a,b)=>a.row!==b.row?a.row-b.row:a.col-b.col);
 
   for(const c of sorted){
@@ -1452,6 +1453,7 @@ function showBuildPick(cell,loc){
   const isCastle=loc==='castle';
   const defs=isCastle?BUILDINGS:LAND_BUILDINGS;
   const clvl=getCLvl();
+  let bg;
   const con=document.createElement('div');
   // Показать очереди строительства
   const maxQueues = clvl >= 5 ? 2 : 1;
@@ -1521,7 +1523,7 @@ function showBuildPick(cell,loc){
 
   if(!con.children.length)con.innerHTML='<p style="text-align:center;color:#a89070;padding:16px;">Нет доступных построек</p>';
   const terrain={inner:'замок',grass:'трава',forest:'лес',stone:'камень'}[cell.type]||cell.type;
-  const bg=modal({title:`Строить — ${terrain}`,body:con});
+  bg=modal({title:`Строить — ${terrain}`,body:con});
 }
 
 function showBldModal(cell,loc){
@@ -1530,7 +1532,8 @@ function showBldModal(cell,loc){
   const def=BUILDINGS[cell.bldId]||LAND_BUILDINGS[cell.bldId];if(!def)return;
   const clvl=getCLvl();
   const cost=calcCost(cell.bldId,cell.level),time=calcTime(cell.bldId,cell.level,clvl);
-  const ok=canAfford(cost);
+  const atMax=def.max&&cell.level>=def.max;
+  const ok=!atMax&&canAfford(cost);
   const s=spr(def.img);
   let extra='';
   if(def.produces)extra=`<p>📈 Производство: <b style="color:#5cff7a;">+${(60*Math.pow(1.3,cell.level)).toFixed(0)}/ч</b></p>`;
@@ -1555,7 +1558,7 @@ function showBldModal(cell,loc){
       <span style="color:var(--gold);">⌛ ${fmtT(time)}</span>
     </div>`;
   const rDelta=ratingDeltaClient(cell.bldId,cell.level+1);
-  const actions=[{label:`Улучшить (+${rDelta}⭐)`,disabled:!ok,handler:async()=>{
+  const actions=[{label:atMax?`Макс. уровень (${def.max})`:`Улучшить (+${rDelta}⭐)`,disabled:!ok,handler:async()=>{
     try{await api('/api/build',{method:'POST',body:{loc,col:cell.col,row:cell.row,bldId:cell.bldId}});
       toast(`Начато улучшение! +${rDelta} к рейтингу 🏆`,'ok');await refreshState();}
     catch(e){toast(e.message,'err');}
@@ -1664,6 +1667,7 @@ function showWorldModal(c){
           <div style="font-weight:bold;font-size:14px;color:#3a1a08;">Замок ${c.player}</div>
           <div style="color:#7a5020;font-size:12px;">X: ${c.col}  Y: ${c.row}</div>
           <div style="color:#7a5020;font-size:12px;">Рейтинг: 🏛 ${wp.rating||0}</div>
+          <div style="color:#7a5020;font-size:12px;">Ратуша: 🏰 Ур.${wp.castleLevel||'?'}</div>
         </div>
       </div>
       <div style="color:#5a3010;font-size:13px;margin-bottom:12px;">
@@ -1677,7 +1681,7 @@ function showWorldModal(c){
         <div class="wm-action-btn" data-act="trade">
           <div style="font-size:28px;">🤝</div><div>Торговля</div>
         </div>
-        <div class="wm-action-btn ${armyTotal()===0?'wm-disabled':''}\" data-act="war">
+        <div class="wm-action-btn ${armyTotal()===0?'wm-disabled':''}" data-act="war">
           <div style="font-size:28px;">⚔️</div><div>Война</div>
         </div>
         <div class="wm-action-btn" data-act="spy">
@@ -1788,12 +1792,12 @@ function showArmyModal(){
     bd+=`<h3 style="color:#ff8080;margin:8px 0 4px;">⚰ Павшие генералы:</h3>`;
     dead.forEach((g,i)=>{
       const u=UNITS[g.uid];
-      const canAfford=(S.player.res.gold||0)>=g.resurrectCost;
+      const canAffordRes=(S.player.res.gold||0)>=g.resurrectCost;
       bd+=`<div style="display:flex;gap:7px;align-items:center;background:rgba(80,0,0,.4);padding:7px;border:1px solid #662020;border-radius:4px;margin-bottom:4px;">
         <span style="font-size:20px;">⚰</span>
         <div style="flex:1;font-size:12px;"><b style="color:#ff9090;">${u?.name||g.uid}</b>
         <div style="color:#a08080;">Стоимость воскрешения: <b style="color:#ffd060;">${g.resurrectCost} 🪙</b></div></div>
-        <button class="mbtn${canAfford&&hasHQ?' gold':' gray'} res-gen" data-idx="${i}"
+        <button class="mbtn${canAffordRes&&hasHQ?' gold':' gray'} res-gen" data-idx="${i}"
           style="font-size:11px;padding:4px 8px;"
           ${!hasHQ?'title="Нужен Военный штаб"':''}>${hasHQ?'Воскресить':'Нет штаба'}</button>
       </div>`;
@@ -1819,7 +1823,8 @@ function showArmyModal(){
 
 function showAttackModal(target){
   const tn=target.type==='bandit'?'Разбойники':target.type==='oasis'?`Оазис ${RES_L[target.resource]||''}`:target.player||'?';
-  const tp=target.type==='bandit'?(target.power||100):target.type==='oasis'?(target.owner?80:30):(target.lvl||1)*200;
+  const _wp=S.worldPlayers?.[target.player]||{};
+  const tp=target.type==='bandit'?(target.power||100):target.type==='oasis'?(target.owner?80:30):(_wp.castleLevel||1)*200;
   const con=document.createElement('div');
   // Тип боя — только для атаки игрока или оазиса
   let battleType='attack';
@@ -2429,7 +2434,8 @@ function appendChat(msg,prepend=false){
 }
 function sendChat(){
   const inp=$('#chat-inp');const text=(inp.value||'').trim();
-  if(!text||!ws||ws.readyState!==1)return;
+  if(!text)return;
+  if(!ws||ws.readyState!==1){toast('Нет соединения с сервером','err');return;}
   ws.send(JSON.stringify({type:'chat',text}));inp.value='';inp.focus();
 }
 async function openChat(){
