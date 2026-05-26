@@ -1680,6 +1680,9 @@ function showWorldModal(c){
         <div class="wm-action-btn ${armyTotal()===0?'wm-disabled':''}\" data-act="war">
           <div style="font-size:28px;">⚔️</div><div>Война</div>
         </div>
+        <div class="wm-action-btn" data-act="spy">
+          <div style="font-size:28px;">🕵️</div><div>Шпионаж</div>
+        </div>
       </div>
       <div class="wm-action-btn" data-act="bookmark" style="display:flex;align-items:center;gap:8px;border-radius:6px;padding:8px 12px;">
         <span style="font-size:18px;">📌</span><span>Запомнить место</span>
@@ -1697,6 +1700,7 @@ function showWorldModal(c){
           if(act==='msg')showCompose(c.player);
           else if(act==='trade')showMarketModal();
           else if(act==='war')showAttackModal(c);
+          else if(act==='spy')showSpyModal(c.player);
           else if(act==='bookmark')toast(`📌 Замок ${c.player} запомнен  X:${c.col} Y:${c.row}`,'ok');
         };
       });
@@ -1796,7 +1800,13 @@ function showArmyModal(){
     });
     if(!hasHQ) bd+=`<p style="font-size:11px;color:#a06060;text-align:center;">Постройте Военный штаб чтобы воскрешать генералов</p>`;
   }
-  const bg=modal({title:'⚔ Армия',body:bd});
+  const bg=modal({title:'⚔ Армия',body:bd,actions:[
+    {label:'⚔ Тренировать',kind:'gold',handler:()=>{
+      const barrackCell=S.player.castle.find(c=>c.bldId==='barracks'&&c.level>0)||S.player.castle.find(c=>c.bldId==='stable'&&c.level>0);
+      if(barrackCell)showTrainModal(barrackCell);
+      else toast('Постройте казарму или конюшню','err');
+    },close:true},
+  ]});
   bg.querySelectorAll('.res-gen').forEach(btn=>{
     btn.onclick=async()=>{
       const idx=parseInt(btn.dataset.idx);
@@ -1866,7 +1876,7 @@ function showAttackModal(target){
       catch(e){toast(e.message,'err');}
     },close:true},
   ]});
-  bg.querySelector('.mbtn.red').classList.add('atkgo');
+  bg.querySelector('.mfoot .mbtn.red')?.classList.add('atkgo');
   refresh();
   if(isPlayer){
     bg.querySelectorAll('.btype').forEach(btn=>{
@@ -1935,7 +1945,10 @@ function renderBattleReport(report) {
 async function showPlayerProfile(name){
   const con=document.createElement('div');
   con.innerHTML='<p style="text-align:center;color:#a09070;padding:16px;">Загрузка...</p>';
-  const bg=modal({title:`👤 ${name}`,body:con});
+  const bg=modal({title:`👤 ${name}`,body:con,actions:[
+    {label:'✉ Написать',kind:'gray',handler:()=>showCompose(name),close:true},
+    {label:'⚔ Атаковать',kind:'red',handler:()=>{toast('Найдите игрока на карте мира для атаки','err');},close:true},
+  ]});
   try{
     const d=await api('/api/player/'+encodeURIComponent(name));
     const alliLine=d.allianceName?`<p>Альянс: <b style="color:#5cff7a;">[${d.allianceTag}] ${d.allianceName}</b></p>`:'<p style="color:#806050;">Без альянса</p>';
@@ -1953,6 +1966,7 @@ async function showPlayerProfile(name){
           ${alliLine}
           <p>Уровень замка: <b style="color:var(--gold);">Ур.${d.castleLevel}</b></p>
           <p>Рейтинг: <b style="color:#ffd44a;">${d.rating} очков</b></p>
+          <p>Армия: <b style="color:#ff9090;">${d.armySize!=null?d.armySize+' воинов':'?'}</b></p>
           <p>Боевая мощь: <b>${powerLabel}</b></p>
         </div>
       </div>`;
@@ -1969,9 +1983,15 @@ function showCompose(toName=''){
         style="width:100%;background:rgba(0,0,0,.4);border:1px solid #5a3510;color:#f0d060;
                padding:8px 10px;border-radius:6px;font-family:inherit;font-size:13px;outline:none;">
     </div>
+    <div style="margin-bottom:8px;">
+      <div style="font-size:11px;color:#a09070;margin-bottom:4px;">Тема</div>
+      <input id="mail-subj" maxlength="80" placeholder="Тема письма"
+        style="width:100%;background:rgba(0,0,0,.4);border:1px solid #5a3510;color:#f0d060;
+               padding:8px 10px;border-radius:6px;font-family:inherit;font-size:13px;outline:none;">
+    </div>
     <div>
       <div style="font-size:11px;color:#a09070;margin-bottom:4px;">Сообщение</div>
-      <textarea id="mail-text" maxlength="500" rows="5" placeholder="Напиши правителю..."
+      <textarea id="mail-text" maxlength="500" rows="4" placeholder="Напиши правителю..."
         style="width:100%;background:rgba(0,0,0,.4);border:1px solid #5a3510;color:#f0d060;
                padding:8px 10px;border-radius:6px;font-family:inherit;font-size:13px;
                outline:none;resize:vertical;"></textarea>
@@ -1980,10 +2000,11 @@ function showCompose(toName=''){
   modal({title:'✉ Написать письмо',body:con,actions:[
     {label:'📨 Отправить',kind:'gold',handler:async()=>{
       const to=con.querySelector('#mail-to').value.trim();
+      const subject=con.querySelector('#mail-subj').value.trim();
       const text=con.querySelector('#mail-text').value.trim();
-      if(!to||!text){con.querySelector('#mail-err').textContent='Заполни все поля';return;}
+      if(!to||!text){con.querySelector('#mail-err').textContent='Заполни поля Кому и Сообщение';return;}
       try{
-        await api('/api/mail/send',{method:'POST',body:{to,text}});
+        await api('/api/mail/send',{method:'POST',body:{to,subject,text}});
         toast('✉ Письмо отправлено','ok');
       }catch(e){con.querySelector('#mail-err').textContent=e.message;}
     },close:true},
@@ -1995,6 +2016,7 @@ async function showInboxModal(){
   const con=document.createElement('div');
   con.innerHTML='<p style="text-align:center;color:#a09070;padding:12px;">Загрузка...</p>';
   modal({title:'✉ Входящие',body:con,actions:[
+    {label:'✉ Написать',kind:'gold',handler:()=>showCompose(''),close:true},
     {label:'✓ Всё прочитано',kind:'gray',handler:async()=>{
       await api('/api/mail/read',{method:'POST',body:{}});
       await refreshState();
@@ -2002,8 +2024,6 @@ async function showInboxModal(){
   ]});
   try{
     const {mail}=await api('/api/mail');
-    await api('/api/mail/read',{method:'POST',body:{}});
-    await refreshState();
     if(!mail||!mail.length){
       con.innerHTML='<p style="text-align:center;color:#a09070;padding:16px;">Нет писем</p>';return;
     }
@@ -2086,7 +2106,7 @@ function showTechModal(){
         // Исследование — через API
         try{
           const r=await api('/api/research',{method:'POST',body:{tid}});
-          if(r.ok){playerTechs[tid]=true;toast('Исучено: '+t.name,'ok');bg.remove();}
+          if(r.ok){playerTechs[tid]=true;toast('Изучено: '+t.name,'ok');bg.remove();await refreshState();}
         }catch(e){toast(e.message,'err');}
       };
       grid.appendChild(card);
@@ -2196,6 +2216,7 @@ function showProfileModal(username){
         ['⚔','Армия',armyTotal()+' воинов'],
         ['🏗','Зданий',(p.castle||[]).filter(c=>c.bldId).length+(p.lands||[]).filter(c=>c.bldId).length],
         ['🔬','Технологий',techCount+' / '+Object.keys(TECHS).length],
+        ['🛡','Альянс',p.alliance?`[${p.alliance.tag}] ${p.alliance.name}`:'Нет альянса'],
         ['🌍','Позиция',p.worldPos?p.worldPos.col+','+p.worldPos.row:'—'],
         ['⏳','Стройка в очереди',(p.queue||[]).length],
       ].map(([i,l,v])=>`
@@ -2357,11 +2378,12 @@ async function showRatingModal(){
   const bg=modal({title:'🏆 Рейтинг игроков',body:con});
   try{
     const d=await api('/api/rating');
+    d.top.sort((a,b)=>(b.rating||0)-(a.rating||0));
     const me=S.player.username;
     const myRank=(d.top.findIndex(p=>p.username===me)+1)||'?';
     let html=`<div style="font-size:12px;color:#a89070;text-align:center;margin-bottom:10px;">
       Твоё место: <b style="color:var(--gold2);font-size:16px;">#${myRank}</b>
-      из <b>${d.top.length}</b> игроков
+      из <b>${d.total||d.top.length}</b> игроков
     </div>
     <div style="display:flex;flex-direction:column;gap:4px;">`;
     d.top.forEach((p,i)=>{
@@ -2624,13 +2646,13 @@ function updateWorldCoords(){
 // ── Кабинет (7-вкладочное меню) ──────────────────────────
 let _cabBg=null;
 function showCabinet(startTab){
+  if(!S?.player)return;
   if(_cabBg){_cabBg.remove();_cabBg=null;}
   const bg=document.createElement('div');
   bg.style.cssText='position:fixed;inset:0 0 56px 0;background:linear-gradient(180deg,#f5e8c8,#e8d4a0);z-index:55;display:flex;flex-direction:column;overflow:hidden;';
   document.body.appendChild(bg);
   _cabBg=bg;
   $('#cabinet-bar').classList.add('vis');
-  $$('.cb-tab').forEach(b=>b.classList.remove('active'));
 
   function renderCab(tab){
     $$('.cb-tab').forEach(b=>b.classList.toggle('active',b.dataset.cab===tab));
@@ -2686,18 +2708,22 @@ function showCabinet(startTab){
         </div>`).join('')+'</div>';
       body.querySelectorAll('[data-loc]').forEach(el=>el.onclick=()=>{cbtn.click();setLoc(el.dataset.loc);});
     } else if(tab==='alliance'){
-      cbtn.click=()=>{bg.remove();_cabBg=null;$('#cabinet-bar').classList.remove('vis');};
-      setTimeout(()=>{cbtn.click();showAllianceModal();},0);
+      setTimeout(()=>{cbtn.onclick();showAllianceModal();},0);
     } else if(tab==='mail'){
       setTimeout(()=>{cbtn.click();showInboxModal();},0);
     } else if(tab==='rating'){
       setTimeout(()=>{cbtn.click();showRatingModal();},0);
     } else if(tab==='info'){
-      body.innerHTML='<div style="padding:0;">'+[['📰','Новости',()=>toast('Раздел новостей')],['❓','Справка',()=>toast('Справка')],['📞','Контакты',()=>toast('Контакты')]].map(([i,n])=>`
+      const infoItems=[['📰','Новости',()=>toast('Раздел новостей будет добавлен','ok')],['❓','Справка',()=>toast('Справка: стройте здания, тренируйте войска, атакуйте врагов!','ok')],['📞','Контакты',()=>toast('Контакты: поддержка в разработке','ok')]];
+      body.innerHTML='<div style="padding:0;">'+infoItems.map(([i,n])=>`
         <div style="display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid rgba(160,120,40,.25);background:rgba(255,255,255,.4);cursor:pointer;" data-n="${n}">
           <span style="font-size:22px;width:28px;text-align:center;">${i}</span>
           <span style="font-size:14px;color:#3a1a08;font-weight:bold;">${n}</span>
+          <span style="margin-left:auto;color:#8a6020;font-size:16px;">›</span>
         </div>`).join('')+'</div>';
+      infoItems.forEach(([,n,fn])=>{
+        [...body.querySelectorAll('[data-n]')].find(el=>el.dataset.n===n)?.addEventListener('click',fn);
+      });
     } else {
       body.innerHTML='<p style="padding:20px;text-align:center;color:#8a6020;">Скоро</p>';
     }
@@ -2717,8 +2743,8 @@ function showResModal(){
   const con=document.createElement('div');
   con.innerHTML='<div style="display:flex;flex-direction:column;gap:6px;">'+
     RES.map(r=>{
-      const v=p.res[r]||0,mx=p.resMax[r]||1;
-      const pct=Math.min(100,Math.round(v/mx*100));
+      const v=p.res[r]||0,mx=p.resMax[r]||0;
+      const pct=mx>0?Math.min(100,Math.round(v/mx*100)):0;
       const si=spr(RES_I[r]);
       const oaz=oasisBonus[r]?`<span style="color:#5dff7a;font-size:10px;"> +${oasisBonus[r]}%🌿</span>`:'';
       const cls=v>=mx?'#ffd44a':v<mx*.1?'#ff8080':'#e0d0a0';
@@ -2814,13 +2840,21 @@ async function showAllianceModal(){
         ${alliances.length?alliances.map(a=>`
           <div style="display:flex;justify-content:space-between;align-items:center;padding:7px;background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:4px;margin-bottom:4px;">
             <div>
-              <span style="font-weight:bold;color:var(--gold2);">[${a.tag}] ${a.name}</span>
-              <div style="font-size:11px;color:#a08060;">Лидер: ${a.leader} · ${a.memberCount} чел.</div>
+              <span style="font-weight:bold;color:var(--gold2);">[${escH(a.tag)}] ${escH(a.name)}</span>
+              <div style="font-size:11px;color:#a08060;">Лидер: ${escH(a.leader)} · ${a.memberCount} чел.</div>
             </div>
+            <button class="mbtn gray join-btn" data-id="${a.id}" style="padding:4px 8px;font-size:10px;min-width:auto;">Вступить</button>
           </div>`).join('')
         :'<p style="text-align:center;color:#a08060;padding:12px;">Пока нет альянсов</p>'}
       </div>`;
     const bg=modal({title:'🛡 Альянс',body:con});
+    bg.querySelectorAll('.join-btn').forEach(btn=>{
+      btn.onclick=async()=>{
+        try{await api('/api/alliance/join',{method:'POST',body:{allianceId:btn.dataset.id}});
+          toast('Вы вступили в альянс!','ok');bg.remove();await refreshState();showAllianceModal();}
+        catch(e){toast(e.message,'err');}
+      };
+    });
     bg.querySelector('#al-create-btn').onclick=async()=>{
       const name=bg.querySelector('#al-name').value.trim();
       const tag=bg.querySelector('#al-tag').value.trim();
