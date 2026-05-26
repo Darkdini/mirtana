@@ -1967,6 +1967,7 @@ async function showPlayerProfile(name){
   const con=document.createElement('div');
   con.innerHTML='<p style="text-align:center;color:#a09070;padding:16px;">Загрузка...</p>';
   const bg=modal({title:`👤 ${name}`,body:con,actions:[
+    {label:'⭐ Подарить реп.',kind:'gold',handler:()=>showRepGiftModal(name),close:true},
     {label:'✉ Написать',kind:'gray',handler:()=>showCompose(name),close:true},
     {label:'⚔ Атаковать',kind:'red',handler:()=>{toast('Найдите игрока на карте мира для атаки','err');},close:true},
   ]});
@@ -1994,6 +1995,42 @@ async function showPlayerProfile(name){
         </div>
       </div>`;
   }catch(e){con.innerHTML=`<p style="color:#ff8080;text-align:center;">${escH(e.message)}</p>`;}
+}
+
+function showRepGiftModal(targetName){
+  const isSelf=!targetName||targetName===S?.player?.username;
+  const title=isSelf?'⭐ Прокачать репутацию':'⭐ Подарить репутацию';
+  const con=document.createElement('div');
+  con.innerHTML=`
+    <div style="text-align:center;margin-bottom:12px;">
+      <div style="font-size:13px;color:#3a1a08;margin-bottom:4px;">
+        ${isSelf?'Трать золото — получай репутацию':'Трать своё золото — репутацию получит <b>'+escH(targetName)+'</b>'}
+      </div>
+      <div style="font-size:12px;color:#7a4010;margin-bottom:12px;">💰 1 золото = ⭐ 3 репутации</div>
+      <div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px;">
+        ${[10,50,100,500].map(g=>`<button class="mbtn gold rep-preset" data-g="${g}" style="min-width:0;padding:7px 10px;font-size:11px;">${g}🪙<br><span style="font-size:10px;color:#5a3000;">+${g*3}⭐</span></button>`).join('')}
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;justify-content:center;">
+        <input id="rep-gold-inp" type="number" min="1" placeholder="Своя сумма"
+          style="width:110px;background:rgba(0,0,0,.3);border:1px solid #9a7020;color:#f0d060;
+                 padding:7px 10px;border-radius:8px;font-family:inherit;font-size:13px;outline:none;text-align:center;">
+        <span style="font-size:12px;color:#7a4010;">🪙 = <span id="rep-preview">0</span>⭐</span>
+      </div>
+      <div id="rep-err" style="color:#e05050;font-size:12px;margin-top:6px;"></div>
+    </div>`;
+  const inp=con.querySelector('#rep-gold-inp');
+  const prev=con.querySelector('#rep-preview');
+  inp.oninput=()=>{prev.textContent=(parseInt(inp.value)||0)*3;};
+  con.querySelectorAll('.rep-preset').forEach(b=>b.onclick=()=>{inp.value=b.dataset.g;prev.textContent=b.dataset.g*3;});
+  modal({title,body:con,actions:[{label:'⭐ Подтвердить',kind:'gold',handler:async()=>{
+    const gold=parseInt(inp.value)||0;
+    if(gold<1){con.querySelector('#rep-err').textContent='Введи количество золота';return;}
+    try{
+      const r=await api('/api/reputation/gift',{method:'POST',body:{gold,target:isSelf?'':targetName}});
+      toast(`⭐ +${r.rep} репутации!`,'ok');
+      await refreshState();
+    }catch(e){con.querySelector('#rep-err').textContent=e.message;}
+  },close:true}]});
 }
 
 // ── Написать письмо ──────────────────────────────────────────────
@@ -2299,7 +2336,8 @@ function showProfileModal(username){
     </div>`:''}`;
 
   const actions=[
-    {label:'🏆 Рейтинг',kind:'gold',handler:()=>{showRatingModal();},close:true},
+    {label:'⭐ Прокачать реп.',kind:'gold',handler:()=>showRepGiftModal(''),close:true},
+    {label:'🏆 Рейтинг',kind:'gray',handler:()=>{showRatingModal();},close:true},
     {label:'Изменить аватар',kind:'gray',handler:()=>{
       const ed=con.querySelector('#avatar-editor');
       ed.style.display=ed.style.display==='none'?'block':'none';

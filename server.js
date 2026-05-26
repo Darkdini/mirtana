@@ -684,6 +684,28 @@ async function router(req, res) {
     return send(res, 200, result);
   }
 
+  if (pathname === '/api/reputation/gift' && req.method === 'POST') {
+    const body = await readBody(req);
+    const gold = Math.max(1, parseInt(body.gold) || 0);
+    const target = (body.target || '').trim();
+    if (gold < 1) return send(res, 400, { error: 'Укажи количество золота' });
+    if ((p.res.gold || 0) < gold) return send(res, 400, { error: 'Недостаточно золота' });
+    const rep = gold * 3;
+    p.res.gold -= gold;
+    if (!target || target === p.username) {
+      p.reputation = (p.reputation || 0) + rep;
+      G.addReport(p, `⭐ +${rep} репутации (потрачено ${gold}🪙)`, 'info');
+    } else {
+      const tp = STATE.players[target];
+      if (!tp) return send(res, 404, { error: 'Игрок не найден' });
+      tp.reputation = (tp.reputation || 0) + rep;
+      G.addReport(p, `⭐ Подарено +${rep} реп. игроку ${target} за ${gold}🪙`, 'info');
+      G.addReport(tp, `⭐ +${rep} репутации — подарок от ${p.username} (${gold}🪙)`, 'info');
+    }
+    saveState();
+    return send(res, 200, { ok: true, rep, gold });
+  }
+
   return send(res, 404, { error: 'Not found' });
 }
 
