@@ -2426,9 +2426,6 @@ async function openChat(){
 }
 function closeChat(){chatOpen=false;$('#chat-panel').classList.remove('open');}
 function initChat(){
-  const btn=$('#chat-bar-btn');if(!btn)return;
-  btn.style.display='flex';
-  btn.onclick=()=>chatOpen?closeChat():openChat();
   $('#chat-close').onclick=closeChat;
   $('#chat-send').onclick=sendChat;
   $('#chat-inp').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}};
@@ -2780,7 +2777,7 @@ async function enterGame(){
   $('#btn-chat').onclick=()=>chatOpen?closeChat():openChat();
 
   // 7-вкладочная нижняя панель
-  $$('.cb-tab').forEach(b=>b.onclick=()=>switchCab(b.dataset.cab));
+  $$('.cb-tab').forEach(b=>b.onclick=()=>showCabinet(b.dataset.cab));
 
   connectWS();initChat();initDrag();startAnim();initWorldSearch();
 
@@ -2954,35 +2951,6 @@ async function showAllianceModal(){
   });
 }
 
-function showMenu(){
-  const bd=document.createElement('div');
-  const grid=document.createElement('div');
-  grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;';
-  [
-    ['👑','Профиль',()=>showProfileModal(S?.player?.username)],
-    ['⚔','Армия',showArmyModal],
-    ['✉','Письма',showInboxModal],
-    ['📨','Отчёты',showReportsModal],
-    ['🔬','Технологии',showTechModal],
-    ['🛡','Альянс',()=>showAllianceModal()],
-    ['📜','Задания',showQuestsModal],
-    ['🏪','Рынок',showMarketModal],
-    ['🏆','Рейтинг',()=>showRatingModal()],
-    ['⚗','Артефакты',showArtifactsModal],
-    ['💰','Ресурсы',showResModal],
-    ['🚪','Выход',()=>{api('/api/logout',{method:'POST'}).then(()=>location.reload());}],
-  ].forEach(([i,n,h])=>{
-    const c=document.createElement('div');
-    c.style.cssText='padding:10px 4px;background:linear-gradient(180deg,#5a3018,#2a1008);border:2px solid var(--gold3);border-radius:6px;text-align:center;cursor:pointer;transition:border-color .15s;';
-    c.innerHTML=`<div style="font-size:28px;line-height:1;">${i}</div><div style="font-size:11px;color:var(--gold2);font-weight:bold;margin-top:4px;">${n}</div>`;
-    c.onmouseenter=()=>c.style.borderColor='var(--gold2)';
-    c.onmouseleave=()=>c.style.borderColor='var(--gold3)';
-    c.onclick=()=>{bg.remove();h();};
-    grid.appendChild(c);
-  });
-  bd.appendChild(grid);
-  const bg=modal({title:'☰ Меню',body:bd});
-}
 
 // ── АРТЕФАКТЫ ──────────────────────────────────────────
 const ARTIFACTS = {
