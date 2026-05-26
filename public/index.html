@@ -2829,8 +2829,8 @@ async function enterGame(){
   $('#rn-res').onclick=showResModal;
 
   // Уведомления
-  $('#tn-mail').onclick=showInboxModal;
-  $('#tn-report').onclick=showReportsModal;
+  $('#tn-mail').onclick=()=>showInboxModal();
+  $('#tn-report').onclick=()=>showReportsModal();
 
   // Кнопки внизу
   $('#btn-menu').onclick=()=>showCabinet();
