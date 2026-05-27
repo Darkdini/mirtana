@@ -1389,16 +1389,24 @@ function onCanvasClick(px,py){
 function initDrag(){
   const mw=$('#mapwrap');
   const ptr=e=>e.touches?.[0]??e.changedTouches?.[0]??e;
-  let sx=0,sy=0,svx=0,svy=0,moved=false;
-  const dn=e=>{const p=ptr(e);sx=p.clientX;sy=p.clientY;svx=vpX;svy=vpY;moved=false;};
+  let sx=0,sy=0,svx=0,svy=0,moved=false,pressing=false;
+  const dn=e=>{
+    if(!e.touches&&e.button!==0)return;
+    pressing=true;
+    const p=ptr(e);sx=p.clientX;sy=p.clientY;svx=vpX;svy=vpY;moved=false;
+  };
   const mv=e=>{
+    if(!pressing)return;
     const p=ptr(e);const dx=p.clientX-sx,dy=p.clientY-sy;
     if(!moved&&(Math.abs(dx)>6||Math.abs(dy)>6))moved=true;
     if(!moved)return;
     vpX=svx+dx;vpY=svy+dy;
     renderMap();
   };
-  const up=()=>{if(moved){mw.dataset.dragged='1';setTimeout(()=>mw.dataset.dragged='',80);}};
+  const up=()=>{
+    pressing=false;
+    if(moved){mw.dataset.dragged='1';setTimeout(()=>mw.dataset.dragged='',80);}
+  };
   mw.addEventListener('mousedown',dn);mw.addEventListener('touchstart',dn,{passive:true});
   mw.addEventListener('mousemove',mv);mw.addEventListener('touchmove',mv,{passive:true});
   window.addEventListener('mouseup',up);mw.addEventListener('touchend',up);
@@ -1406,13 +1414,11 @@ function initDrag(){
     if(mw.dataset.dragged==='1')return;
     const rect=$('#canvas').getBoundingClientRect();
     const dpr=devicePixelRatio||1;
-    // Нужно учесть масштаб canvas
     const scaleX=($('#canvas').width/dpr)/rect.width;
     const scaleY=($('#canvas').height/dpr)/rect.height;
     onCanvasClick((e.clientX-rect.left)*scaleX,(e.clientY-rect.top)*scaleY);
   });
   window.addEventListener('resize',()=>{vpX=0;vpY=0;renderMap();});
-  // Двойной тап — сброс позиции
   let lastTap=0;
   mw.addEventListener('touchend',()=>{
     const now=Date.now();
