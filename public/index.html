@@ -263,7 +263,7 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 
 /* Поиск по координатам */
 #world-search{
-  position:absolute;top:8px;right:8px;z-index:11;
+  position:absolute;top:52px;right:8px;z-index:11;
   display:none;align-items:center;gap:4px;
 }
 .loc-world #world-search{display:flex;}
@@ -2657,8 +2657,11 @@ function setLoc(loc){
     const R=33,W=R*2,H=Math.round(R*Math.sqrt(3));
     const {col,row}=S.player.worldPos;
     const hx=col*(W*0.75),hy=row*H+(col%2)*(H/2);
-    const gridW=20*(R*1.5)+R*0.5,gridH=20*H+H*0.5;
-    vpX=gridW/2-hx-R;vpY=gridH/2-hy-H/2;
+    const mw=$('#main').clientWidth||window.innerWidth;
+    const mh=$('#main').clientHeight||window.innerHeight;
+    const gridW=WORLD_COLS*(R*1.5)+R*0.5,gridH=WORLD_ROWS*H+H*0.5;
+    vpX=mw/2-(mw-gridW)/2-hx-R;
+    vpY=mh/2-(mh-gridH)/2-hy-H/2;
   }else{vpX=0;vpY=0;}
   const main=$('#main');
   if(main){main.className=loc==='world'?'loc-world':'';}
@@ -2668,11 +2671,11 @@ function setLoc(loc){
 }
 
 function jumpToCoords(col,row){
-  col=Math.max(0,Math.min(19,+col||0));
-  row=Math.max(0,Math.min(19,+row||0));
+  col=Math.max(0,Math.min(WORLD_COLS-1,+col||0));
+  row=Math.max(0,Math.min(WORLD_ROWS-1,+row||0));
   const R=33,W=R*2,H=Math.round(R*Math.sqrt(3));
   const hx=col*(W*0.75),hy=row*H+(col%2)*(H/2);
-  const gridW=20*(R*1.5)+R*0.5,gridH=20*H+H*0.5;
+  const gridW=WORLD_COLS*(R*1.5)+R*0.5,gridH=WORLD_ROWS*H+H*0.5;
   const mw=$('#main').clientWidth||window.innerWidth;
   const mh=$('#main').clientHeight||window.innerHeight;
   vpX=mw/2-(mw-gridW)/2-hx-R;
