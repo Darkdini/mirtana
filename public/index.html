@@ -485,6 +485,105 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
   .bb-ico{font-size:18px;}
   .bgrid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));}
 }
+/* ── МЕССЕНДЖЕР ── */
+#messenger{
+  position:fixed;inset:0;z-index:150;
+  background:linear-gradient(180deg,#1a0a04 0%,#0e0602 100%);
+  display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+#messenger.open{transform:translateX(0);pointer-events:all;}
+#msg-topbar{
+  background:linear-gradient(180deg,#3a1e08,#250f04);
+  border-bottom:2px solid #c8a030;
+  padding:10px 12px;display:flex;align-items:center;gap:10px;
+  min-height:52px;
+}
+#msg-topbar .msg-title{flex:1;font-size:16px;font-weight:bold;color:var(--gold2);text-align:center;}
+#msg-topbar button{
+  width:36px;height:36px;background:rgba(0,0,0,.4);border:1px solid #7a5020;
+  border-radius:8px;color:#e0c060;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+#msg-topbar button:active{filter:brightness(1.4);}
+#msg-views{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column;}
+.msg-view{position:absolute;inset:0;display:flex;flex-direction:column;
+  transition:transform .22s ease,opacity .22s ease;}
+.msg-view.hidden{transform:translateX(60px);opacity:0;pointer-events:none;}
+/* Список диалогов */
+#mv-list{overflow-y:auto;}
+.msg-contact{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-bottom:1px solid rgba(200,160,48,.1);
+  cursor:pointer;transition:background .15s;
+}
+.msg-contact:active{background:rgba(200,140,40,.1);}
+.msg-avatar{
+  width:42px;height:42px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#8a4010,#3a1a06);
+  border:2px solid #c8a030;display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:bold;color:#f0c040;position:relative;
+}
+.msg-avatar .msg-dot{
+  position:absolute;bottom:-2px;right:-2px;
+  width:12px;height:12px;background:#e03030;border:2px solid #0e0602;
+  border-radius:50%;display:none;
+}
+.msg-avatar .msg-dot.vis{display:block;}
+.msg-contact-info{flex:1;min-width:0;}
+.msg-contact-name{font-size:14px;font-weight:bold;color:#f0d080;margin-bottom:2px;}
+.msg-contact-preview{font-size:12px;color:#908070;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.msg-contact-time{font-size:10px;color:#706050;flex-shrink:0;align-self:flex-start;margin-top:2px;}
+.msg-empty{padding:40px 20px;text-align:center;color:#706050;font-size:14px;}
+/* Тред */
+#mv-thread{overflow-y:auto;padding:10px;}
+.msg-bubble-wrap{display:flex;margin-bottom:8px;}
+.msg-bubble-wrap.out{justify-content:flex-end;}
+.msg-bubble{
+  max-width:75%;padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.4;
+  word-break:break-word;
+}
+.msg-bubble-wrap.in .msg-bubble{
+  background:rgba(60,35,10,.8);border:1px solid #5a3a18;color:#f0ddb0;
+  border-radius:14px 14px 14px 4px;
+}
+.msg-bubble-wrap.out .msg-bubble{
+  background:linear-gradient(135deg,#6a3a10,#3a1a06);border:1px solid #c8a030;color:#fff8d0;
+  border-radius:14px 14px 4px 14px;
+}
+.msg-bubble-time{font-size:9px;color:rgba(255,255,255,.4);margin-top:3px;text-align:right;}
+#msg-thread-inp-row{
+  display:flex;gap:8px;padding:10px 12px;
+  border-top:2px solid rgba(200,160,48,.25);
+  background:rgba(0,0,0,.4);flex-shrink:0;
+}
+#msg-thread-inp{
+  flex:1;background:rgba(0,0,0,.5);border:1px solid #7a5020;color:#f0d070;
+  padding:9px 12px;border-radius:10px;font-family:inherit;font-size:13px;outline:none;
+}
+#msg-thread-inp:focus{border-color:#c8a030;}
+#msg-thread-send{
+  width:42px;height:42px;background:linear-gradient(180deg,#3a8a4a,#1d4a26);
+  border:1px solid #4aaa5a;border-radius:10px;color:#fff;font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+/* Новое сообщение */
+#mv-new{padding:16px;}
+#mv-new label{font-size:12px;color:#a09070;display:block;margin-bottom:4px;}
+#mv-new input, #mv-new textarea{
+  width:100%;background:rgba(0,0,0,.5);border:1px solid #7a5020;color:#f0d070;
+  padding:9px 12px;border-radius:10px;font-family:inherit;font-size:13px;outline:none;
+  box-sizing:border-box;
+}
+#mv-new input:focus, #mv-new textarea:focus{border-color:#c8a030;}
+#mv-new textarea{resize:none;height:100px;margin-top:10px;}
+#mv-new-send{
+  margin-top:12px;width:100%;padding:11px;
+  background:linear-gradient(180deg,#e0a020,#8a5c0e);
+  border:2px solid #f5cc50;border-radius:10px;
+  color:#1a0a04;font-size:14px;font-weight:bold;cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -584,7 +683,7 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
   <!-- Уведомления вверху -->
   <div id="topnotif">
     <button class="tn-btn" id="tn-mail" title="Почта">✉<span class="nb" id="tn-mail-n"></span></button>
-    <button class="tn-btn" id="tn-report" title="Отчёты">📋<span class="nb" id="tn-rep-n"></span></button>
+    <button class="tn-btn" id="tn-report" title="Отчёты">📜<span class="nb" id="tn-rep-n"></span></button>
   </div>
   <!-- Правая навигационная панель -->
   <div id="rnav-wrap">
@@ -601,6 +700,36 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
   <!-- Кнопка Чат -->
   <button id="btn-chat">💬</button>
   <span id="chat-nb"></span>
+</div>
+
+<!-- МЕССЕНДЖЕР -->
+<div id="messenger">
+  <div id="msg-topbar">
+    <button id="msg-close-btn">✕</button>
+    <span class="msg-title" id="msg-topbar-title">Сообщения</span>
+    <button id="msg-new-btn">✏</button>
+  </div>
+  <div id="msg-views">
+    <!-- View 1: список диалогов -->
+    <div class="msg-view" id="mv-list"></div>
+    <!-- View 2: тред -->
+    <div class="msg-view hidden" id="mv-thread-wrap">
+      <div id="mv-thread"></div>
+      <div id="msg-thread-inp-row">
+        <input id="msg-thread-inp" placeholder="Написать..." maxlength="500">
+        <button id="msg-thread-send">➤</button>
+      </div>
+    </div>
+    <!-- View 3: новое сообщение -->
+    <div class="msg-view hidden" id="mv-new">
+      <label>Ник получателя</label>
+      <input id="msg-new-to" placeholder="Имя игрока" maxlength="30">
+      <label style="margin-top:10px;">Сообщение</label>
+      <textarea id="msg-new-text" placeholder="Напиши что-нибудь..." maxlength="500"></textarea>
+      <button id="mv-new-send">Отправить</button>
+      <div id="msg-new-err" style="color:#ff8080;font-size:12px;margin-top:8px;text-align:center;"></div>
+    </div>
+  </div>
 </div>
 
 <!-- 7-вкладочная нижняя панель (в меню-режиме) -->
