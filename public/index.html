@@ -2752,7 +2752,7 @@ function showCabinet(startTab){
       body.appendChild(_repBanner);
       const items=[
         ['👑','Профиль',()=>showProfileModal(S?.player?.username)],
-        ['🧙','Советник',()=>toast('Советник скоро будет добавлен','ok')],
+        ['🧙','Советник',showAdvisorModal],
         ['💰','Казна',showResModal],
         ['⚔','Армия',showArmyModal],
         ['🔬','Технологии',showTechModal],
@@ -3278,6 +3278,170 @@ const QUESTS_CLIENT = {
   alliance_member:{ name:'Дипломат',      desc:'Вступи в альянс',          goal:{type:'alliance',count:1},    reward:{gold:300} },
   expedition_done:{ name:'Путешественник',desc:'Заверши 3 экспедиции',     goal:{type:'expedition',count:3},  reward:{gold:700} },
 };
+
+function showAdvisorModal(){
+  const p=S.player;
+  if(!p)return;
+  const res=p.res||{}, resMax=p.resMax||{}, queue=p.queue||[], trainQ=p.trainQueue||[];
+  const castle=p.castle||[], lands=p.lands||[];
+  const castleLvl=getCLvl();
+  const allCells=[...castle,...lands];
+  const techs=p.techs||{}, quests=p.quests||{};
+  const army=armyTotal();
+
+  const tips=[];
+  const tip=(priority,icon,title,desc,fn,lbl)=>tips.push({priority,icon,title,desc,fn,lbl});
+
+  // ── ЗАДАНИЯ: можно забрать награду ──
+  const claimable=Object.entries(QUESTS_CLIENT).filter(([id])=>{
+    const q=quests[id]; return q?.done&&!q?.claimed;
+  });
+  if(claimable.length)
+    tip(10,'📜',`Заберите награду! (${claimable.length} задан${claimable.length===1?'ие':'ия'})`,
+      claimable.map(([,q])=>q.name).join(', '),showQuestsModal,'Задания');
+
+  // ── ЕДА критически мала ──
+  if((res.food||0)<50)
+    tip(9,'🌾','Критически мало еды!',
+      `Осталось ${res.food||0} — войска могут взбунтоваться. Стройте или улучшайте фермы.`,
+      ()=>setLoc('lands'),'Земли');
+  else if((res.food||0)<200)
+    tip(7,'🌾','Мало еды',`Запасы еды: ${res.food||0}. Рекомендуем улучшить фермы.`,
+      ()=>setLoc('lands'),'Земли');
+
+  // ── АРМИЯ ──
+  if(army===0)
+    tip(9,'⚔','Нет армии!',
+      'Без войск вы беззащитны. Постройте казарму и наймите солдат.',
+      showArmyModal,'Армия');
+  else if(army<30)
+    tip(7,'⚔',`Армия очень мала (${army} воинов)`,
+      'Противники могут атаковать. Рекомендуем набрать хотя бы 50 воинов.',
+      showArmyModal,'Армия');
+
+  // ── ОЧЕРЕДЬ СТРОИТЕЛЬСТВА ПУСТА ──
+  if(queue.length===0){
+    // Найдём что можно построить/улучшить
+    const upgradeable=castle.filter(c=>{
+      if(!c.bldId)return false;
+      const def=BUILDINGS[c.bldId]; if(!def)return false;
+      if(c.level>=(def.max||20))return false;
+      const cost=calcCost(c.bldId,c.level+1,castleLvl);
+      return canAfford(cost)&&reqOk(c.bldId,allCells);
+    }).slice(0,3);
+    const buildable=Object.keys(BUILDINGS).filter(id=>{
+      if(hasU(id))return false;
+      if(!reqOk(id,allCells))return false;
+      if(!BUILDINGS[id].unique)return false;
+      const cost=calcCost(id,1,castleLvl);
+      return canAfford(cost);
+    }).slice(0,2);
+    const names=[
+      ...upgradeable.map(c=>`↑${BUILDINGS[c.bldId]?.name}`),
+      ...buildable.map(id=>BUILDINGS[id]?.name)
+    ].join(', ');
+    if(names)
+      tip(8,'🏗','Очередь строительства пуста',
+        `Доступно: ${names||'проверьте замок'}`,()=>setLoc('castle'),'Замок');
+    else
+      tip(5,'🏗','Очередь строительства пуста',
+        'Загляните в замок — возможно накоплено достаточно ресурсов.',
+        ()=>setLoc('castle'),'Замок');
+  }
+
+  // ── РЕСУРСЫ ПЕРЕПОЛНЯЮТСЯ ──
+  const resNames={food:'Еда',wood:'Дерево',stone:'Камень',iron:'Железо'};
+  for(const[k,name] of Object.entries(resNames)){
+    const val=res[k]||0, max=resMax[k]||1000;
+    if(max>0&&val/max>0.9)
+      tip(6,'📦',`${name} переполняется (${Math.round(val/max*100)}%)`,
+        'Постройте или улучшите склад, либо потратьте ресурсы на строительство.',
+        showResModal,'Казна');
+  }
+
+  // ── ТЕХНОЛОГИИ ──
+  const affordableTechs=Object.entries(TECHS).filter(([tid,t])=>{
+    if(techs[tid])return false;
+    return canAfford(t.cost)&&reqOk(tid,allCells);
+  });
+  if(affordableTechs.length)
+    tip(5,'🔬',`Доступно технологий для изучения: ${affordableTechs.length}`,
+      affordableTechs.slice(0,3).map(([,t])=>t.name).join(', ')+(affordableTechs.length>3?'…':''),
+      showTechModal,'Технологии');
+
+  // ── АЛЬЯНС ──
+  if(!p.alliance)
+    tip(4,'🤝','Вы не в альянсе',
+      'Союзники защитят вас и помогут в войнах. Создайте или вступите в альянс.',
+      showAllianceModal,'Альянс');
+
+  // ── ЗАДАНИЯ В ПРОГРЕССЕ ──
+  const inProgress=Object.entries(QUESTS_CLIENT).filter(([id,q])=>{
+    const s=quests[id]; return !s?.claimed&&!s?.done&&(s?.progress||0)>0;
+  }).sort(([ia,qa],[ib,qb])=>{
+    const pa=(quests[ia]?.progress||0)/qa.goal.count;
+    const pb=(quests[ib]?.progress||0)/qb.goal.count;
+    return pb-pa;
+  });
+  if(inProgress.length){
+    const[cid,cdef]=inProgress[0], cq=quests[cid];
+    const pct=Math.round((cq?.progress||0)/cdef.goal.count*100);
+    tip(3,'📋',`Задание «${cdef.name}» — ${pct}%`,
+      cdef.desc,showQuestsModal,'Задания');
+  }
+
+  // ── ЗЕМЛИ: пустые клетки ──
+  const emptyLands=lands.filter(c=>!c.bldId&&c.type!=='wall'&&c.type!=='empty');
+  if(emptyLands.length)
+    tip(4,'🌍',`На землях ${emptyLands.length} пустых клеток`,
+      'Постройте фермы, лесопилки или рудники для добычи ресурсов.',
+      ()=>setLoc('lands'),'Земли');
+
+  // ── РЕПУТАЦИЯ ──
+  if((p.reputation||0)<10)
+    tip(2,'⭐','Репутация очень низкая',
+      'Тратьте золото на развитие или подарите репутацию — это влияет на силу в альянсе.',
+      ()=>showRepGiftModal(''),'Репутация');
+
+  tips.sort((a,b)=>b.priority-a.priority);
+
+  // Случайная мудрость короля
+  const wisdom=[
+    '«Великие королевства строятся камень за камнем.»',
+    '«Сильная армия — это мир без войны.»',
+    '«Мудрый правитель слушает советника.»',
+    '«Пустые склады — слабые стены.»',
+    '«Союзники важнее золота.»',
+    '«Технологии решают исход войны.»',
+  ];
+  const quote=wisdom[Math.floor(Date.now()/86400000)%wisdom.length];
+
+  const con=document.createElement('div');
+  con.innerHTML=`<div style="background:linear-gradient(135deg,rgba(200,160,40,.15),rgba(200,160,40,.05));border:1px solid rgba(160,120,40,.4);border-radius:10px;padding:10px 12px;margin-bottom:10px;text-align:center;">
+    <div style="font-size:11px;color:#9a7030;font-style:italic;">${quote}</div>
+  </div>`+
+  (tips.length===0
+    ? '<p style="text-align:center;padding:16px;color:#6a5030;font-size:13px;">👑 Ваше королевство процветает!<br>Нет срочных советов.</p>'
+    : '<div style="display:flex;flex-direction:column;gap:7px;">'+
+      tips.map((t,i)=>`
+        <div data-ti="${i}" style="background:rgba(255,255,255,.5);border-radius:10px;
+          border:1px solid rgba(${t.priority>=8?'200,80,40':'160,120,40'},.4);
+          padding:10px 12px;display:flex;gap:10px;align-items:flex-start;
+          cursor:${t.fn?'pointer':'default'};">
+          <span style="font-size:22px;flex-shrink:0;">${t.icon}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:bold;color:#3a1a08;margin-bottom:2px;">${t.title}</div>
+            <div style="font-size:11px;color:#7a4a20;line-height:1.4;">${t.desc}</div>
+          </div>
+          ${t.fn?'<span style="color:#9a7020;font-size:18px;align-self:center;flex-shrink:0;">›</span>':''}
+        </div>`).join('')+'</div>');
+
+  const bg=modal({title:'🧙 Советник',body:con});
+  tips.forEach((t,i)=>{
+    if(!t.fn)return;
+    con.querySelector(`[data-ti="${i}"]`)?.addEventListener('click',()=>{bg.remove();t.fn();});
+  });
+}
 
 function showQuestsModal() {
   const p = S.player;
