@@ -2205,51 +2205,162 @@ function showCompose(toName=''){
   ]});
 }
 
-// ── Входящие письма ──────────────────────────────────────────────
-async function showInboxModal(){
-  const con=document.createElement('div');
-  con.innerHTML='<p style="text-align:center;color:#a09070;padding:12px;">Загрузка...</p>';
-  modal({title:'✉ Входящие',body:con,actions:[
-    {label:'✉ Написать',kind:'gold',handler:()=>showCompose(''),close:true},
-    {label:'✓ Всё прочитано',kind:'gray',handler:async()=>{
-      await api('/api/mail/read',{method:'POST',body:{}});
-      await refreshState();
-    },close:false},
-  ]});
-  try{
-    const {mail}=await api('/api/mail');
-    if(!mail||!mail.length){
-      con.innerHTML='<p style="text-align:center;color:#a09070;padding:16px;">Нет писем</p>';return;
+// ── МЕССЕНДЖЕР ──────────────────────────────────────────────────
+let msgCurrentThread = null;
+
+function showMessenger() {
+  $('#messenger').classList.add('open');
+  msgLoadContacts();
+  msgShowView('list');
+}
+
+function closeMessenger() {
+  $('#messenger').classList.remove('open');
+}
+
+function msgShowView(v) {
+  const views = { list: '#mv-list', thread: '#mv-thread-wrap', new: '#mv-new' };
+  Object.entries(views).forEach(([k, sel]) => {
+    const el = $(sel);
+    if (el) el.classList.toggle('hidden', k !== v);
+  });
+  const titles = { list: 'Сообщения', thread: msgCurrentThread || '', new: 'Новое сообщение' };
+  const tb = $('#msg-topbar-title');
+  if (tb) tb.textContent = titles[v] || 'Сообщения';
+  const newBtn = $('#msg-new-btn');
+  if (newBtn) newBtn.style.visibility = v === 'list' ? 'visible' : 'hidden';
+}
+
+async function msgLoadContacts() {
+  const list = $('#mv-list');
+  if (!list) return;
+  list.innerHTML = '<div class="msg-empty">Загрузка...</div>';
+  try {
+    const [{ mail }, { sentMail }] = await Promise.all([
+      api('/api/mail'),
+      api('/api/mail/sent').catch(() => ({ sentMail: [] })),
+    ]);
+    const contacts = {};
+    (mail || []).forEach(m => {
+      const k = m.from;
+      if (!contacts[k]) contacts[k] = { name: k, msgs: [], unread: 0 };
+      contacts[k].msgs.push({ ...m, dir: 'in' });
+      if (!m.read) contacts[k].unread++;
+    });
+    (sentMail || []).forEach(m => {
+      const k = m.to;
+      if (!contacts[k]) contacts[k] = { name: k, msgs: [], unread: 0 };
+      contacts[k].msgs.push({ ...m, dir: 'out' });
+    });
+    const sorted = Object.values(contacts).sort((a, b) => {
+      const la = Math.max(...a.msgs.map(x => x.time));
+      const lb = Math.max(...b.msgs.map(x => x.time));
+      return lb - la;
+    });
+    if (!sorted.length) {
+      list.innerHTML = '<div class="msg-empty">Нет сообщений<br><span style="font-size:12px;">Нажми ✏ чтобы написать</span></div>';
+      return;
     }
-    con.innerHTML='<div id="mail-list" style="display:flex;flex-direction:column;gap:6px;"></div>';
-    const list=con.querySelector('#mail-list');
-    mail.slice().reverse().forEach((m,ri)=>{
-      const idx=mail.length-1-ri;
-      const t=new Date(m.time).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-      const el=document.createElement('div');
-      el.style.cssText='background:rgba(0,0,0,.35);border:1px solid #4a2a10;border-radius:6px;padding:8px 10px;position:relative;';
-      if(!m.read)el.style.borderColor='#c09040';
-      el.innerHTML=`
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <span style="font-weight:bold;color:var(--gold2);">✉ ${escH(m.from)}</span>
-          <span style="font-size:10px;color:#706050;">${t}</span>
+    list.innerHTML = '';
+    sorted.forEach(c => {
+      const last = c.msgs.sort((a, b) => b.time - a.time)[0];
+      const t = new Date(last.time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const preview = (last.dir === 'out' ? 'Вы: ' : '') + (last.text || '').slice(0, 50);
+      const initial = c.name.charAt(0).toUpperCase();
+      const el = document.createElement('div');
+      el.className = 'msg-contact';
+      el.innerHTML = `
+        <div class="msg-avatar">${initial}<span class="msg-dot${c.unread ? ' vis' : ''}"></span></div>
+        <div class="msg-contact-info">
+          <div class="msg-contact-name">${escH(c.name)}</div>
+          <div class="msg-contact-preview">${escH(preview)}</div>
         </div>
-        <div style="font-size:13px;color:#e0d0b0;white-space:pre-wrap;word-break:break-word;">${escH(m.text)}</div>
-        <div style="display:flex;gap:6px;margin-top:6px;">
-          <button class="reply-btn" style="font-size:11px;background:rgba(80,50,10,.5);border:1px solid #7a5020;border-radius:4px;padding:3px 8px;color:#c09040;cursor:pointer;">↩ Ответить</button>
-          <button class="del-btn" style="font-size:11px;background:rgba(60,0,0,.4);border:1px solid #6a2020;border-radius:4px;padding:3px 8px;color:#c06060;cursor:pointer;">🗑 Удалить</button>
-        </div>`;
-      el.querySelector('.reply-btn').onclick=()=>{showCompose(m.from);};
-      el.querySelector('.del-btn').onclick=async()=>{
-        await api('/api/mail/delete',{method:'POST',body:{idx}});
-        el.remove();
-        if(!con.querySelector('#mail-list').children.length)
-          con.innerHTML='<p style="text-align:center;color:#a09070;padding:16px;">Нет писем</p>';
-      };
+        <div class="msg-contact-time">${t}</div>`;
+      el.onclick = () => msgOpenThread(c.name);
       list.appendChild(el);
     });
-  }catch(e){con.innerHTML=`<p style="color:#ff8080;text-align:center;">${escH(e.message)}</p>`;}
+  } catch (e) {
+    list.innerHTML = `<div class="msg-empty" style="color:#ff8080;">${escH(e.message)}</div>`;
+  }
 }
+
+async function msgOpenThread(username) {
+  msgCurrentThread = username;
+  msgShowView('thread');
+  const wrap = $('#mv-thread');
+  if (!wrap) return;
+  wrap.innerHTML = '<div style="padding:20px;text-align:center;color:#706050;">Загрузка...</div>';
+  try {
+    const { thread } = await api(`/api/mail/thread?with=${encodeURIComponent(username)}`);
+    wrap.innerHTML = '';
+    if (!thread || !thread.length) {
+      wrap.innerHTML = '<div style="padding:20px;text-align:center;color:#706050;">Начни переписку ниже</div>';
+    } else {
+      thread.forEach(m => {
+        const t = new Date(m.time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        const el = document.createElement('div');
+        el.className = `msg-bubble-wrap ${m.dir}`;
+        el.innerHTML = `<div class="msg-bubble">${escH(m.text)}<div class="msg-bubble-time">${t}</div></div>`;
+        wrap.appendChild(el);
+      });
+      wrap.scrollTop = wrap.scrollHeight;
+    }
+    const inp = $('#msg-thread-inp');
+    if (inp) { inp.value = ''; inp.focus(); }
+    const sendBtn = $('#msg-thread-send');
+    if (sendBtn) {
+      sendBtn.onclick = () => msgSendInThread(username);
+    }
+    const inpEl = $('#msg-thread-inp');
+    if (inpEl) {
+      inpEl.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); msgSendInThread(username); } };
+    }
+  } catch (e) {
+    wrap.innerHTML = `<div style="padding:20px;text-align:center;color:#ff8080;">${escH(e.message)}</div>`;
+  }
+}
+
+async function msgSendInThread(username) {
+  const inp = $('#msg-thread-inp');
+  const text = (inp ? inp.value : '').trim();
+  if (!text) return;
+  inp.value = '';
+  try {
+    await api('/api/mail/send', { method: 'POST', body: { to: username, text } });
+    const wrap = $('#mv-thread');
+    if (wrap) {
+      const t = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const el = document.createElement('div');
+      el.className = 'msg-bubble-wrap out';
+      el.innerHTML = `<div class="msg-bubble">${escH(text)}<div class="msg-bubble-time">${t}</div></div>`;
+      wrap.appendChild(el);
+      wrap.scrollTop = wrap.scrollHeight;
+    }
+  } catch (e) {
+    toast(e.message, 'err');
+    inp.value = text;
+  }
+}
+
+async function msgSendNew() {
+  const to = ($('#msg-new-to').value || '').trim();
+  const text = ($('#msg-new-text').value || '').trim();
+  const err = $('#msg-new-err');
+  if (!to || !text) { if (err) err.textContent = 'Заполни оба поля'; return; }
+  if (err) err.textContent = '';
+  try {
+    await api('/api/mail/send', { method: 'POST', body: { to, text } });
+    $('#msg-new-to').value = '';
+    $('#msg-new-text').value = '';
+    toast('Сообщение отправлено', 'ok');
+    msgOpenThread(to);
+  } catch (e) {
+    if (err) err.textContent = e.message;
+  }
+}
+
+// Старая функция showInboxModal (не удаляем — используем для обратной совместимости)
+function showInboxModal() { showMessenger(); }
 
 function showReportsModal(filterKind){
   let reps=(S.player.reports||[]).slice().reverse();
@@ -3004,8 +3115,18 @@ async function enterGame(){
   $('#rn-res').onclick=showResModal;
 
   // Уведомления
-  $('#tn-mail').onclick=()=>showInboxModal();
+  $('#tn-mail').onclick=()=>showMessenger();
   $('#tn-report').onclick=()=>showReportsModal();
+
+  // Мессенджер
+  $('#msg-close-btn').onclick=()=>{
+    const threadHidden=$('#mv-thread-wrap').classList.contains('hidden');
+    const newHidden=$('#mv-new').classList.contains('hidden');
+    if(!threadHidden||!newHidden){msgShowView('list');msgLoadContacts();}
+    else closeMessenger();
+  };
+  $('#msg-new-btn').onclick=()=>{msgShowView('new');$('#msg-new-to').focus();};
+  $('#mv-new-send').onclick=()=>msgSendNew();
 
   // Кнопки внизу
   $('#btn-menu').onclick=()=>showCabinet();
