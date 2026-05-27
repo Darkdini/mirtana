@@ -35,7 +35,13 @@ function loadState() {
       console.log('[load] Резервная копия сохранена → state.json.backup');
     }
     STATE = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    if (!STATE.world)        { STATE.world=G.createWorldGrid(); G.initProvince(STATE.world); G.initRelics(STATE.world); }
+    if (!STATE.world || STATE.world.length !== G.WORLD_COLS * G.WORLD_ROWS) {
+      console.log('[load] Размер мира изменился — пересоздаём карту');
+      STATE.world = G.createWorldGrid(); G.initProvince(STATE.world); G.initRelics(STATE.world);
+      for (const [uname, p] of Object.entries(STATE.players||{})) {
+        p.worldPos = G.placePlayerOnWorld(STATE.world, uname, p.race||'human');
+      }
+    }
     if (!STATE.chat)          STATE.chat=[];
     if (!STATE.alliances)     STATE.alliances={};
     if (!STATE.allianceWars)  STATE.allianceWars={};

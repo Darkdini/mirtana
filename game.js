@@ -182,7 +182,7 @@ function ratingDelta(bldId, toLvl) {
 // ─── РАЗМЕРЫ КАРТ ───────────────────────────────────────────────────
 const CASTLE_COLS = 7, CASTLE_ROWS = 7;
 const LANDS_COLS  = 10, LANDS_ROWS = 10;
-const WORLD_COLS  = 20, WORLD_ROWS = 20;
+const WORLD_COLS  = 45, WORLD_ROWS = 45;
 const MAX_PLAYERS_PER_PROVINCE = 10;
 const OASES_PER_PROVINCE = 3;
 
