@@ -464,8 +464,25 @@ async function router(req, res) {
     if (!target.mail) target.mail = [];
     target.mail.push(msg);
     if (target.mail.length > 100) target.mail = target.mail.slice(-100);
+    const sent = { to, text: String(text).slice(0, 500), time: msg.time };
+    if (!p.sentMail) p.sentMail = [];
+    p.sentMail.push(sent);
+    if (p.sentMail.length > 200) p.sentMail = p.sentMail.slice(-200);
     saveState();
     return send(res, 200, { ok: true });
+  }
+  if (pathname === '/api/mail/sent' && req.method === 'GET') {
+    return send(res, 200, { sentMail: p.sentMail || [] });
+  }
+  if (pathname === '/api/mail/thread' && req.method === 'GET') {
+    const partner = new URL('http://x'+url).searchParams.get('with');
+    if (!partner) return send(res, 400, { error: 'Укажи собеседника' });
+    const inbox = (p.mail || []).filter(m => m.from === partner).map(m => ({...m, dir: 'in'}));
+    const sentArr = (p.sentMail || []).filter(m => m.to === partner).map(m => ({...m, dir: 'out'}));
+    const thread = [...inbox, ...sentArr].sort((a, b) => a.time - b.time);
+    if (p.mail) p.mail.forEach(m => { if (m.from === partner) m.read = true; });
+    saveState();
+    return send(res, 200, { thread });
   }
   if (pathname === '/api/mail/read' && req.method === 'POST') {
     if (!p.mail) p.mail = [];
