@@ -6,11 +6,15 @@
 <title>СРЕДНЕВЕКОВЬЕ</title>
 <style>
 :root{
-  --gold:#d4a236;--gold2:#f0c958;--gold3:#8a6020;
-  --dark:#0a0604;--wood:#3a1f10;--wood2:#5a2f18;
+  --gold:#e0a83a;--gold2:#f5d060;--gold3:#9a6e22;
+  --dark:#0c0704;--wood:#3e2010;--wood2:#5e3218;
   --red:#5a0e0e;--red2:#3a0a0a;
   --green:#2d6b3a;--green2:#1d4a26;
   --hex-grass:#4a7a28;--hex-forest:#2a5a18;--hex-stone:#6a6860;
+  --amber:#c87820;--honey:#f0b030;--copper:#b06820;
+  --warm-panel:rgba(255,160,40,.05);
+  --warm-glow:rgba(220,130,30,.18);
+  --warm-shadow:rgba(180,90,10,.55);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;font-family:'Times New Roman',serif;
@@ -18,286 +22,388 @@ html,body{height:100%;overflow:hidden;font-family:'Times New Roman',serif;
 button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer;}
 
 /* ===== AUTH ===== */
-@keyframes authFlicker{
-  0%,100%{opacity:1;}50%{opacity:.93;}
-  25%{opacity:.97;}75%{opacity:.96;}
-}
 @keyframes titleGlow{
-  0%,100%{filter:drop-shadow(0 3px 8px rgba(220,120,0,.5)) drop-shadow(0 6px 0 #180800);}
-  50%{filter:drop-shadow(0 3px 18px rgba(255,170,40,.9)) drop-shadow(0 6px 0 #180800);}
+  0%,100%{filter:drop-shadow(0 2px 12px rgba(230,145,0,.65));}
+  50%{filter:drop-shadow(0 2px 26px rgba(255,190,50,1));}
 }
-@keyframes embersRise{
-  0%{transform:translateY(0) translateX(0) scale(1);opacity:.8;}
-  100%{transform:translateY(-120px) translateX(var(--dx,10px)) scale(.2);opacity:0;}
-}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
 #auth{
   position:fixed;inset:0;
-  background:radial-gradient(ellipse 100% 60% at 50% 100%, #3a1a06 0%, #1c0c03 40%, #0a0502 100%);
-  display:flex;flex-direction:column;align-items:center;
-  padding:10px 16px 24px;overflow-y:auto;z-index:200;overflow-x:hidden;
+  background:url('auth_bg.png') center center/cover no-repeat;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:12px 16px;overflow-y:auto;z-index:200;
 }
-#auth::after{
-  content:'';position:fixed;inset:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse 70% 25% at 15% 95%, rgba(200,90,10,.18) 0%, transparent 70%),
-    radial-gradient(ellipse 70% 25% at 85% 95%, rgba(180,70,10,.14) 0%, transparent 70%),
-    radial-gradient(ellipse 100% 50% at 50% 110%, rgba(160,60,5,.22) 0%, transparent 60%);
-  animation:authFlicker 4s ease-in-out infinite;
+#auth::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 130% 85% at 50% 115%, rgba(66,25,10,.7) 0%, rgba(30,11,3,.55) 48%, rgba(9,4,2,.4) 100%);
 }
 #auth-embers{position:fixed;inset:0;pointer-events:none;z-index:1;}
-.auth-logo{margin-top:20px;text-align:center;position:relative;z-index:2;}
+/* Кнопка языка */
+#lang-btn{
+  position:fixed;top:12px;right:14px;z-index:210;
+  background:rgba(38,18,5,.88);border:1px solid #8a5a22;
+  color:#e0a83a;font-size:12px;font-weight:bold;
+  padding:5px 10px;border-radius:20px;cursor:pointer;
+  letter-spacing:1px;backdrop-filter:blur(4px);
+  transition:border-color .2s,color .2s,box-shadow .2s;
+}
+#lang-btn:hover{border-color:#e0a83a;color:#f5d060;box-shadow:0 0 8px rgba(220,140,30,.3);}
+/* Лого */
+.auth-logo{text-align:center;position:relative;z-index:2;margin-bottom:6px;}
 .auth-logo .t1{
-  display:block;font-size:clamp(30px,9vw,64px);
-  background:linear-gradient(180deg,#fff8c0 0%,#f5c840 30%,#d08020 65%,#7a3800 100%);
+  display:block;font-size:clamp(26px,8vw,52px);
+  background:linear-gradient(180deg,#fff8b0 0%,#f5c838 32%,#c87820 68%,#6e3200 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
-  font-weight:900;font-variant:small-caps;letter-spacing:4px;
+  font-weight:900;font-variant:small-caps;letter-spacing:5px;
   animation:titleGlow 3s ease-in-out infinite;
 }
 .auth-logo .t2{
-  display:block;font-size:clamp(10px,3vw,13px);color:#c09050;
-  letter-spacing:7px;text-transform:uppercase;margin-top:6px;
-  text-shadow:0 0 10px rgba(180,110,30,.5);
+  display:block;font-size:11px;color:#aa7832;letter-spacing:6px;
+  text-transform:uppercase;margin-top:4px;
 }
-.auth-sep{
-  color:#8a5a20;font-size:13px;letter-spacing:10px;
-  margin:10px 0 0;position:relative;z-index:2;
-  text-shadow:0 0 8px rgba(180,100,20,.4);
-}
+/* Карточка */
 .parch{
-  background:linear-gradient(155deg,#5c3a18 0%,#3e2410 45%,#271508 100%);
-  border:1px solid #7a5020;border-radius:10px;
-  padding:22px 18px 22px;max-width:360px;width:100%;
-  margin-top:14px;position:relative;z-index:2;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, var(--warm-panel) 0%, transparent 70%),
+    linear-gradient(160deg,rgba(255,190,70,.06) 0%,transparent 45%),
+    linear-gradient(180deg,#3e2412 0%,#251408 60%,#1a0d05 100%);
+  border:1px solid #724418;border-radius:18px;
+  padding:0;max-width:340px;width:100%;
+  position:relative;z-index:2;
   box-shadow:
-    0 0 0 1px #2a1408,
-    0 0 40px rgba(160,80,10,.2),
-    0 20px 60px rgba(0,0,0,.85),
-    inset 0 1px 0 rgba(255,210,100,.12),
-    inset 0 0 50px rgba(0,0,0,.25);
+    0 0 0 1px #1e0e04,
+    0 28px 64px rgba(0,0,0,.88),
+    0 0 48px var(--warm-glow),
+    inset 0 1px 0 rgba(255,185,60,.08);
+  animation:cardIn .35s ease;
+  overflow:hidden;
 }
-.parch::before{
-  content:'✦ ⚔ ✦';position:absolute;top:-11px;left:50%;
-  transform:translateX(-50%);font-size:15px;color:#d4a236;
-  white-space:nowrap;background:#271508;padding:0 10px;
-  text-shadow:0 0 10px rgba(220,160,40,.6);
+/* Вкладки логин/регистрация */
+.auth-tabs{display:flex;border-bottom:1px solid #522c10;}
+.auth-tab{
+  flex:1;padding:12px;text-align:center;font-size:12px;font-weight:bold;
+  letter-spacing:2px;text-transform:uppercase;color:#7e5232;cursor:pointer;
+  transition:color .2s,background .2s;
 }
-.parch::after{
-  content:'';position:absolute;inset:0;border-radius:10px;pointer-events:none;
-  background:linear-gradient(135deg,rgba(255,200,80,.04) 0%,transparent 50%,rgba(0,0,0,.1) 100%);
-}
-.parch .rl,.parch .rr{display:none;}
+.auth-tab.active{color:#f5c838;background:rgba(255,160,40,.07);border-bottom:2px solid #e0a83a;}
+.auth-tab:hover:not(.active){color:#c89850;}
+/* Тело карточки */
+.auth-body{padding:20px 18px 18px;}
 .parch h3{
-  font-size:10px;color:#c89040;margin:10px 0 5px;
+  font-size:9px;color:#aa7832;margin:12px 0 5px;
   text-transform:uppercase;letter-spacing:3px;
-  text-shadow:0 0 6px rgba(180,120,20,.3);
+}
+.parch h3:first-child{margin-top:0;}
+/* Поля ввода */
+.inp-wrap{position:relative;margin-bottom:10px;}
+.inp-wrap .inp-icon{
+  position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  font-size:14px;opacity:.5;pointer-events:none;
 }
 .parch input{
-  width:100%;background:linear-gradient(180deg,#140c04,#0e0803);
-  border:1px solid #6a3e18;color:#f0d070;
-  padding:11px 14px;font-size:14px;border-radius:7px;
-  margin-bottom:8px;font-family:inherit;outline:none;
-  box-shadow:inset 0 2px 8px rgba(0,0,0,.6);
+  width:100%;background:rgba(0,0,0,.42);
+  border:1px solid #5e3712;color:#f5d560;
+  padding:11px 14px 11px 34px;font-size:14px;border-radius:10px;
+  font-family:inherit;outline:none;
+  box-shadow:inset 0 2px 7px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,160,40,.03);
   transition:border-color .2s,box-shadow .2s;
 }
 .parch input:focus{
-  border-color:#d4a236;
-  box-shadow:inset 0 2px 8px rgba(0,0,0,.6),0 0 10px rgba(212,162,54,.25);
+  border-color:#d09430;
+  box-shadow:inset 0 2px 7px rgba(0,0,0,.5),0 0 10px rgba(210,148,40,.28);
 }
-.parch input::placeholder{color:#4a2e10;}
-.parch .err{color:#ff9060;font-size:12px;min-height:16px;margin-bottom:6px;text-align:center;text-shadow:0 0 6px rgba(255,80,20,.3);}
-.parch .sw{font-size:12px;color:#906a30;margin-top:8px;text-align:center;}
-.parch .sw a{color:#e0b050;border-bottom:1px solid #7a5020;cursor:pointer;}
-.reg-welcome{font-size:13px;color:#d4a060;text-align:center;margin-bottom:14px;line-height:1.6;font-style:italic;opacity:.9;}
+.parch input::placeholder{color:#4e3318;}
+.parch .err{color:#ff8a55;font-size:11px;min-height:14px;margin:4px 0 6px;text-align:center;}
+/* Кнопка войти */
 .btn-g{
-  display:block;width:100%;padding:13px;
-  background:linear-gradient(180deg,#c87820,#8a4c0e);
-  border:1px solid #e8a040;border-radius:7px;color:#fff5d0;
-  font-weight:bold;font-size:14px;letter-spacing:3px;text-transform:uppercase;
-  text-align:center;margin-bottom:8px;cursor:pointer;
-  box-shadow:0 4px 0 #2e1604,0 0 16px rgba(200,110,20,.25);
-  text-shadow:0 1px 4px rgba(0,0,0,.7);
-  transition:filter .15s,transform .1s,box-shadow .1s;
-}
-.btn-g:active{transform:translateY(2px);box-shadow:0 2px 0 #2e1604;}
-.btn-g:hover{filter:brightness(1.2);}
-.btn-r{
-  display:block;width:100%;padding:10px;
-  background:linear-gradient(180deg,#6a1e1e,#421010);
-  border:1px solid #a03030;border-radius:7px;color:#ffb0a0;
-  font-weight:bold;font-size:12px;letter-spacing:2px;text-transform:uppercase;
+  display:block;width:100%;padding:13px;margin-top:4px;
+  background:linear-gradient(180deg,#c87428 0%,#a05818 55%,#7a3e08 100%);
+  border:1px solid #de9e30;border-radius:12px;color:#fff8d8;
+  font-weight:bold;font-size:13px;letter-spacing:3px;text-transform:uppercase;
   text-align:center;cursor:pointer;
-  box-shadow:0 3px 0 #180606;
-  transition:filter .15s,transform .1s;
+  box-shadow:0 3px 0 #2e1204,0 0 18px rgba(200,116,40,.3),inset 0 1px 0 rgba(255,210,80,.18);
+  transition:box-shadow .18s,transform .1s,filter .15s;
+  text-shadow:0 1px 3px rgba(0,0,0,.65);
 }
-.btn-r:active{transform:translateY(1px);}
-.btn-r:hover{filter:brightness(1.2);}
-.race-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:8px;}
+.btn-g:active{transform:translateY(2px);box-shadow:0 1px 0 #2e1204,0 0 6px rgba(200,116,40,.15);}
+.btn-g:hover{filter:brightness(1.14);box-shadow:0 3px 0 #2e1204,0 0 28px rgba(230,140,30,.5),inset 0 1px 0 rgba(255,210,80,.22);}
+/* Ссылка-переключатель */
+.parch .sw{font-size:12px;color:#7e5532;margin-top:12px;text-align:center;padding-bottom:2px;}
+.parch .sw a{color:#cc9442;cursor:pointer;border-bottom:1px solid #6e4222;}
+/* Регистрация — приветствие */
+.reg-welcome{font-size:12px;color:#b88442;text-align:center;margin-bottom:14px;line-height:1.5;font-style:italic;}
+/* Капча */
+.captcha-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.captcha-q{
+  background:rgba(0,0,0,.48);border:1px solid #5e3712;border-radius:10px;
+  padding:10px 12px;font-size:15px;font-weight:bold;color:#f5c838;
+  white-space:nowrap;flex-shrink:0;letter-spacing:1px;
+  box-shadow:inset 0 2px 7px rgba(0,0,0,.55);
+}
+.captcha-refresh{
+  flex-shrink:0;width:34px;height:38px;border-radius:10px;
+  background:rgba(0,0,0,.38);border:1px solid #5e3712;
+  color:#aa7832;font-size:18px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:color .15s,border-color .15s,box-shadow .15s;
+}
+.captcha-refresh:hover{color:#f5c838;border-color:#e0a83a;box-shadow:0 0 8px rgba(220,140,30,.25);}
+/* Карточки рас */
+.race-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:10px;}
 .rcard{
-  padding:9px 6px 8px;
-  background:linear-gradient(180deg,#1c1006,#120a04);
-  border:1px solid #4a2e14;border-radius:7px;cursor:pointer;text-align:center;
+  padding:8px 5px;
+  background:linear-gradient(160deg,rgba(255,160,40,.04) 0%,rgba(0,0,0,.32) 100%);
+  border:1px solid #4e3016;border-radius:12px;cursor:pointer;text-align:center;
   transition:border-color .15s,box-shadow .15s,background .15s;
 }
-.rcard:hover{border-color:#7a5020;background:linear-gradient(180deg,#261408,#180e06);}
+.rcard:hover{border-color:#925e22;background:linear-gradient(160deg,rgba(255,160,40,.08) 0%,rgba(0,0,0,.28) 100%);}
 .rcard.sel{
-  border-color:var(--gold2);
-  background:linear-gradient(180deg,#3a2010,#22120a);
-  box-shadow:0 0 12px rgba(240,200,88,.25),inset 0 0 10px rgba(200,140,40,.08);
+  border-color:#f5c838;
+  background:linear-gradient(160deg,rgba(255,185,50,.1) 0%,rgba(0,0,0,.28) 100%);
+  box-shadow:0 0 14px rgba(245,195,60,.28),inset 0 0 0 1px rgba(255,200,60,.1);
 }
-.rcard .rg{font-size:26px;line-height:1;margin-bottom:4px;}
-.rcard .rn{font-size:11px;font-weight:bold;color:var(--gold2);text-shadow:0 0 4px rgba(200,160,40,.3);}
-.rcard .rb{font-size:9px;color:#806040;margin-top:2px;line-height:1.3;}
+.rcard .rg{font-size:24px;line-height:1;margin-bottom:3px;}
+.rcard .rn{font-size:10px;font-weight:bold;color:#e0a83a;}
+.rcard .rb{font-size:8px;color:#745232;margin-top:2px;line-height:1.3;}
+.parch .rl,.parch .rr{display:none;}
 
 /* ===== ИГРА ===== */
-#app{position:fixed;inset:0;display:grid;grid-template-rows:auto auto 1fr auto;}
-#sbar{height:30px;background:linear-gradient(180deg,var(--red2),var(--red));
-  border-bottom:2px solid var(--gold3);
-  display:flex;align-items:center;justify-content:space-between;padding:0 10px;}
-#sbar .stitle{color:var(--gold2);font-weight:bold;font-size:14px;letter-spacing:2px;}
-#sbar .conn{font-size:11px;font-weight:bold;}
-#sbar .conn.on{color:#5cff7a;}
-#sbar .conn.off{color:#ff5050;}
-#topbar{background:linear-gradient(180deg,#0a0604,#180a02);
-  border-bottom:2px solid var(--gold);padding:3px 4px;
-  display:flex;gap:1px;flex-wrap:nowrap;overflow:hidden;}
-.ri{flex:1;display:flex;align-items:center;gap:2px;
-  background:rgba(0,0,0,.5);border:1px solid var(--gold3);
-  border-radius:3px;padding:2px 4px;min-width:0;font-size:11px;}
-.ri img{width:13px;height:13px;image-rendering:pixelated;flex-shrink:0;}
-.ri span{font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.ri.low span{color:#ff8080;}
-.ri.full span{color:#ffd44a;}
-#main{position:relative;overflow:hidden;}
+#app{position:fixed;inset:0;}
+#main{position:absolute;inset:0;}
 #mapwrap{position:absolute;inset:0;overflow:hidden;touch-action:none;}
 #canvas{display:block;}
 
-/* ── БОКОВАЯ ПАНЕЛЬ ── */
-#side-wrap{
-  position:absolute;
-  top:50%;right:0;
-  transform:translateY(-50%);
-  display:flex;align-items:center;
-  z-index:8;pointer-events:none;
+/* ── Уведомления вверху по центру ── */
+#topnotif{
+  position:absolute;top:6px;left:50%;transform:translateX(-50%);
+  display:flex;gap:5px;z-index:20;
 }
-/* панель слева от кнопки — сворачивается до 0 ширины */
-#sidepanel{
-  overflow:hidden;
-  max-height:0;width:0;
-  background:linear-gradient(180deg,var(--wood2),var(--dark));
-  border:0 solid var(--gold);border-right:0;
-  border-radius:8px 0 0 8px;
-  transition:max-height .35s cubic-bezier(.4,0,.2,1),
-             width .35s cubic-bezier(.4,0,.2,1),
-             border-width .3s,padding .3s;
-  display:flex;flex-direction:column;gap:6px;
-  padding:0;pointer-events:all;
-  align-items:center;
-}
-#sidepanel.open{
-  max-height:380px;
-  width:56px;
-  border-width:2px;
-  padding:10px 6px;
-}
-#sidepanel .sb{
-  width:44px;height:44px;flex-shrink:0;
-  background:linear-gradient(180deg,#c08840,#8a5a20);
-  border:2px solid var(--gold);border-radius:6px;
-  font-size:22px;display:flex;align-items:center;justify-content:center;
-  transition:filter .15s,transform .1s;
-}
-#sidepanel .sb:active{filter:brightness(.85);transform:scale(.92);}
-/* кнопка-язычок, всегда прижата к правому краю */
-#sidebtn{
-  width:30px;height:66px;
-  background:linear-gradient(180deg,#b07828,#7a4a18);
-  border:2px solid var(--gold);border-left:0;
-  border-radius:0 8px 8px 0;
-  color:var(--gold2);font-size:15px;
+.tn-btn{
+  width:40px;height:36px;position:relative;
+  background:linear-gradient(180deg,#e0a020,#8a5c0e);
+  border:2px solid #f5cc50;border-radius:10px;
   display:flex;align-items:center;justify-content:center;
-  pointer-events:all;cursor:pointer;
-  flex-shrink:0;
-  box-shadow:3px 0 10px rgba(0,0,0,.6);
-  transition:filter .15s;
-  writing-mode:vertical-rl;
-  letter-spacing:2px;
+  font-size:16px;cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,.75);
 }
-#sidebtn:active{filter:brightness(.85);}
+.tn-btn .nb{
+  position:absolute;top:-5px;right:-5px;
+  background:#e03030;color:#fff;font-size:8px;font-weight:bold;
+  border-radius:5px;padding:0 3px;min-width:14px;text-align:center;
+  display:none;border:1px solid #0a0604;line-height:14px;
+}
+.tn-btn .nb.vis{display:block;}
 
+/* ── ПРАВАЯ НАВИГАЦИОННАЯ ПАНЕЛЬ ── */
+#rnav-wrap{
+  position:absolute;top:50%;right:0;
+  transform:translateY(-50%);
+  display:flex;flex-direction:row-reverse;align-items:center;
+  z-index:20;
+}
+#rnav-toggle{
+  width:30px;height:76px;
+  background:linear-gradient(180deg,#e0aa2a,#9a6c1a);
+  border:2px solid #f5cc50;border-right:0;
+  border-radius:14px 0 0 14px;
+  color:#fff8d0;font-size:22px;font-weight:bold;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:filter .15s;
+  box-shadow:-3px 0 14px rgba(0,0,0,.65);
+}
+#rnav-toggle:active{filter:brightness(1.25);}
+#rnav{
+  display:flex;flex-direction:column;gap:0;
+  padding:0;width:0;
+  background:linear-gradient(180deg,#3e1e0a,#1a0a04);
+  border:2px solid #9a6c1a;border-right:0;
+  border-radius:14px 0 0 14px;
+  overflow:hidden;
+  transition:width .28s,padding .28s;
+  box-shadow:-4px 0 20px rgba(0,0,0,.85);
+}
+#rnav.open{width:92px;padding:8px;gap:6px;}
+.rn-btn{
+  width:68px;height:68px;flex-shrink:0;
+  background:linear-gradient(180deg,#7a4520,#341408);
+  border:2px solid #a07828;border-radius:12px;
+  color:#f0c040;font-size:9px;font-weight:bold;letter-spacing:.3px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  cursor:pointer;transition:border-color .15s,filter .15s;
+  box-shadow:inset 0 1px 0 rgba(255,210,70,.12);
+}
+.rn-btn:active{filter:brightness(1.3);}
+.rn-btn.active{border-color:#f0c040;background:linear-gradient(180deg,#9a5828,#421e0a);
+  box-shadow:0 0 14px rgba(230,170,30,.45);}
+.rn-btn .ri{font-size:28px;line-height:1;}
+
+/* ── Кнопки снизу ── */
+#btn-menu{
+  position:absolute;bottom:8px;left:8px;z-index:20;
+  width:62px;height:62px;
+  background:linear-gradient(180deg,#6a3818,#2e120a);
+  border:2px solid #b08830;border-radius:14px;
+  color:#f0c040;font-size:9px;font-weight:bold;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.8),0 0 10px rgba(180,110,20,.25);transition:filter .15s;
+}
+#btn-menu:active{filter:brightness(1.3);}
+#btn-menu .bi{font-size:26px;line-height:1;}
+#btn-chat{
+  position:absolute;bottom:8px;right:8px;z-index:20;
+  width:54px;height:54px;
+  background:linear-gradient(180deg,#1c3c1c,#0c1c0c);
+  border:2px solid #44aa44;border-radius:14px;
+  color:#90ff90;font-size:22px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.8),0 0 10px rgba(40,160,40,.2);transition:filter .15s;
+}
+#btn-chat:active{filter:brightness(1.3);}
+#chat-nb{
+  position:absolute;bottom:62px;right:8px;z-index:21;
+  background:#e03030;color:#fff;font-size:9px;font-weight:bold;
+  border-radius:8px;padding:1px 5px;
+  display:none;border:2px solid #0a0604;
+}
+
+/* Поиск по координатам */
+#world-search{
+  position:absolute;top:52px;right:8px;z-index:11;
+  display:none;align-items:center;gap:4px;
+}
+.loc-world #world-search{display:flex;}
+#world-search-btn{
+  width:34px;height:34px;
+  background:rgba(20,8,2,.85);border:1px solid #c8a030;border-radius:8px;
+  color:#f0c040;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.7);
+}
+#world-search-form{
+  display:flex;align-items:center;gap:4px;
+  background:rgba(20,8,2,.92);border:1px solid #c8a030;
+  border-radius:8px;padding:4px 6px;
+  box-shadow:0 2px 8px rgba(0,0,0,.7);
+}
+#ws-x,#ws-y{
+  width:52px;padding:4px 6px;border-radius:5px;
+  background:#1a0c04;border:1px solid #8a6020;
+  color:#f0c040;font-size:13px;font-weight:bold;
+  font-family:inherit;outline:none;text-align:center;
+}
+#ws-go{
+  width:28px;height:28px;background:linear-gradient(180deg,#c83020,#8b1010);
+  border:1px solid #e05050;border-radius:5px;
+  color:#fff;font-size:14px;font-weight:bold;cursor:pointer;
+}
+#ws-close{
+  width:24px;height:24px;background:rgba(100,60,20,.6);
+  border:1px solid #8a6020;border-radius:5px;
+  color:#f0c040;font-size:12px;cursor:pointer;
+}
+/* Координаты карты мира */
+#world-coords{
+  display:none;position:absolute;top:8px;left:50%;transform:translateX(-50%);
+  background:rgba(22,9,2,.88);border:1px solid #c8a030;border-radius:20px;
+  color:#f0c040;font-size:12px;font-weight:bold;padding:3px 12px;
+  z-index:10;white-space:nowrap;pointer-events:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.7);
+}
+#world-compass{
+  display:none;position:absolute;bottom:72px;left:50%;transform:translateX(-50%);
+  z-index:10;pointer-events:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.8));
+}
+.loc-world #world-coords,.loc-world #world-compass{display:block;}
 #timebar{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
-  background:rgba(0,0,0,.8);color:#fff;padding:2px 10px;border-radius:10px;
+  background:rgba(10,4,1,.85);color:#e8d090;padding:2px 12px;border-radius:12px;
   font-size:12px;font-family:monospace;font-weight:bold;z-index:5;
-  border:1px solid rgba(255,255,255,.15);pointer-events:none;}
+  border:1px solid rgba(200,150,40,.25);pointer-events:none;}
 
-/* Нижняя панель */
-#bottombar{
-  background:linear-gradient(0deg,#050302,#150902);
-  border-top:2px solid var(--gold);
-  display:grid;grid-template-columns:repeat(5,1fr);
-  gap:2px;padding:3px;z-index:10;
+/* ── 7-вкладочная нижняя навигация (в меню-экранах) ── */
+#cabinet-bar{
+  position:fixed;bottom:0;left:0;right:0;height:60px;z-index:60;
+  background:linear-gradient(180deg,#301608,#180c04);
+  border-top:2px solid #9a6c1a;border-radius:16px 16px 0 0;
+  display:none;
 }
-.tab{padding:3px 1px 5px;
-  background:linear-gradient(180deg,#3a1f10,#1a0a05);
-  border:2px solid var(--gold3);border-radius:4px;
-  color:var(--gold);font-size:9px;font-weight:bold;
-  text-align:center;display:flex;flex-direction:column;align-items:center;gap:1px;
-  text-transform:uppercase;position:relative;}
-.tab .ti{font-size:20px;line-height:1;}
-.tab.active{background:linear-gradient(180deg,#5a3018,#2a1408);
-  border-color:var(--gold2);color:var(--gold2);}
-.tab:active{filter:brightness(1.3);}
-.tab .badge{position:absolute;top:-5px;right:-3px;
-  background:#c00;color:#fff;font-size:9px;font-weight:bold;
-  border-radius:8px;padding:1px 4px;min-width:14px;text-align:center;
-  border:1px solid var(--dark);}
+#cabinet-bar.vis{display:flex;}
+.cb-tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;background:none;border:none;border-top:2px solid transparent;
+  color:#7a5020;font-size:8px;font-weight:bold;letter-spacing:.3px;
+  cursor:pointer;transition:color .15s,border-color .15s;
+  margin-top:-2px;border-radius:12px 12px 0 0;
+}
+.cb-tab .ci{font-size:18px;line-height:1;}
+.cb-tab.active{color:#f5b830;border-color:#f5b830;}
+.cb-tab:active{background:rgba(255,200,30,.1);}
 
 /* Тосты */
 #toasts{position:fixed;top:44px;left:50%;transform:translateX(-50%);
   z-index:100;display:flex;flex-direction:column;gap:4px;
   pointer-events:none;width:90%;max-width:380px;}
 .toast{background:rgba(10,4,2,.97);border:1px solid var(--gold);
-  color:var(--gold2);padding:7px 12px;border-radius:4px;font-size:13px;
+  color:var(--gold2);padding:7px 12px;border-radius:12px;font-size:13px;
   text-align:center;animation:tsin .2s,tout .25s 2.7s forwards;
-  box-shadow:0 4px 12px rgba(0,0,0,.7);}
+  box-shadow:0 4px 14px rgba(0,0,0,.75),0 0 6px rgba(180,120,20,.15);}
 .toast.err{border-color:#c44;color:#ffb0b0;}
 .toast.ok{border-color:#5cff7a;color:#c8ffc8;}
 @keyframes tsin{from{opacity:0;transform:translateY(-10px);}}
 @keyframes tout{to{opacity:0;}}
 
-/* Модалки */
-.mbg{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(3px);
+/* Модалки — стиль «пергамент» как в оригинале */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(2px);
   display:flex;align-items:center;justify-content:center;z-index:50;padding:8px;
   animation:fadein .15s;}
 @keyframes fadein{from{opacity:0;}}
-.mbox{background:var(--wood);border:2px solid var(--gold);
-  border-radius:6px;max-width:450px;width:100%;max-height:90vh;
+.mbox{
+  background:linear-gradient(180deg,#f4e6c4,#ead6a4);
+  border:2px solid #c8a030;border-radius:18px;
+  max-width:440px;width:100%;max-height:90vh;
   display:flex;flex-direction:column;overflow:hidden;
-  box-shadow:0 8px 40px rgba(0,0,0,.9);}
-.mhead{background:linear-gradient(180deg,var(--red2),var(--red));
-  color:#fff;padding:8px 12px;font-size:14px;font-weight:bold;
-  text-align:center;border-bottom:2px solid var(--gold3);
-  position:relative;letter-spacing:1px;}
-.mhead .xb{position:absolute;top:50%;right:8px;transform:translateY(-50%);
-  width:26px;height:26px;background:linear-gradient(180deg,#c44,#722);
-  border:1px solid #fff;border-radius:3px;font-size:14px;
+  box-shadow:inset 0 1px 0 rgba(255,220,120,.4),0 12px 48px rgba(0,0,0,.9);}
+.mhead{
+  background:linear-gradient(180deg,#c83030,#8b1010);
+  color:#fff;padding:9px 36px 9px 12px;font-size:14px;font-weight:bold;
+  text-align:center;border-bottom:2px solid #c8a030;border-radius:16px 16px 0 0;
+  position:relative;letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,.5);}
+.mhead .xb{
+  position:absolute;top:50%;right:6px;transform:translateY(-50%);
+  width:28px;height:28px;
+  background:linear-gradient(180deg,#c44,#722);
+  border:2px solid rgba(255,255,255,.5);border-radius:8px;font-size:16px;
   color:#fff;font-weight:bold;display:flex;align-items:center;justify-content:center;}
-.mbody{flex:1;overflow-y:auto;padding:12px;
-  background:repeating-linear-gradient(0deg,var(--wood) 0 3px,#3a1a08 3px 6px);
-  color:#e8d0b0;font-size:13px;line-height:1.5;}
+.mbody{
+  flex:1;overflow-y:auto;padding:12px;
+  background:transparent;
+  color:#3a1a08;font-size:13px;line-height:1.5;}
 .mbody p{margin-bottom:5px;}
-.mfoot{padding:8px 12px;background:linear-gradient(0deg,var(--dark),var(--wood));
-  border-top:1px solid var(--gold3);display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
-.mbtn{padding:9px 14px;background:linear-gradient(180deg,#3a8a4a,var(--green2));
-  color:#fff;border:2px solid #5cff7a;border-radius:5px;font-weight:bold;
-  font-size:12px;letter-spacing:1px;text-transform:uppercase;min-width:90px;}
-.mbtn:active{transform:translateY(1px);}
-.mbtn:disabled{opacity:.4;cursor:not-allowed;border-color:#666;}
-.mbtn.red{background:linear-gradient(180deg,#c43a3a,#5a1414);border-color:#ff5050;}
-.mbtn.gold{background:linear-gradient(180deg,#c4a030,#7a5010);border-color:var(--gold2);color:#1a0800;text-shadow:none;}
-.mbtn.gray{background:linear-gradient(180deg,#5a4a30,#2a2010);border-color:#8a7050;}
+.mfoot{padding:8px 10px;background:rgba(200,160,40,.15);
+  border-top:1px solid rgba(200,160,40,.4);display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+/* Кнопки в пергаментном стиле */
+.mbtn{
+  padding:9px 16px;
+  background:linear-gradient(180deg,#7a4020,#3e1808);
+  color:#f0d080;border:2px solid #c8a030;border-radius:10px;
+  font-weight:bold;font-size:12px;letter-spacing:.5px;min-width:90px;
+  box-shadow:0 2px 6px rgba(60,12,4,.55);transition:filter .15s;}
+.mbtn:active{transform:translateY(1px);box-shadow:none;}
+.mbtn:disabled{opacity:.4;cursor:not-allowed;}
+.mbtn.red{background:linear-gradient(180deg,#d44040,#6a1818);border-color:#e85858;color:#fff;border-radius:10px;}
+.mbtn.gold{background:linear-gradient(180deg,#d4a030,#8a6010);border-color:#f0c040;color:#1a0800;border-radius:10px;}
+.mbtn.gray{background:linear-gradient(180deg,#6a5840,#342818);border-color:#9a8060;color:#d8c8a8;border-radius:10px;}
+/* Кнопки-иконки в карточке замка на карте мира */
+.wm-action-btn{
+  background:linear-gradient(180deg,#f4e0a8,#d8bc72);
+  border:2px solid #c8a030;border-radius:12px;
+  padding:8px 4px;text-align:center;cursor:pointer;
+  color:#3a1a08;font-size:10px;font-weight:bold;
+  transition:filter .15s;box-shadow:0 2px 6px rgba(0,0,0,.25);
+}
+.wm-action-btn:active{filter:brightness(.9);}
+.wm-action-btn.wm-disabled{opacity:.4;cursor:not-allowed;}
 .bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;}
-.bcard{background:linear-gradient(180deg,#5a3018,#2a1008);
-  border:2px solid var(--gold3);border-radius:4px;padding:7px 5px;
+.bcard{background:linear-gradient(180deg,#5e3420,#2e1208);
+  border:2px solid var(--gold3);border-radius:10px;padding:7px 5px;
   cursor:pointer;text-align:center;}
 .bcard:hover{border-color:var(--gold2);transform:translateY(-1px);}
 .bcard.cant{opacity:.4;cursor:not-allowed;}
@@ -319,8 +425,8 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
   border-radius:4px;font-family:inherit;font-size:12px;text-align:center;outline:none;}
 /* Технологии */
 .tech-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:7px;}
-.tcard{background:linear-gradient(180deg,#1a2a3a,#0a1a2a);
-  border:2px solid #3a5a7a;border-radius:5px;padding:8px;cursor:pointer;}
+.tcard{background:linear-gradient(180deg,#1e3040,#0e1e2e);
+  border:2px solid #3a5a7a;border-radius:10px;padding:8px;cursor:pointer;}
 .tcard:hover{border-color:#5a8aaa;}
 .tcard.done{border-color:#3a8a4a;background:linear-gradient(180deg,#1a3a1a,#0a2a0a);}
 .tcard.cant{opacity:.45;cursor:not-allowed;}
@@ -329,25 +435,12 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 .tcard .td{font-size:10px;color:#a0b0c0;line-height:1.3;}
 
 /* ЧАТ */
-#chat-btn{
-  position:fixed;bottom:68px;right:8px;
-  width:46px;height:46px;
-  background:linear-gradient(180deg,#c08840,#7a4a10);
-  border:2px solid var(--gold2);border-radius:50%;
-  font-size:20px;display:none;align-items:center;justify-content:center;
-  z-index:20;box-shadow:0 3px 10px rgba(0,0,0,.5);}
-#chat-btn:active{transform:scale(.9);}
-#chat-nb{position:absolute;top:-4px;right:-4px;
-  background:#e03030;color:#fff;font-size:9px;font-weight:bold;
-  border-radius:50%;min-width:16px;height:16px;
-  display:none;align-items:center;justify-content:center;
-  border:2px solid var(--dark);padding:0 2px;}
 #chat-panel{
-  position:fixed;bottom:68px;right:8px;
+  position:fixed;bottom:62px;right:8px;
   width:min(320px,calc(100vw - 16px));
   height:min(460px,calc(100vh - 150px));
-  background:linear-gradient(180deg,#1a0e05,#0a0604);
-  border:2px solid var(--gold);border-radius:10px;
+  background:linear-gradient(180deg,#1e1006,#0e0804);
+  border:2px solid var(--gold);border-radius:14px;
   display:flex;flex-direction:column;z-index:21;
   box-shadow:0 8px 32px rgba(0,0,0,.9);overflow:hidden;
   transform:scale(0) translateY(16px);transform-origin:bottom right;
@@ -356,17 +449,18 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 #chat-panel.open{transform:scale(1) translateY(0);pointer-events:all;opacity:1;}
 #chat-head{background:linear-gradient(180deg,var(--red2),var(--red));
   padding:7px 10px;display:flex;align-items:center;
-  justify-content:space-between;border-bottom:2px solid var(--gold3);flex-shrink:0;}
+  justify-content:space-between;border-bottom:2px solid var(--gold3);
+  border-radius:12px 12px 0 0;flex-shrink:0;}
 #chat-head span{font-size:14px;font-weight:bold;color:var(--gold2);}
 #chat-head button{width:24px;height:24px;background:linear-gradient(180deg,#c44,#722);
-  border:1px solid #fff;border-radius:3px;color:#fff;font-size:14px;font-weight:bold;}
+  border:1px solid #fff;border-radius:6px;color:#fff;font-size:14px;font-weight:bold;}
 #chat-msgs{flex:1;overflow-y:auto;padding:7px;display:flex;flex-direction:column;gap:3px;}
 #chat-msgs::-webkit-scrollbar{width:3px;}
 #chat-msgs::-webkit-scrollbar-thumb{background:var(--gold3);border-radius:2px;}
 .cmsg{padding:4px 7px;background:rgba(255,255,255,.04);
-  border-left:2px solid var(--gold3);border-radius:0 3px 3px 0;
+  border-left:2px solid var(--gold3);border-radius:0 8px 8px 0;
   font-size:12px;line-height:1.4;word-break:break-word;}
-.cmsg.me{background:rgba(212,162,54,.1);border-left-color:var(--gold2);}
+.cmsg.me{background:rgba(220,170,60,.13);border-left-color:var(--gold2);}
 .cmsg.sys{border-left-color:#5cff7a;color:#5cff7a;text-align:center;}
 .cmsg .ch{display:flex;gap:4px;align-items:center;margin-bottom:2px;}
 .cmsg .cr{font-size:13px;}
@@ -375,91 +469,280 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 .cmsg .cx{color:#e0c890;font-size:12px;}
 #chat-irow{display:flex;gap:5px;padding:7px;
   border-top:1px solid var(--gold3);background:rgba(0,0,0,.3);flex-shrink:0;}
-#chat-inp{flex:1;background:#0a1a0a;border:2px solid var(--gold3);
-  color:#e0d0b0;padding:7px 9px;border-radius:5px;
+#chat-inp{flex:1;background:#120a04;border:2px solid var(--gold3);
+  color:#e0d0b0;padding:7px 9px;border-radius:10px;
   font-family:inherit;font-size:12px;outline:none;}
 #chat-inp:focus{border-color:var(--gold2);}
 #chat-send{width:38px;height:38px;background:linear-gradient(180deg,#3a8a4a,#1d4a26);
-  border:2px solid #5cff7a;border-radius:5px;font-size:16px;
+  border:2px solid #5cff7a;border-radius:10px;font-size:16px;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 #chat-send:active{transform:scale(.9);}
 
 @media(max-width:360px){
-  .tab{font-size:8px;}.tab .ti{font-size:17px;}
-  .ri{font-size:10px;}
+  .rb-res{font-size:11px;padding:3px 5px;}
+  .loc-tab{font-size:10px;}
+  .bb-btn{font-size:8px;}
+  .bb-ico{font-size:18px;}
   .bgrid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));}
+}
+/* ── МЕССЕНДЖЕР ── */
+#messenger{
+  position:fixed;inset:0;z-index:150;
+  background:linear-gradient(180deg,#1a0a04 0%,#0e0602 100%);
+  display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+#messenger.open{transform:translateX(0);pointer-events:all;}
+#msg-topbar{
+  background:linear-gradient(180deg,#3a1e08,#250f04);
+  border-bottom:2px solid #c8a030;
+  padding:10px 12px;display:flex;align-items:center;gap:10px;
+  min-height:52px;
+}
+#msg-topbar .msg-title{flex:1;font-size:16px;font-weight:bold;color:var(--gold2);text-align:center;}
+#msg-topbar button{
+  width:36px;height:36px;background:rgba(0,0,0,.4);border:1px solid #7a5020;
+  border-radius:8px;color:#e0c060;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+#msg-topbar button:active{filter:brightness(1.4);}
+#msg-views{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column;}
+.msg-view{position:absolute;inset:0;display:flex;flex-direction:column;
+  transition:transform .22s ease,opacity .22s ease;}
+.msg-view.hidden{transform:translateX(60px);opacity:0;pointer-events:none;}
+/* Список диалогов */
+#mv-list{overflow-y:auto;}
+.msg-contact{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-bottom:1px solid rgba(200,160,48,.1);
+  cursor:pointer;transition:background .15s;
+}
+.msg-contact:active{background:rgba(200,140,40,.1);}
+.msg-avatar{
+  width:42px;height:42px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#8a4010,#3a1a06);
+  border:2px solid #c8a030;display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:bold;color:#f0c040;position:relative;
+}
+.msg-avatar .msg-dot{
+  position:absolute;bottom:-2px;right:-2px;
+  width:12px;height:12px;background:#e03030;border:2px solid #0e0602;
+  border-radius:50%;display:none;
+}
+.msg-avatar .msg-dot.vis{display:block;}
+.msg-contact-info{flex:1;min-width:0;}
+.msg-contact-name{font-size:14px;font-weight:bold;color:#f0d080;margin-bottom:2px;}
+.msg-contact-preview{font-size:12px;color:#908070;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.msg-contact-time{font-size:10px;color:#706050;flex-shrink:0;align-self:flex-start;margin-top:2px;}
+.msg-empty{padding:40px 20px;text-align:center;color:#706050;font-size:14px;}
+/* Тред */
+#mv-thread{overflow-y:auto;padding:10px;}
+.msg-bubble-wrap{display:flex;margin-bottom:8px;}
+.msg-bubble-wrap.out{justify-content:flex-end;}
+.msg-bubble{
+  max-width:75%;padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.4;
+  word-break:break-word;
+}
+.msg-bubble-wrap.in .msg-bubble{
+  background:rgba(60,35,10,.8);border:1px solid #5a3a18;color:#f0ddb0;
+  border-radius:14px 14px 14px 4px;
+}
+.msg-bubble-wrap.out .msg-bubble{
+  background:linear-gradient(135deg,#6a3a10,#3a1a06);border:1px solid #c8a030;color:#fff8d0;
+  border-radius:14px 14px 4px 14px;
+}
+.msg-bubble-time{font-size:9px;color:rgba(255,255,255,.4);margin-top:3px;text-align:right;}
+#msg-thread-inp-row{
+  display:flex;gap:8px;padding:10px 12px;
+  border-top:2px solid rgba(200,160,48,.25);
+  background:rgba(0,0,0,.4);flex-shrink:0;
+}
+#msg-thread-inp{
+  flex:1;background:rgba(0,0,0,.5);border:1px solid #7a5020;color:#f0d070;
+  padding:9px 12px;border-radius:10px;font-family:inherit;font-size:13px;outline:none;
+}
+#msg-thread-inp:focus{border-color:#c8a030;}
+#msg-thread-send{
+  width:42px;height:42px;background:linear-gradient(180deg,#3a8a4a,#1d4a26);
+  border:1px solid #4aaa5a;border-radius:10px;color:#fff;font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+/* Новое сообщение */
+#mv-new{padding:16px;}
+#mv-new label{font-size:12px;color:#a09070;display:block;margin-bottom:4px;}
+#mv-new input, #mv-new textarea{
+  width:100%;background:rgba(0,0,0,.5);border:1px solid #7a5020;color:#f0d070;
+  padding:9px 12px;border-radius:10px;font-family:inherit;font-size:13px;outline:none;
+  box-sizing:border-box;
+}
+#mv-new input:focus, #mv-new textarea:focus{border-color:#c8a030;}
+#mv-new textarea{resize:none;height:100px;margin-top:10px;}
+#mv-new-send{
+  margin-top:12px;width:100%;padding:11px;
+  background:linear-gradient(180deg,#e0a020,#8a5c0e);
+  border:2px solid #f5cc50;border-radius:10px;
+  color:#1a0a04;font-size:14px;font-weight:bold;cursor:pointer;
 }
 </style>
 </head>
 <body>
 
 <!-- AUTH -->
+<button id="lang-btn">RU</button>
 <div id="auth">
   <canvas id="auth-embers"></canvas>
-  <div class="auth-logo">
-    <span class="t1">СРЕДНЕВЕКОВЬЕ</span>
-    <span class="t2">Война Королей</span>
-  </div>
-  <div class="auth-sep">⸻ ✦ ⸻</div>
-  <div class="parch" id="aLogin">
-    <h3>Имя правителя</h3>
-    <input type="text" id="liU" placeholder="Введи свой логин" autocomplete="username">
-    <h3>Пароль</h3>
-    <input type="password" id="liP" placeholder="Введи пароль" autocomplete="current-password">
-    <div class="err" id="liE"></div>
-    <button class="btn-g" id="liBtn">⚔ ВОЙТИ В КОРОЛЕВСТВО</button>
-    <button class="btn-r" id="toReg">🏰 СОЗДАТЬ КОРОЛЕВСТВО</button>
-    <div class="sw">Нет аккаунта? <a id="sw1">Основать королевство</a></div>
-  </div>
-  <div class="parch" id="aReg" style="display:none;">
-    <div class="reg-welcome">Правитель, укажи свои данные<br>и выбери народ для управления!</div>
-    <h3>Имя правителя</h3>
-    <input type="text" id="reU" placeholder="Имя игрока (мин. 3)" maxlength="20" autocomplete="username">
-    <h3>Пароль</h3>
-    <input type="password" id="reP" placeholder="Пароль (мин. 4)" maxlength="40" autocomplete="new-password">
-    <h3>Название королевства</h3>
-    <input type="text" id="reK" placeholder="Как называть твоё королевство" maxlength="20">
-    <h3>Выбери народ</h3>
-    <div class="race-grid" id="racePick"></div>
-    <div class="err" id="reE"></div>
-    <button class="btn-g" id="reBtn">👑 ОСНОВАТЬ КОРОЛЕВСТВО</button>
-    <button class="btn-r" id="sw2">← НАЗАД</button>
+  <div class="parch">
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" data-i18n="tabLogin">ВОЙТИ</div>
+      <div class="auth-tab" id="tab-reg" data-i18n="tabReg">ОСНОВАТЬ</div>
+    </div>
+    <!-- Вход -->
+    <div class="auth-body" id="aLogin">
+      <h3 data-i18n="labelUser">Правитель</h3>
+      <div class="inp-wrap">
+        <span class="inp-icon">⚔</span>
+        <input type="text" id="liU" data-i18n-ph="phUser" placeholder="Имя правителя" autocomplete="username">
+      </div>
+      <h3 data-i18n="labelPass">Пароль</h3>
+      <div class="inp-wrap">
+        <span class="inp-icon">🔑</span>
+        <input type="password" id="liP" data-i18n-ph="phPass" placeholder="Твой пароль" autocomplete="current-password">
+      </div>
+      <div class="err" id="liE"></div>
+      <button class="btn-g" id="liBtn" data-i18n="btnLogin">⚔ ВОЙТИ В КОРОЛЕВСТВО</button>
+    </div>
+    <!-- Регистрация -->
+    <div class="auth-body" id="aReg" style="display:none;">
+      <div class="reg-welcome" data-i18n="regWelcome">Правитель, укажи свои данные<br>и выбери народ для управления!</div>
+      <h3 data-i18n="labelUser">Правитель</h3>
+      <div class="inp-wrap">
+        <span class="inp-icon">⚔</span>
+        <input type="text" id="reU" data-i18n-ph="phUser" placeholder="Имя правителя" maxlength="20" autocomplete="username">
+      </div>
+      <h3 data-i18n="labelPass">Пароль</h3>
+      <div class="inp-wrap">
+        <span class="inp-icon">🔑</span>
+        <input type="password" id="reP" data-i18n-ph="phPassNew" placeholder="Придумай пароль" maxlength="40" autocomplete="new-password">
+      </div>
+      <h3 data-i18n="labelKingdom">Королевство</h3>
+      <div class="inp-wrap">
+        <span class="inp-icon">🏰</span>
+        <input type="text" id="reK" data-i18n-ph="phKingdom" placeholder="Название королевства" maxlength="20">
+      </div>
+      <h3 data-i18n="labelRace">Народ</h3>
+      <div class="race-grid" id="racePick"></div>
+      <h3 data-i18n="labelCaptcha">Проверка</h3>
+      <div class="captcha-row">
+        <span id="captcha-q" class="captcha-q"></span>
+        <div class="inp-wrap" style="flex:1;margin-bottom:0;">
+          <span class="inp-icon">🔢</span>
+          <input type="number" id="captcha-a" data-i18n-ph="phCaptcha" placeholder="Ответ" maxlength="3" inputmode="numeric">
+        </div>
+        <button type="button" class="captcha-refresh" id="captcha-new" title="Новый пример">↺</button>
+      </div>
+      <div class="err" id="reE"></div>
+      <button class="btn-g" id="reBtn" data-i18n="btnReg">👑 ОСНОВАТЬ КОРОЛЕВСТВО</button>
+    </div>
   </div>
 </div>
 
 <!-- ИГРА -->
 <div id="app" style="display:none;">
-  <div id="sbar">
-    <span class="stitle">СРЕДНЕВЕКОВЬЕ</span>
-    <span class="conn off" id="conn">● OFF</span>
-  </div>
-  <div id="topbar"></div>
   <div id="main">
     <div id="mapwrap"><canvas id="canvas"></canvas></div>
-    <div id="side-wrap">
-      <div id="sidepanel">
-        <button class="sb" data-a="army" title="Армия">⚔</button>
-        <button class="sb" data-a="alliance" title="Альянс">🛡</button>
-        <button class="sb" data-a="tech" title="Технологии">🔬</button>
-        <button class="sb" data-a="reports" title="Отчёты">📨</button>
-        <button class="sb" data-a="profile" title="Профиль">👑</button>
-        <button class="sb" data-a="logout" title="Выход">🚪</button>
-      </div>
-      <button id="sidebtn">▶</button>
-    </div>
     <div id="timebar">--:--:--</div>
+    <!-- Карта мира: координаты вверху -->
+    <div id="world-coords"></div>
+    <!-- Карта мира: поиск по координатам -->
+    <div id="world-search">
+      <button id="world-search-btn" title="Перейти к координатам">🔍</button>
+      <div id="world-search-form" style="display:none;">
+        <input id="ws-x" type="number" placeholder="X" min="0" max="999">
+        <input id="ws-y" type="number" placeholder="Y" min="0" max="999">
+        <button id="ws-go">→</button>
+        <button id="ws-close">✕</button>
+      </div>
+    </div>
+    <!-- Карта мира: компас внизу -->
+    <div id="world-compass">
+      <svg width="54" height="54" viewBox="0 0 54 54">
+        <circle cx="27" cy="27" r="25" fill="rgba(30,14,4,.75)" stroke="#c8a030" stroke-width="2"/>
+        <polygon points="27,5 31,23 27,20 23,23" fill="#e03030"/>
+        <polygon points="27,49 31,31 27,34 23,31" fill="#f0e0b0"/>
+        <polygon points="5,27 23,23 20,27 23,31" fill="#f0e0b0"/>
+        <polygon points="49,27 31,23 34,27 31,31" fill="#f0e0b0"/>
+        <circle cx="27" cy="27" r="3" fill="#f0c040"/>
+        <text x="27" y="13" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold">С</text>
+        <text x="27" y="47" text-anchor="middle" fill="#d0c0a0" font-size="7">Ю</text>
+        <text x="9" y="30" text-anchor="middle" fill="#d0c0a0" font-size="7">З</text>
+        <text x="46" y="30" text-anchor="middle" fill="#d0c0a0" font-size="7">В</text>
+      </svg>
+    </div>
   </div>
-  <div id="bottombar">
-    <button class="tab active" data-loc="castle"><span class="ti">🏰</span>Замок</button>
-    <button class="tab" data-loc="lands"><span class="ti">🌾</span>Земли</button>
-    <button class="tab" data-loc="world"><span class="ti">🌍</span>Мир</button>
-    <button class="tab" data-loc="army"><span class="ti">⚔</span>Армия</button>
-    <button class="tab" data-loc="menu"><span class="ti">📜</span>Меню</button>
+  <!-- Уведомления вверху -->
+  <div id="topnotif">
+    <button class="tn-btn" id="tn-mail" title="Почта">✉<span class="nb" id="tn-mail-n"></span></button>
+    <button class="tn-btn" id="tn-report" title="Отчёты">📜<span class="nb" id="tn-rep-n"></span></button>
+  </div>
+  <!-- Правая навигационная панель -->
+  <div id="rnav-wrap">
+    <button id="rnav-toggle">›</button>
+    <div id="rnav">
+      <button class="rn-btn active" data-loc="castle"><span class="ri">🏰</span>Замок</button>
+      <button class="rn-btn" data-loc="lands"><span class="ri">🌾</span>Земли</button>
+      <button class="rn-btn" data-loc="world"><span class="ri">🌍</span>Мир</button>
+      <button class="rn-btn" id="rn-res"><span class="ri">🧺</span>Ресурсы</button>
+    </div>
+  </div>
+  <!-- Кнопка Меню -->
+  <button id="btn-menu"><span class="bi">📜</span>Меню</button>
+  <!-- Кнопка Чат -->
+  <button id="btn-chat">💬</button>
+  <span id="chat-nb"></span>
+</div>
+
+<!-- МЕССЕНДЖЕР -->
+<div id="messenger">
+  <div id="msg-topbar">
+    <button id="msg-close-btn">✕</button>
+    <span class="msg-title" id="msg-topbar-title">Сообщения</span>
+    <button id="msg-new-btn">✏</button>
+  </div>
+  <div id="msg-views">
+    <!-- View 1: список диалогов -->
+    <div class="msg-view" id="mv-list"></div>
+    <!-- View 2: тред -->
+    <div class="msg-view hidden" id="mv-thread-wrap">
+      <div id="mv-thread"></div>
+      <div id="msg-thread-inp-row">
+        <input id="msg-thread-inp" placeholder="Написать..." maxlength="500">
+        <button id="msg-thread-send">➤</button>
+      </div>
+    </div>
+    <!-- View 3: новое сообщение -->
+    <div class="msg-view hidden" id="mv-new">
+      <label>Ник получателя</label>
+      <input id="msg-new-to" placeholder="Имя игрока" maxlength="30">
+      <label style="margin-top:10px;">Сообщение</label>
+      <textarea id="msg-new-text" placeholder="Напиши что-нибудь..." maxlength="500"></textarea>
+      <button id="mv-new-send">Отправить</button>
+      <div id="msg-new-err" style="color:#ff8080;font-size:12px;margin-top:8px;text-align:center;"></div>
+    </div>
   </div>
 </div>
 
+<!-- 7-вкладочная нижняя панель (в меню-режиме) -->
+<div id="cabinet-bar">
+  <button class="cb-tab active" data-cab="cabinet"><span class="ci">👑</span>КАБИНЕТ</button>
+  <button class="cb-tab" data-cab="locations"><span class="ci">🗺</span>ЛОКАЦИИ</button>
+  <button class="cb-tab" data-cab="alliance"><span class="ci">⚔</span>АЛЬЯНС</button>
+  <button class="cb-tab" data-cab="mail"><span class="ci">✉</span>ПОЧТА</button>
+  <button class="cb-tab" data-cab="info"><span class="ci">ℹ</span>ИНФО</button>
+  <button class="cb-tab" data-cab="rating"><span class="ci">🏆</span>РЕЙТИНГ</button>
+</div>
+
 <div id="toasts"></div>
-<button id="chat-btn">💬<span id="chat-nb"></span></button>
 <div id="chat-panel">
   <div id="chat-head"><span>💬 Мировой чат</span><button id="chat-close">✕</button></div>
   <div id="chat-msgs"></div>
@@ -481,7 +764,7 @@ const RACE_G = {human:'⚔',elf:'🏹',dwarv:'⛏',orc:'🪓'};
 const RES = ['gold','wood','stone','food','iron','people'];
 const RES_L = {gold:'Золото',wood:'Дерево',stone:'Камень',food:'Еда',iron:'Железо',people:'Люди'};
 const RES_I = {gold:'res/gold.png',wood:'res/wood.png',stone:'res/stone.png',food:'res/food.png',iron:'res/iron.png',people:'res/people.png'};
-const CASTLE_COLS=7,CASTLE_ROWS=7,LANDS_COLS=10,LANDS_ROWS=10,WORLD_COLS=20,WORLD_ROWS=20;
+const CASTLE_COLS=7,CASTLE_ROWS=7,LANDS_COLS=10,LANDS_ROWS=10,WORLD_COLS=45,WORLD_ROWS=45;
 
 // ── ЗДАНИЯ ─────────────────────────────────────────────
 const BUILDINGS = {
@@ -746,7 +1029,7 @@ function connectWS(){
   ws.onerror=()=>{};
   ws.onmessage=ev=>{
     let m;try{m=JSON.parse(ev.data);}catch{return;}
-    if(m.type==='state'){S.player=m.player;if(m.player.techs)playerTechs=m.player.techs;renderTopbar();renderMap();}
+    if(m.type==='state'){S.player=m.player;if(m.world)S.world=m.world;if(m.player.techs)playerTechs=m.player.techs;renderTopbar();renderMap();}
     else if(m.type==='reports'){
       for(const r of m.items){
         toast(r.txt,r.kind==='battle-loss'?'err':r.kind==='build'?'ok':'');
@@ -757,39 +1040,25 @@ function connectWS(){
         else if(r.txt&&r.txt.includes('Экспедиция вернулась')){pushNotif('🗺 Экспедиция',r.txt);}
       }
     }
-    else if(m.type==='chat'){appendChat(m.msg);if(!chatOpen){chatUnread++;const b=$('#chat-nb');b.style.display='flex';b.textContent=chatUnread>99?'99+':chatUnread;}}
+    else if(m.type==='chat'){appendChat(m.msg);if(!chatOpen){chatUnread++;const b=$('#chat-nb');b.style.display='block';b.textContent=chatUnread>99?'99+':chatUnread;}}
   };
 }
-function setConn(ok){const e=$('#conn');e.className='conn '+(ok?'on':'off');e.textContent=ok?'● ON':'● OFF';}
+function setConn(ok){}
 
 // ── ТОПБАР ─────────────────────────────────────────────
-function renderTopbar(){
+function renderTopbar(){renderNotifs();}
+
+function renderNotifs(){
   if(!S?.player)return;
   const p=S.player;
-  const oasisBonus={};
-  for(const o of (p.oases||[])) oasisBonus[o.resource]=(oasisBonus[o.resource]||0)+25;
-  const loyalty=p.loyalty??100;
-  const lc=loyalty>=70?'#5cff7a':loyalty>=40?'#ffd44a':loyalty>=20?'#ff8a4a':'#ff4444';
-  const prot=p.protectedUntil>Date.now()?`🛡${fmtT(Math.ceil((p.protectedUntil-Date.now())/1000))} · `:'';
-  const loyTip=`${prot}Лояльность: ${Math.floor(loyalty)}%${loyalty<40?' ⚠️':''} · Храм и Пивоварня поднимают`;
-  // Полоска лояльности — абсолютно внутри #topbar, не добавляет новый grid-элемент
-  const tb=$('#topbar');
-  tb.style.position='relative';
-  tb.innerHTML=RES.map(r=>{
-    const v=p.res[r]||0,mx=p.resMax[r]||1;
-    const cls=v>=mx?'full':v<mx*.1?'low':'';
-    const si=spr(RES_I[r]);
-    const oaz=oasisBonus[r]?`+${oasisBonus[r]}%`:'';
-    return `<div class="ri ${cls}" title="${RES_L[r]}: ${Math.floor(v)}/${Math.floor(mx)}${oaz?' 🌿'+oaz:''}">
-      ${si?`<img src="${si}">`:''}
-      <span>${fmtN(v)}${oaz?`<sup style="color:#5dff7a;font-size:9px;"> ${oaz}</sup>`:''}</span>
-    </div>`;
-  }).join('')+
-  `<div id="loyaltybar" title="${loyTip}"
-    style="position:absolute;bottom:0;left:0;right:0;height:4px;background:#1a1008;cursor:pointer;"
-    onclick="toast('${loyTip.replace(/'/g,'&apos;')}','${loyalty<40?'err':'ok'}')">
-    <div style="height:100%;width:${loyalty}%;background:${lc};transition:width .6s,background .6s;"></div>
-  </div>`;
+  const mailN=(p.mail||[]).filter(m=>!m.read).length;
+  const nb1=$('#tn-mail-n');
+  if(nb1){nb1.textContent=mailN;nb1.classList.toggle('vis',mailN>0);}
+  const repN=(p.reports||[]).filter(r=>!r.read).length;
+  const nb2=$('#tn-rep-n');
+  if(nb2){nb2.textContent=repN;nb2.classList.toggle('vis',repN>0);}
+  const chatNb=$('#chat-nb');
+  if(chatNb){chatNb.textContent=chatUnread||'';chatNb.style.display=chatUnread?'block':'none';}
 }
 
 // ══════════════════════════════════════════════════════
@@ -824,6 +1093,20 @@ function hexPoints(cx,cy,R){
   return pts;
 }
 
+function roundedHexPath(ctx,pts,r){
+  ctx.beginPath();
+  for(let i=0;i<6;i++){
+    const p0=pts[(i+5)%6],p1=pts[i],p2=pts[(i+1)%6];
+    const d1=Math.hypot(p1.x-p0.x,p1.y-p0.y),d2=Math.hypot(p2.x-p1.x,p2.y-p1.y);
+    const rr=Math.min(r,d1/2,d2/2);
+    const a1x=p1.x+(p0.x-p1.x)/d1*rr,a1y=p1.y+(p0.y-p1.y)/d1*rr;
+    const a2x=p1.x+(p2.x-p1.x)/d2*rr,a2y=p1.y+(p2.y-p1.y)/d2*rr;
+    if(i===0)ctx.moveTo(a1x,a1y);else ctx.lineTo(a1x,a1y);
+    ctx.arcTo(p1.x,p1.y,a2x,a2y,rr);
+  }
+  ctx.closePath();
+}
+
 // Полупрозрачная заливка для карты мира (трава просвечивает)
 function worldHexFill(c){
   if(c.type==='forest') return 'rgba(30,70,15,0.38)';
@@ -838,44 +1121,44 @@ function worldHexFill(c){
 // Цвет заливки гекса по типу
 function hexFill(c,loc,col,row,cols,rows){
   if(loc==='castle'){
-    // Центральный гекс (ратуша) — золотистый
     const cx=Math.floor(cols/2),cy=Math.floor(rows/2);
     const dist=Math.max(Math.abs(col-cx),Math.abs(row-cy));
-    if(dist===0) return '#6a5a20';  // центр — золото
-    if(dist===1) return '#5a7030';  // вокруг — светлее
-    if(dist===2) return '#4a6828';  // средний пояс
-    return '#3a5820';               // края
+    if(dist===0) return 'rgba(120,100,30,.55)';
+    if(dist===1) return 'rgba(80,110,40,.4)';
+    if(dist===2) return 'rgba(60,90,30,.35)';
+    return 'rgba(40,70,20,.3)';
   }
-  if(c.type==='forest')return '#2a5a18';
-  if(c.type==='stone') return '#58524a';
-  if(c.type==='grass') return '#4a7a28';
-  if(c.type==='player')  return '#3a4a7a';
-  if(c.type==='bandit')  return '#5a3a18';
-  if(c.type==='oasis')   return '#2a6a4a';
-  if(c.type==='caravan') return '#4a5a20';
-  return '#4a6a2a';
+  if(c.type==='forest')return 'rgba(30,70,15,.45)';
+  if(c.type==='stone') return 'rgba(80,75,60,.45)';
+  if(c.type==='grass') return 'rgba(60,110,30,.35)';
+  if(c.type==='player')  return 'rgba(50,60,110,.45)';
+  if(c.type==='bandit')  return 'rgba(90,50,20,.45)';
+  if(c.type==='oasis')   return 'rgba(30,100,65,.45)';
+  if(c.type==='caravan') return 'rgba(70,85,25,.4)';
+  return 'rgba(55,90,35,.35)';
 }
 function hexStroke(c,loc,col,row,cols,rows){
   if(loc==='castle'){
     const cx=Math.floor(cols/2),cy=Math.floor(rows/2);
     const dist=Math.max(Math.abs(col-cx),Math.abs(row-cy));
-    if(dist===0) return 'rgba(212,162,54,.8)';  // золотой ободок у ратуши
-    if(dist===1) return 'rgba(160,130,60,.5)';
-    return 'rgba(0,0,0,.3)';
+    if(dist===0) return 'rgba(212,162,54,.9)';
+    if(dist===1) return 'rgba(180,150,70,.55)';
+    return 'rgba(255,255,255,.18)';
   }
-  if(c.type==='forest')return 'rgba(0,0,0,.4)';
-  if(c.type==='stone') return 'rgba(0,0,0,.4)';
-  return 'rgba(0,0,0,.3)';
+  if(c.type==='forest')return 'rgba(255,255,255,.15)';
+  if(c.type==='stone') return 'rgba(255,255,255,.2)';
+  return 'rgba(255,255,255,.15)';
 }
 
 let hitHexes=[];
 
 function renderMap(){
   if(!S?.player)return;
-  $('#main').className='loc-'+LOC;
+  const main=$('#main');
+  if(main)main.className=LOC==='world'?'loc-world':'';
   if(LOC==='castle')drawHexGrid(S.player.castle,CASTLE_COLS,CASTLE_ROWS,'castle');
   else if(LOC==='lands')drawHexGrid(S.player.lands,LANDS_COLS,LANDS_ROWS,'lands');
-  else drawWorldHex();
+  else{drawWorldHex();updateWorldCoords();}
 }
 
 function calcHexSize(cols,rows,W,H){
@@ -933,22 +1216,20 @@ function drawHexGrid(cells,cols,rows,loc){
     const pts=hexPoints(cx2,cy2,R);
 
     // Заливка
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x,pts[0].y);
-    for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
-    ctx.closePath();
+    roundedHexPath(ctx,pts,R*0.18);
     ctx.fillStyle=hexFill(c,loc,c.col,c.row,cols,rows);
     ctx.fill();
     // Тонкая внутренняя тень
     if(loc==='castle'){
       ctx.save();
-      ctx.clip();
+      roundedHexPath(ctx,pts,R*0.18);ctx.clip();
       const grd=ctx.createRadialGradient(cx2,cy2,0,cx2,cy2,R);
       grd.addColorStop(0,'rgba(255,255,200,.08)');
       grd.addColorStop(1,'rgba(0,0,0,.25)');
       ctx.fillStyle=grd;ctx.fill();
       ctx.restore();
     }
+    roundedHexPath(ctx,pts,R*0.18);
     ctx.strokeStyle=hexStroke(c,loc,c.col,c.row,cols,rows);
     ctx.lineWidth=loc==='castle'?2:1.5;
     ctx.stroke();
@@ -958,12 +1239,10 @@ function drawHexGrid(cells,cols,rows,loc){
     if(_isSel){
       ctx.save();
       for(let g=3;g>=1;g--){
-        ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
-        for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);ctx.closePath();
+        roundedHexPath(ctx,pts,R*0.18);
         ctx.strokeStyle=`rgba(255,215,60,${0.25*g})`;ctx.lineWidth=g*3;ctx.stroke();
       }
-      ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
-      for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);ctx.closePath();
+      roundedHexPath(ctx,pts,R*0.18);
       ctx.strokeStyle='rgba(255,230,80,0.95)';ctx.lineWidth=2;ctx.stroke();
       ctx.restore();
     }
@@ -1036,10 +1315,7 @@ function drawHexGrid(cells,cols,rows,loc){
     if(inQ){
       // Пульсирующий контур
       const a=0.4+0.3*Math.sin(now/400);
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x,pts[0].y);
-      for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
-      ctx.closePath();
+      roundedHexPath(ctx,pts,R*0.18);
       ctx.strokeStyle=`rgba(255,200,0,${a})`;ctx.lineWidth=3;ctx.stroke();
       // Иконка
       ctx.font=`${Math.round(R*0.5)}px serif`;ctx.textAlign='center';
@@ -1092,6 +1368,7 @@ function drawWorldHex(){
   const myName=S.player.username;
   const castleS=gi('ground/castle_small.png');
   const banditS=gi('ground/bandit_camp.png');
+  if(!S?.world)return;
   const sorted=[...S.world].sort((a,b)=>a.row!==b.row?a.row-b.row:a.col-b.col);
 
   for(const c of sorted){
@@ -1100,12 +1377,7 @@ function drawWorldHex(){
     const pts=hexPoints(cx2,cy2,R);
     const isSel=selectedWorldHex&&selectedWorldHex.col===c.col&&selectedWorldHex.row===c.row;
 
-    const hexPath=()=>{
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x,pts[0].y);
-      for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
-      ctx.closePath();
-    };
+    const hexPath=()=>roundedHexPath(ctx,pts,R*0.15);
 
     // Полупрозрачная заливка
     hexPath();
@@ -1145,9 +1417,7 @@ function drawWorldHex(){
       // Ободок: золото — я, зелёный — союзник
       if(isMe||isAlly){
         ctx.strokeStyle=isMe?'#f0c958':'#5cff7a';ctx.lineWidth=2.5;
-        ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
-        for(let i=1;i<6;i++)ctx.lineTo(pts[i].x,pts[i].y);
-        ctx.closePath();ctx.stroke();
+        roundedHexPath(ctx,pts,R*0.15);ctx.stroke();
       }
       // Щит защиты новичка
       const defPlayer=S.player.username===c.player?S.player:null;
@@ -1247,16 +1517,24 @@ function onCanvasClick(px,py){
 function initDrag(){
   const mw=$('#mapwrap');
   const ptr=e=>e.touches?.[0]??e.changedTouches?.[0]??e;
-  let sx=0,sy=0,svx=0,svy=0,moved=false;
-  const dn=e=>{const p=ptr(e);sx=p.clientX;sy=p.clientY;svx=vpX;svy=vpY;moved=false;};
+  let sx=0,sy=0,svx=0,svy=0,moved=false,pressing=false;
+  const dn=e=>{
+    if(!e.touches&&e.button!==0)return;
+    pressing=true;
+    const p=ptr(e);sx=p.clientX;sy=p.clientY;svx=vpX;svy=vpY;moved=false;
+  };
   const mv=e=>{
+    if(!pressing)return;
     const p=ptr(e);const dx=p.clientX-sx,dy=p.clientY-sy;
     if(!moved&&(Math.abs(dx)>6||Math.abs(dy)>6))moved=true;
     if(!moved)return;
     vpX=svx+dx;vpY=svy+dy;
     renderMap();
   };
-  const up=()=>{if(moved){mw.dataset.dragged='1';setTimeout(()=>mw.dataset.dragged='',80);}};
+  const up=()=>{
+    pressing=false;
+    if(moved){mw.dataset.dragged='1';setTimeout(()=>mw.dataset.dragged='',80);}
+  };
   mw.addEventListener('mousedown',dn);mw.addEventListener('touchstart',dn,{passive:true});
   mw.addEventListener('mousemove',mv);mw.addEventListener('touchmove',mv,{passive:true});
   window.addEventListener('mouseup',up);mw.addEventListener('touchend',up);
@@ -1264,13 +1542,11 @@ function initDrag(){
     if(mw.dataset.dragged==='1')return;
     const rect=$('#canvas').getBoundingClientRect();
     const dpr=devicePixelRatio||1;
-    // Нужно учесть масштаб canvas
     const scaleX=($('#canvas').width/dpr)/rect.width;
     const scaleY=($('#canvas').height/dpr)/rect.height;
     onCanvasClick((e.clientX-rect.left)*scaleX,(e.clientY-rect.top)*scaleY);
   });
   window.addEventListener('resize',()=>{vpX=0;vpY=0;renderMap();});
-  // Двойной тап — сброс позиции
   let lastTap=0;
   mw.addEventListener('touchend',()=>{
     const now=Date.now();
@@ -1327,6 +1603,7 @@ function showBuildPick(cell,loc){
   const isCastle=loc==='castle';
   const defs=isCastle?BUILDINGS:LAND_BUILDINGS;
   const clvl=getCLvl();
+  let bg;
   const con=document.createElement('div');
   // Показать очереди строительства
   const maxQueues = clvl >= 5 ? 2 : 1;
@@ -1396,7 +1673,7 @@ function showBuildPick(cell,loc){
 
   if(!con.children.length)con.innerHTML='<p style="text-align:center;color:#a89070;padding:16px;">Нет доступных построек</p>';
   const terrain={inner:'замок',grass:'трава',forest:'лес',stone:'камень'}[cell.type]||cell.type;
-  const bg=modal({title:`Строить — ${terrain}`,body:con});
+  bg=modal({title:`Строить — ${terrain}`,body:con});
 }
 
 function showBldModal(cell,loc){
@@ -1405,7 +1682,8 @@ function showBldModal(cell,loc){
   const def=BUILDINGS[cell.bldId]||LAND_BUILDINGS[cell.bldId];if(!def)return;
   const clvl=getCLvl();
   const cost=calcCost(cell.bldId,cell.level),time=calcTime(cell.bldId,cell.level,clvl);
-  const ok=canAfford(cost);
+  const atMax=def.max&&cell.level>=def.max;
+  const ok=!atMax&&canAfford(cost);
   const s=spr(def.img);
   let extra='';
   if(def.produces)extra=`<p>📈 Производство: <b style="color:#5cff7a;">+${(60*Math.pow(1.3,cell.level)).toFixed(0)}/ч</b></p>`;
@@ -1430,7 +1708,7 @@ function showBldModal(cell,loc){
       <span style="color:var(--gold);">⌛ ${fmtT(time)}</span>
     </div>`;
   const rDelta=ratingDeltaClient(cell.bldId,cell.level+1);
-  const actions=[{label:`Улучшить (+${rDelta}⭐)`,disabled:!ok,handler:async()=>{
+  const actions=[{label:atMax?`Макс. уровень (${def.max})`:`Улучшить (+${rDelta}⭐)`,disabled:!ok,handler:async()=>{
     try{await api('/api/build',{method:'POST',body:{loc,col:cell.col,row:cell.row,bldId:cell.bldId}});
       toast(`Начато улучшение! +${rDelta} к рейтингу 🏆`,'ok');await refreshState();}
     catch(e){toast(e.message,'err');}
@@ -1515,26 +1793,72 @@ function showWorldModal(c){
   if(c.type==='player'){
     if(c.player===myName){
       title='🏰 Ваш замок';
-      bd=`<p>Королевство: <b>${S.player.kingdom}</b></p>
-          <p>Раса: <b>${RACES[c.race]?.name||c.race}</b></p>
-          <p>Координаты: <b>${c.col}-${c.row}</b></p>
-          <p style="color:var(--gold2);">Войско: <b>${armyTotal()}</b> воинов</p>`;
-      actions.push({label:'Армия',kind:'gold',handler:showArmyModal,close:true});
+      const wp=S.worldPlayers?.[c.player]||{};
+      bd=`<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
+        <div style="font-size:48px;line-height:1;flex-shrink:0;">🏰</div>
+        <div>
+          <div style="font-weight:bold;font-size:14px;color:#3a1a08;">Замок ${S.player.kingdom}</div>
+          <div style="color:#7a5020;font-size:12px;">X: ${c.col}  Y: ${c.row}</div>
+          <div style="color:#7a5020;font-size:12px;">Рейтинг: 🏛 ${wp.rating||S.player.rating||0}</div>
+          <div style="color:#5a3010;font-size:12px;">Раса: ${RACES[c.race]?.name||c.race}</div>
+        </div>
+      </div>
+      <div style="color:#5a3010;font-size:13px;margin-bottom:6px;">Войско: <b>${armyTotal()}</b> воинов</div>`;
+      actions.push({label:'⚔ Армия',kind:'gold',handler:showArmyModal,close:true});
+      actions.push({label:'👤 Профиль',kind:'gray',handler:()=>showProfileModal(myName),close:true});
     }else{
-      title=`🏯 ${c.player}`;
+      title='Замок';
       const wp=S.worldPlayers?.[c.player]||{};
       const alliTag=wp.allianceTag?` [${wp.allianceTag}]`:'';
-      bd=`<p>Игрок: <b>${c.player}${alliTag}</b></p>
-          <p>Раса: <b>${RACES[c.race]?.name||'?'}</b></p>
-          <p style="color:var(--gold);">Сила обороны: ~${(c.lvl||1)*200}</p>
-          <p style="font-size:11px;color:#a09070;">🏃 Набег — только грабёж · ⚔ Нападение — бой+здание · 🔥 Штурм — максимальный урон</p>`;
-      if(armyTotal()>0)actions.push({label:'⚔ Атаковать',kind:'red',handler:()=>showAttackModal(c),close:true});
-      else actions.push({label:'Нет войск',disabled:true,handler:()=>{}});
-      // Шпионаж
-      const hasResident = (S.player.castle||[]).some(c2=>c2.bldId==='resident'&&c2.level>0);
-      if (hasResident) {
-        actions.push({label:'🕵 Шпионаж',kind:'gray',handler:()=>showSpyModal(c.player),close:true});
-      }
+      const raceG=RACE_G?.[c.race]||'👑';
+      bd=`<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;">
+        <div style="font-size:48px;line-height:1;flex-shrink:0;">🏯</div>
+        <div>
+          <div style="font-weight:bold;font-size:14px;color:#3a1a08;">Замок ${c.player}</div>
+          <div style="color:#7a5020;font-size:12px;">X: ${c.col}  Y: ${c.row}</div>
+          <div style="color:#7a5020;font-size:12px;">Рейтинг: 🏛 ${wp.rating||0}</div>
+          <div style="color:#7a5020;font-size:12px;">Ратуша: 🏰 Ур.${wp.castleLevel||'?'}</div>
+        </div>
+      </div>
+      <div style="color:#5a3010;font-size:13px;margin-bottom:12px;">
+        Игрок: <b>${c.player}${alliTag}</b><br>
+        Раса: <b>${raceG} ${RACES[c.race]?.name||'?'}</b>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;">
+        <div class="wm-action-btn" data-act="msg">
+          <div style="font-size:28px;">✉️</div><div>Сообщение</div>
+        </div>
+        <div class="wm-action-btn" data-act="trade">
+          <div style="font-size:28px;">🤝</div><div>Торговля</div>
+        </div>
+        <div class="wm-action-btn ${armyTotal()===0?'wm-disabled':''}" data-act="war">
+          <div style="font-size:28px;">⚔️</div><div>Война</div>
+        </div>
+        <div class="wm-action-btn" data-act="spy">
+          <div style="font-size:28px;">🕵️</div><div>Шпионаж</div>
+        </div>
+      </div>
+      <div class="wm-action-btn" data-act="bookmark" style="display:flex;align-items:center;gap:8px;border-radius:6px;padding:8px 12px;">
+        <span style="font-size:18px;">📌</span><span>Запомнить место</span>
+      </div>`;
+
+      const bg=modal({title,body:bd,actions:[
+        {label:'👤 Профиль',kind:'gray',handler:()=>showPlayerProfile(c.player),close:true}
+      ]});
+      // Вешаем обработчики на кнопки-иконки
+      bg.querySelectorAll('.wm-action-btn[data-act]').forEach(btn=>{
+        if(btn.classList.contains('wm-disabled'))return;
+        btn.onclick=()=>{
+          const act=btn.dataset.act;
+          bg.remove();
+          if(act==='msg')showCompose(c.player);
+          else if(act==='trade')showMarketModal();
+          else if(act==='war')showAttackModal(c);
+          else if(act==='spy')showSpyModal(c.player);
+          else if(act==='bookmark')toast(`📌 Замок ${c.player} запомнен  X:${c.col} Y:${c.row}`,'ok');
+        };
+      });
+      return;
     }
   }else if(c.type==='caravan'){
     title='🚚 Торговый обоз';
@@ -1618,19 +1942,25 @@ function showArmyModal(){
     bd+=`<h3 style="color:#ff8080;margin:8px 0 4px;">⚰ Павшие генералы:</h3>`;
     dead.forEach((g,i)=>{
       const u=UNITS[g.uid];
-      const canAfford=(S.player.res.gold||0)>=g.resurrectCost;
+      const canAffordRes=(S.player.res.gold||0)>=g.resurrectCost;
       bd+=`<div style="display:flex;gap:7px;align-items:center;background:rgba(80,0,0,.4);padding:7px;border:1px solid #662020;border-radius:4px;margin-bottom:4px;">
         <span style="font-size:20px;">⚰</span>
         <div style="flex:1;font-size:12px;"><b style="color:#ff9090;">${u?.name||g.uid}</b>
         <div style="color:#a08080;">Стоимость воскрешения: <b style="color:#ffd060;">${g.resurrectCost} 🪙</b></div></div>
-        <button class="mbtn${canAfford&&hasHQ?' gold':' gray'} res-gen" data-idx="${i}"
+        <button class="mbtn${canAffordRes&&hasHQ?' gold':' gray'} res-gen" data-idx="${i}"
           style="font-size:11px;padding:4px 8px;"
           ${!hasHQ?'title="Нужен Военный штаб"':''}>${hasHQ?'Воскресить':'Нет штаба'}</button>
       </div>`;
     });
     if(!hasHQ) bd+=`<p style="font-size:11px;color:#a06060;text-align:center;">Постройте Военный штаб чтобы воскрешать генералов</p>`;
   }
-  const bg=modal({title:'⚔ Армия',body:bd});
+  const bg=modal({title:'⚔ Армия',body:bd,actions:[
+    {label:'⚔ Тренировать',kind:'gold',handler:()=>{
+      const barrackCell=S.player.castle.find(c=>c.bldId==='barracks'&&c.level>0)||S.player.castle.find(c=>c.bldId==='stable'&&c.level>0);
+      if(barrackCell)showTrainModal(barrackCell);
+      else toast('Постройте казарму или конюшню','err');
+    },close:true},
+  ]});
   bg.querySelectorAll('.res-gen').forEach(btn=>{
     btn.onclick=async()=>{
       const idx=parseInt(btn.dataset.idx);
@@ -1643,7 +1973,8 @@ function showArmyModal(){
 
 function showAttackModal(target){
   const tn=target.type==='bandit'?'Разбойники':target.type==='oasis'?`Оазис ${RES_L[target.resource]||''}`:target.player||'?';
-  const tp=target.type==='bandit'?(target.power||100):target.type==='oasis'?(target.owner?80:30):(target.lvl||1)*200;
+  const _wp=S.worldPlayers?.[target.player]||{};
+  const tp=target.type==='bandit'?(target.power||100):target.type==='oasis'?(target.owner?80:30):(_wp.castleLevel||1)*200;
   const con=document.createElement('div');
   // Тип боя — только для атаки игрока или оазиса
   let battleType='attack';
@@ -1700,7 +2031,7 @@ function showAttackModal(target){
       catch(e){toast(e.message,'err');}
     },close:true},
   ]});
-  bg.querySelector('.mbtn.red').classList.add('atkgo');
+  bg.querySelector('.mfoot .mbtn.red')?.classList.add('atkgo');
   refresh();
   if(isPlayer){
     bg.querySelectorAll('.btype').forEach(btn=>{
@@ -1765,8 +2096,275 @@ function renderBattleReport(report) {
   return html;
 }
 
-function showReportsModal(){
-  const reps=(S.player.reports||[]).slice().reverse();
+// ── Публичный профиль игрока ─────────────────────────────────────
+async function showPlayerProfile(name){
+  const con=document.createElement('div');
+  con.innerHTML='<p style="text-align:center;color:#a09070;padding:16px;">Загрузка...</p>';
+  const bg=modal({title:`👤 ${name}`,body:con,actions:[
+    {label:'⭐ Подарить реп.',kind:'gold',handler:()=>showRepGiftModal(name),close:true},
+    {label:'✉ Написать',kind:'gray',handler:()=>showCompose(name),close:true},
+    {label:'⚔ Атаковать',kind:'red',handler:()=>{toast('Найдите игрока на карте мира для атаки','err');},close:true},
+  ]});
+  try{
+    const d=await api('/api/player/'+encodeURIComponent(name));
+    const alliLine=d.allianceName?`<p>Альянс: <b style="color:#5cff7a;">[${d.allianceTag}] ${d.allianceName}</b></p>`:'<p style="color:#806050;">Без альянса</p>';
+    const powerLabel=d.power>5000?'💀 Грозный':d.power>2000?'⚔ Сильный':d.power>500?'🛡 Средний':'🐣 Слабый';
+    const avi=d.photo
+      ?`<img src="${d.photo}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);display:block;margin:0 auto 10px;">`
+      :`<div style="width:72px;height:72px;border-radius:50%;background:${d.avatarBg||'#3a2a10'};border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 10px;">${d.avatar||RACE_G[d.race]||'👤'}</div>`;
+    const repColor=d.reputation>500?'#ff9090':d.reputation>200?'#ffd44a':'#a0c090';
+    con.innerHTML=`
+      <div style="padding:4px 0;">
+        ${avi}
+        <p style="text-align:center;font-size:18px;font-weight:bold;color:var(--gold2);margin-bottom:10px;">${escH(d.kingdom)}</p>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;">
+          <p>Правитель: <b>${escH(d.username)}</b></p>
+          <p>Народ: <b>${RACES[d.race]?.name||d.race}</b> ${RACE_G[d.race]||''}</p>
+          ${alliLine}
+          <p>Уровень замка: <b style="color:var(--gold);">Ур.${d.castleLevel}</b></p>
+          <p>Рейтинг: <b style="color:#ffd44a;">${d.rating} очков</b></p>
+          <p>Репутация: <b style="color:${repColor};">⭐ ${d.reputation||0}</b></p>
+          <p>Армия: <b style="color:#ff9090;">${d.armySize!=null?d.armySize+' воинов':'?'}</b></p>
+          <p>Боевая мощь: <b>${powerLabel}</b></p>
+        </div>
+      </div>`;
+  }catch(e){con.innerHTML=`<p style="color:#ff8080;text-align:center;">${escH(e.message)}</p>`;}
+}
+
+function showRepGiftModal(targetName){
+  const isSelf=!targetName||targetName===S?.player?.username;
+  const title=isSelf?'⭐ Прокачать репутацию':'⭐ Подарить репутацию';
+  const con=document.createElement('div');
+  con.innerHTML=`
+    <div style="text-align:center;margin-bottom:12px;">
+      <div style="font-size:13px;color:#3a1a08;margin-bottom:4px;">
+        ${isSelf?'Трать золото — получай репутацию':'Трать своё золото — репутацию получит <b>'+escH(targetName)+'</b>'}
+      </div>
+      <div style="font-size:12px;color:#7a4010;margin-bottom:12px;">💰 1 золото = ⭐ 3 репутации</div>
+      <div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px;">
+        ${[10,50,100,500].map(g=>`<button class="mbtn gold rep-preset" data-g="${g}" style="min-width:0;padding:7px 10px;font-size:11px;">${g}🪙<br><span style="font-size:10px;color:#5a3000;">+${g*3}⭐</span></button>`).join('')}
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;justify-content:center;">
+        <input id="rep-gold-inp" type="number" min="1" placeholder="Своя сумма"
+          style="width:110px;background:rgba(0,0,0,.3);border:1px solid #9a7020;color:#f0d060;
+                 padding:7px 10px;border-radius:8px;font-family:inherit;font-size:13px;outline:none;text-align:center;">
+        <span style="font-size:12px;color:#7a4010;">🪙 = <span id="rep-preview">0</span>⭐</span>
+      </div>
+      <div id="rep-err" style="color:#e05050;font-size:12px;margin-top:6px;"></div>
+    </div>`;
+  const inp=con.querySelector('#rep-gold-inp');
+  const prev=con.querySelector('#rep-preview');
+  inp.oninput=()=>{prev.textContent=(parseInt(inp.value)||0)*3;};
+  con.querySelectorAll('.rep-preset').forEach(b=>b.onclick=()=>{inp.value=b.dataset.g;prev.textContent=b.dataset.g*3;});
+  modal({title,body:con,actions:[{label:'⭐ Подтвердить',kind:'gold',handler:async()=>{
+    const gold=parseInt(inp.value)||0;
+    if(gold<1){con.querySelector('#rep-err').textContent='Введи количество золота';return;}
+    try{
+      const r=await api('/api/reputation/gift',{method:'POST',body:{gold,target:isSelf?'':targetName}});
+      toast(`⭐ +${r.rep} репутации!`,'ok');
+      await refreshState();
+    }catch(e){con.querySelector('#rep-err').textContent=e.message;}
+  },close:true}]});
+}
+
+// ── Написать письмо ──────────────────────────────────────────────
+function showCompose(toName=''){
+  const con=document.createElement('div');
+  con.innerHTML=`
+    <div style="margin-bottom:8px;">
+      <div style="font-size:11px;color:#a09070;margin-bottom:4px;">Кому</div>
+      <input id="mail-to" value="${escH(toName)}" placeholder="Имя игрока" maxlength="30"
+        style="width:100%;background:rgba(0,0,0,.4);border:1px solid #5a3510;color:#f0d060;
+               padding:8px 10px;border-radius:6px;font-family:inherit;font-size:13px;outline:none;">
+    </div>
+    <div style="margin-bottom:8px;">
+      <div style="font-size:11px;color:#a09070;margin-bottom:4px;">Тема</div>
+      <input id="mail-subj" maxlength="80" placeholder="Тема письма"
+        style="width:100%;background:rgba(0,0,0,.4);border:1px solid #5a3510;color:#f0d060;
+               padding:8px 10px;border-radius:6px;font-family:inherit;font-size:13px;outline:none;">
+    </div>
+    <div>
+      <div style="font-size:11px;color:#a09070;margin-bottom:4px;">Сообщение</div>
+      <textarea id="mail-text" maxlength="500" rows="4" placeholder="Напиши правителю..."
+        style="width:100%;background:rgba(0,0,0,.4);border:1px solid #5a3510;color:#f0d060;
+               padding:8px 10px;border-radius:6px;font-family:inherit;font-size:13px;
+               outline:none;resize:vertical;"></textarea>
+    </div>
+    <div class="err" id="mail-err" style="margin-top:6px;"></div>`;
+  modal({title:'✉ Написать письмо',body:con,actions:[
+    {label:'📨 Отправить',kind:'gold',handler:async()=>{
+      const to=con.querySelector('#mail-to').value.trim();
+      const subject=con.querySelector('#mail-subj').value.trim();
+      const text=con.querySelector('#mail-text').value.trim();
+      if(!to||!text){con.querySelector('#mail-err').textContent='Заполни поля Кому и Сообщение';return;}
+      try{
+        await api('/api/mail/send',{method:'POST',body:{to,subject,text}});
+        toast('✉ Письмо отправлено','ok');
+      }catch(e){con.querySelector('#mail-err').textContent=e.message;}
+    },close:true},
+  ]});
+}
+
+// ── МЕССЕНДЖЕР ──────────────────────────────────────────────────
+let msgCurrentThread = null;
+
+function showMessenger() {
+  $('#messenger').classList.add('open');
+  msgLoadContacts();
+  msgShowView('list');
+}
+
+function closeMessenger() {
+  $('#messenger').classList.remove('open');
+}
+
+function msgShowView(v) {
+  const views = { list: '#mv-list', thread: '#mv-thread-wrap', new: '#mv-new' };
+  Object.entries(views).forEach(([k, sel]) => {
+    const el = $(sel);
+    if (el) el.classList.toggle('hidden', k !== v);
+  });
+  const titles = { list: 'Сообщения', thread: msgCurrentThread || '', new: 'Новое сообщение' };
+  const tb = $('#msg-topbar-title');
+  if (tb) tb.textContent = titles[v] || 'Сообщения';
+  const newBtn = $('#msg-new-btn');
+  if (newBtn) newBtn.style.visibility = v === 'list' ? 'visible' : 'hidden';
+}
+
+async function msgLoadContacts() {
+  const list = $('#mv-list');
+  if (!list) return;
+  list.innerHTML = '<div class="msg-empty">Загрузка...</div>';
+  try {
+    const [{ mail }, { sentMail }] = await Promise.all([
+      api('/api/mail'),
+      api('/api/mail/sent').catch(() => ({ sentMail: [] })),
+    ]);
+    const contacts = {};
+    (mail || []).forEach(m => {
+      const k = m.from;
+      if (!contacts[k]) contacts[k] = { name: k, msgs: [], unread: 0 };
+      contacts[k].msgs.push({ ...m, dir: 'in' });
+      if (!m.read) contacts[k].unread++;
+    });
+    (sentMail || []).forEach(m => {
+      const k = m.to;
+      if (!contacts[k]) contacts[k] = { name: k, msgs: [], unread: 0 };
+      contacts[k].msgs.push({ ...m, dir: 'out' });
+    });
+    const sorted = Object.values(contacts).sort((a, b) => {
+      const la = Math.max(...a.msgs.map(x => x.time));
+      const lb = Math.max(...b.msgs.map(x => x.time));
+      return lb - la;
+    });
+    if (!sorted.length) {
+      list.innerHTML = '<div class="msg-empty">Нет сообщений<br><span style="font-size:12px;">Нажми ✏ чтобы написать</span></div>';
+      return;
+    }
+    list.innerHTML = '';
+    sorted.forEach(c => {
+      const last = c.msgs.sort((a, b) => b.time - a.time)[0];
+      const t = new Date(last.time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const preview = (last.dir === 'out' ? 'Вы: ' : '') + (last.text || '').slice(0, 50);
+      const initial = c.name.charAt(0).toUpperCase();
+      const el = document.createElement('div');
+      el.className = 'msg-contact';
+      el.innerHTML = `
+        <div class="msg-avatar">${initial}<span class="msg-dot${c.unread ? ' vis' : ''}"></span></div>
+        <div class="msg-contact-info">
+          <div class="msg-contact-name">${escH(c.name)}</div>
+          <div class="msg-contact-preview">${escH(preview)}</div>
+        </div>
+        <div class="msg-contact-time">${t}</div>`;
+      el.onclick = () => msgOpenThread(c.name);
+      list.appendChild(el);
+    });
+  } catch (e) {
+    list.innerHTML = `<div class="msg-empty" style="color:#ff8080;">${escH(e.message)}</div>`;
+  }
+}
+
+async function msgOpenThread(username) {
+  msgCurrentThread = username;
+  msgShowView('thread');
+  const wrap = $('#mv-thread');
+  if (!wrap) return;
+  wrap.innerHTML = '<div style="padding:20px;text-align:center;color:#706050;">Загрузка...</div>';
+  try {
+    const { thread } = await api(`/api/mail/thread?with=${encodeURIComponent(username)}`);
+    wrap.innerHTML = '';
+    if (!thread || !thread.length) {
+      wrap.innerHTML = '<div style="padding:20px;text-align:center;color:#706050;">Начни переписку ниже</div>';
+    } else {
+      thread.forEach(m => {
+        const t = new Date(m.time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        const el = document.createElement('div');
+        el.className = `msg-bubble-wrap ${m.dir}`;
+        el.innerHTML = `<div class="msg-bubble">${escH(m.text)}<div class="msg-bubble-time">${t}</div></div>`;
+        wrap.appendChild(el);
+      });
+      wrap.scrollTop = wrap.scrollHeight;
+    }
+    const inp = $('#msg-thread-inp');
+    if (inp) { inp.value = ''; inp.focus(); }
+    const sendBtn = $('#msg-thread-send');
+    if (sendBtn) {
+      sendBtn.onclick = () => msgSendInThread(username);
+    }
+    const inpEl = $('#msg-thread-inp');
+    if (inpEl) {
+      inpEl.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); msgSendInThread(username); } };
+    }
+  } catch (e) {
+    wrap.innerHTML = `<div style="padding:20px;text-align:center;color:#ff8080;">${escH(e.message)}</div>`;
+  }
+}
+
+async function msgSendInThread(username) {
+  const inp = $('#msg-thread-inp');
+  const text = (inp ? inp.value : '').trim();
+  if (!text) return;
+  inp.value = '';
+  try {
+    await api('/api/mail/send', { method: 'POST', body: { to: username, text } });
+    const wrap = $('#mv-thread');
+    if (wrap) {
+      const t = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const el = document.createElement('div');
+      el.className = 'msg-bubble-wrap out';
+      el.innerHTML = `<div class="msg-bubble">${escH(text)}<div class="msg-bubble-time">${t}</div></div>`;
+      wrap.appendChild(el);
+      wrap.scrollTop = wrap.scrollHeight;
+    }
+  } catch (e) {
+    toast(e.message, 'err');
+    inp.value = text;
+  }
+}
+
+async function msgSendNew() {
+  const to = ($('#msg-new-to').value || '').trim();
+  const text = ($('#msg-new-text').value || '').trim();
+  const err = $('#msg-new-err');
+  if (!to || !text) { if (err) err.textContent = 'Заполни оба поля'; return; }
+  if (err) err.textContent = '';
+  try {
+    await api('/api/mail/send', { method: 'POST', body: { to, text } });
+    $('#msg-new-to').value = '';
+    $('#msg-new-text').value = '';
+    toast('Сообщение отправлено', 'ok');
+    msgOpenThread(to);
+  } catch (e) {
+    if (err) err.textContent = e.message;
+  }
+}
+
+// Старая функция showInboxModal (не удаляем — используем для обратной совместимости)
+function showInboxModal() { showMessenger(); }
+
+function showReportsModal(filterKind){
+  let reps=(S.player.reports||[]).slice().reverse();
+  if(filterKind)reps=reps.filter(r=>r.kind===filterKind);
   const con = document.createElement('div');
   if (!reps.length) {
     con.innerHTML = '<p style="text-align:center;color:#a89070;padding:16px;">Нет отчётов</p>';
@@ -1813,7 +2411,7 @@ function showTechModal(){
         // Исследование — через API
         try{
           const r=await api('/api/research',{method:'POST',body:{tid}});
-          if(r.ok){playerTechs[tid]=true;toast('Исучено: '+t.name,'ok');bg.remove();}
+          if(r.ok){playerTechs[tid]=true;toast('Изучено: '+t.name,'ok');bg.remove();await refreshState();}
         }catch(e){toast(e.message,'err');}
       };
       grid.appendChild(card);
@@ -1859,7 +2457,8 @@ function ratingTitle(pts){
 const AVATARS=['⚔','🏹','⛏','🧙','🛡','🐉','🦅','🌟','💎','🔥','❄️','⚡','🌙','☀️','🗡️','🏰','🐺','🦁'];
 const AVATAR_BGS=['#3a2a10','#1a3a2a','#1a1a3a','#2a1a2a','#3a1a1a','#1a2a3a','#2a3a1a','#3a2a2a'];
 
-function showProfileModal(){
+function showProfileModal(username){
+  if(username&&username!==S?.player?.username){showPlayerProfile(username);return;}
   const p=S.player;
   const pts=p.rating||clientRating(p);
   const techCount=Object.keys(p.techs||{}).length;
@@ -1922,6 +2521,8 @@ function showProfileModal(){
         ['⚔','Армия',armyTotal()+' воинов'],
         ['🏗','Зданий',(p.castle||[]).filter(c=>c.bldId).length+(p.lands||[]).filter(c=>c.bldId).length],
         ['🔬','Технологий',techCount+' / '+Object.keys(TECHS).length],
+        ['⭐','Репутация',(p.reputation||0)+' (+1 за каждые 10 🪙)'],
+        ['🛡','Альянс',p.alliance?`[${p.alliance.tag}] ${p.alliance.name}`:'Нет альянса'],
         ['🌍','Позиция',p.worldPos?p.worldPos.col+','+p.worldPos.row:'—'],
         ['⏳','Стройка в очереди',(p.queue||[]).length],
       ].map(([i,l,v])=>`
@@ -1968,11 +2569,20 @@ function showProfileModal(){
           🚀 ПОЛНЫЙ ТЕСТ — все здания + генерал + оазисы + ресурсы
           <div style="font-size:10px;color:#60c060;margin-top:2px;">Все здания макс. ур. · Генерал · 3 оазиса · Все технологии · Защита снята</div>
         </button>
+        <div style="display:flex;gap:6px;align-items:stretch;">
+          <input id="admin-units-n" type="number" min="1" max="99999" value="500"
+            style="flex:1;background:rgba(0,0,0,.5);border:1px solid #903030;border-radius:6px;
+                   color:#faa;font-size:13px;padding:8px 10px;font-family:inherit;outline:none;min-width:0;">
+          <button data-admin="give-units" style="flex:2;padding:10px 14px;background:linear-gradient(180deg,#1a1a5a,#080828);border:1px solid #4040c0;border-radius:6px;color:#aaaaff;font-size:12px;font-weight:bold;cursor:pointer;text-align:left;">
+            ⚔ Выдать юнитов своей расы
+          </button>
+        </div>
       </div>
     </div>`:''}`;
 
   const actions=[
-    {label:'🏆 Рейтинг',kind:'gold',handler:()=>{showRatingModal();},close:true},
+    {label:'⭐ Прокачать реп.',kind:'gold',handler:()=>showRepGiftModal(''),close:true},
+    {label:'🏆 Рейтинг',kind:'gray',handler:()=>{showRatingModal();},close:true},
     {label:'Изменить аватар',kind:'gray',handler:()=>{
       const ed=con.querySelector('#avatar-editor');
       ed.style.display=ed.style.display==='none'?'block':'none';
@@ -1991,7 +2601,8 @@ function showProfileModal(){
         const action=btn.dataset.admin;
         btn.disabled=true;btn.style.opacity='.5';
         try{
-          await api('/api/admin/'+action,{method:'POST',body:{}});
+          const body=action==='give-units'?{amount:parseInt($('#admin-units-n')?.value)||500}:{};
+          await api('/api/admin/'+action,{method:'POST',body});
           await refreshState();renderTopbar();renderMap();
           toast('✓ Выполнено','ok');
         }catch(e){toast(e.message,'err');}
@@ -2074,28 +2685,33 @@ async function showRatingModal(){
   const bg=modal({title:'🏆 Рейтинг игроков',body:con});
   try{
     const d=await api('/api/rating');
+    d.top.sort((a,b)=>(b.rating||0)-(a.rating||0));
     const me=S.player.username;
     const myRank=(d.top.findIndex(p=>p.username===me)+1)||'?';
     let html=`<div style="font-size:12px;color:#a89070;text-align:center;margin-bottom:10px;">
       Твоё место: <b style="color:var(--gold2);font-size:16px;">#${myRank}</b>
-      из <b>${d.top.length}</b> игроков
+      из <b>${d.total||d.top.length}</b> игроков
     </div>
     <div style="display:flex;flex-direction:column;gap:4px;">`;
     d.top.forEach((p,i)=>{
       const isMeR=p.username===me;
       const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
       const {t:rt,c:rc}=ratingTitle(p.rating);
+      const avatarHtml=p.photo
+        ?`<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--gold3);flex-shrink:0;">`
+        :`<div style="width:36px;height:36px;border-radius:50%;background:${p.avatarBg||'#3a2a10'};border:2px solid var(--gold3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${p.avatar||RACE_G[p.race]||'👤'}</div>`;
       html+=`<div style="display:flex;align-items:center;gap:8px;padding:8px;
         background:${isMeR?'rgba(212,162,54,.15)':'rgba(0,0,0,.3)'};
         border:1px solid ${isMeR?'var(--gold2)':'var(--gold3)'};border-radius:5px;">
-        <span style="font-size:16px;width:28px;text-align:center;flex-shrink:0;">${medal}</span>
-        <span style="font-size:16px;">${RACE_G[p.race]||'👤'}</span>
+        <span style="font-size:16px;width:24px;text-align:center;flex-shrink:0;">${medal}</span>
+        ${avatarHtml}
         <div style="flex:1;min-width:0;">
           <div style="font-weight:bold;color:${isMeR?'var(--gold2)':'#e0d0b0'};font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.kingdom}</div>
           <div style="font-size:10px;color:${rc};">${rt}</div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
           <div style="font-weight:bold;color:var(--gold2);font-size:14px;">${fmtN(p.rating)}</div>
+          <div style="font-size:10px;color:#a0c080;">⭐${fmtN(p.reputation||0)}</div>
           <div style="font-size:10px;color:#a09060;">⚔${p.armySize}</div>
         </div>
       </div>`;
@@ -2124,7 +2740,8 @@ function appendChat(msg,prepend=false){
 }
 function sendChat(){
   const inp=$('#chat-inp');const text=(inp.value||'').trim();
-  if(!text||!ws||ws.readyState!==1)return;
+  if(!text)return;
+  if(!ws||ws.readyState!==1){toast('Нет соединения с сервером','err');return;}
   ws.send(JSON.stringify({type:'chat',text}));inp.value='';inp.focus();
 }
 async function openChat(){
@@ -2143,9 +2760,6 @@ async function openChat(){
 }
 function closeChat(){chatOpen=false;$('#chat-panel').classList.remove('open');}
 function initChat(){
-  const btn=$('#chat-btn');if(!btn)return;
-  btn.style.display='flex';
-  btn.onclick=()=>chatOpen?closeChat():openChat();
   $('#chat-close').onclick=closeChat;
   $('#chat-send').onclick=sendChat;
   $('#chat-inp').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}};
@@ -2187,10 +2801,67 @@ function initChat(){
   tick();
 })();
 
+// ── ЯЗЫКИ ───────────────────────────────────────────────
+const LANGS={
+  ru:{
+    title:'СРЕДНЕВЕКОВЬЕ',subtitle:'Война Королей',
+    tabLogin:'ВОЙТИ',tabReg:'ОСНОВАТЬ',
+    labelUser:'Правитель',labelPass:'Пароль',labelKingdom:'Королевство',labelRace:'Народ',
+    phUser:'Имя правителя',phPass:'Твой пароль',phPassNew:'Придумай пароль',phKingdom:'Название королевства',
+    btnLogin:'⚔ ВОЙТИ В КОРОЛЕВСТВО',btnReg:'👑 ОСНОВАТЬ КОРОЛЕВСТВО',
+    regWelcome:'Правитель, укажи свои данные<br>и выбери народ для управления!',
+    errNoRace:'Выберите народ',errCaptcha:'Неверный ответ',
+    labelCaptcha:'Проверка',phCaptcha:'Ответ',
+  },
+  en:{
+    title:'MEDIEVAL',subtitle:'War of Kings',
+    tabLogin:'LOGIN',tabReg:'FOUND',
+    labelUser:'Ruler',labelPass:'Password',labelKingdom:'Kingdom',labelRace:'Race',
+    phUser:'Your ruler name',phPass:'Your password',phPassNew:'Choose a password',phKingdom:'Kingdom name',
+    btnLogin:'⚔ ENTER THE KINGDOM',btnReg:'👑 FOUND A KINGDOM',
+    regWelcome:'Ruler, enter your details<br>and choose a race to lead!',
+    errNoRace:'Choose a race',errCaptcha:'Wrong answer',
+    labelCaptcha:'Verification',phCaptcha:'Answer',
+  }
+};
+let LANG=localStorage.getItem('lang')||'ru';
+function applyLang(code){
+  LANG=code;localStorage.setItem('lang',code);
+  const L=LANGS[code];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.dataset.i18n;if(L[k]!==undefined)el.innerHTML=L[k];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const k=el.dataset.i18nPh;if(L[k]!==undefined)el.placeholder=L[k];
+  });
+  const lb=$('#lang-btn');if(lb)lb.textContent=code.toUpperCase();
+}
+
 // ── AUTH ────────────────────────────────────────────────
 function initAuth(){
-  $('#sw1').onclick=$('#toReg').onclick=()=>{$('#aLogin').style.display='none';$('#aReg').style.display='block';};
-  $('#sw2').onclick=()=>{$('#aReg').style.display='none';$('#aLogin').style.display='block';};
+  applyLang(LANG);
+  $('#lang-btn').onclick=()=>applyLang(LANG==='ru'?'en':'ru');
+
+  function showTab(t){
+    const isLogin=t==='login';
+    $('#aLogin').style.display=isLogin?'block':'none';
+    $('#aReg').style.display=isLogin?'none':'block';
+    $('#tab-login').classList.toggle('active',isLogin);
+    $('#tab-reg').classList.toggle('active',!isLogin);
+  }
+  $('#tab-login').onclick=()=>showTab('login');
+  $('#tab-reg').onclick=()=>{showTab('reg');newCaptcha();};
+
+  let captchaAns=0;
+  function newCaptcha(){
+    const a=Math.floor(Math.random()*9)+1,b=Math.floor(Math.random()*9)+1;
+    captchaAns=a+b;
+    $('#captcha-q').textContent=`${a} + ${b} = ?`;
+    $('#captcha-a').value='';
+  }
+  newCaptcha();
+  $('#captcha-new').onclick=newCaptcha;
+
   let selRace=null;
   const rp=$('#racePick');
   rp.innerHTML=Object.entries(RACES).map(([id,r])=>`
@@ -2211,7 +2882,8 @@ function initAuth(){
   };
   $('#reBtn').onclick=async()=>{
     $('#reE').textContent='';
-    if(!selRace){$('#reE').textContent='Выберите расу';return;}
+    if(!selRace){$('#reE').textContent=LANGS[LANG].errNoRace;return;}
+    if(parseInt($('#captcha-a').value)!==captchaAns){$('#reE').textContent=LANGS[LANG].errCaptcha;newCaptcha();return;}
     try{
       await api('/api/register',{method:'POST',body:{username:$('#reU').value.trim(),password:$('#reP').value,race:selRace,kingdom:$('#reK').value.trim()}});
       await enterGame();
@@ -2219,54 +2891,251 @@ function initAuth(){
   };
 }
 
+function setLoc(loc){
+  LOC=loc;selectedWorldHex=null;selectedGridHex=null;
+  if(loc==='world'&&S?.player?.worldPos){
+    const R=33,W=R*2,H=Math.round(R*Math.sqrt(3));
+    const {col,row}=S.player.worldPos;
+    const hx=col*(W*0.75),hy=row*H+(col%2)*(H/2);
+    const mw=$('#main').clientWidth||window.innerWidth;
+    const mh=$('#main').clientHeight||window.innerHeight;
+    const gridW=WORLD_COLS*(R*1.5)+R*0.5,gridH=WORLD_ROWS*H+H*0.5;
+    vpX=mw/2-(mw-gridW)/2-hx-R;
+    vpY=mh/2-(mh-gridH)/2-hy-H/2;
+  }else{vpX=0;vpY=0;}
+  const main=$('#main');
+  if(main){main.className=loc==='world'?'loc-world':'';}
+  renderMap();
+  $$('.rn-btn[data-loc]').forEach(x=>x.classList.toggle('active',x.dataset.loc===loc));
+  if(loc==='world')updateWorldCoords();
+}
+
+function jumpToCoords(col,row){
+  col=Math.max(0,Math.min(WORLD_COLS-1,+col||0));
+  row=Math.max(0,Math.min(WORLD_ROWS-1,+row||0));
+  const R=33,W=R*2,H=Math.round(R*Math.sqrt(3));
+  const hx=col*(W*0.75),hy=row*H+(col%2)*(H/2);
+  const gridW=WORLD_COLS*(R*1.5)+R*0.5,gridH=WORLD_ROWS*H+H*0.5;
+  const mw=$('#main').clientWidth||window.innerWidth;
+  const mh=$('#main').clientHeight||window.innerHeight;
+  vpX=mw/2-(mw-gridW)/2-hx-R;
+  vpY=mh/2-(mh-gridH)/2-hy-H/2;
+  renderMap();
+}
+
+function initWorldSearch(){
+  const btn=$('#world-search-btn');
+  const form=$('#world-search-form');
+  if(!btn||!form)return;
+  btn.onclick=()=>{
+    form.style.display=form.style.display==='none'?'flex':'none';
+    if(form.style.display==='flex')$('#ws-x').focus();
+  };
+  $('#ws-close').onclick=()=>{form.style.display='none';};
+  $('#ws-go').onclick=()=>{
+    const x=$('#ws-x').value,y=$('#ws-y').value;
+    if(!x&&!y){toast('Введи X и Y координаты','err');return;}
+    jumpToCoords(x,y);
+    form.style.display='none';
+    toast(`Переход → X:${x} Y:${y}`,'ok');
+  };
+  $('#ws-x').onkeydown=$('#ws-y').onkeydown=e=>{if(e.key==='Enter')$('#ws-go').click();};
+}
+
+function updateWorldCoords(){
+  if(LOC!=='world')return;
+  const el=$('#world-coords');if(!el)return;
+  // Вычисляем центральную клетку
+  const mw=$('#main').clientWidth||window.innerWidth;
+  const mh=$('#main').clientHeight||window.innerHeight;
+  const R=33,W=R*2,H=Math.round(R*Math.sqrt(3));
+  const gridW=20*(R*1.5)+R*0.5,gridH=20*H+H*0.5;
+  const ox=(mw-gridW)/2+vpX;
+  const oy=(mh-gridH)/2+vpY;
+  const cx=(mw/2-ox-R)/(W*0.75);
+  const cy=(mh/2-oy-H/2)/H;
+  const col=Math.round(cx),row=Math.round(cy);
+  el.textContent=`X: ${Math.max(0,col)}  Y: ${Math.max(0,row)}`;
+}
+
+// ── Кабинет (7-вкладочное меню) ──────────────────────────
+let _cabBg=null;
+function showCabinet(startTab){
+  if(!S?.player)return;
+  if(_cabBg){_cabBg.remove();_cabBg=null;}
+  const bg=document.createElement('div');
+  bg.style.cssText='position:fixed;inset:0 0 56px 0;background:linear-gradient(180deg,#f5e8c8,#e8d4a0);z-index:55;display:flex;flex-direction:column;overflow:hidden;';
+  document.body.appendChild(bg);
+  _cabBg=bg;
+  $('#cabinet-bar').classList.add('vis');
+
+  function renderCab(tab){
+    $$('.cb-tab').forEach(b=>b.classList.toggle('active',b.dataset.cab===tab));
+    bg.innerHTML='';
+    // Красный заголовок
+    const hdr=document.createElement('div');
+    hdr.style.cssText='background:linear-gradient(180deg,#c83030,#8b0000);color:#fff;font-weight:bold;font-size:15px;padding:10px;text-align:center;border-bottom:2px solid #f0c040;flex-shrink:0;';
+    const tabNames={cabinet:'Кабинет',locations:'Локации',alliance:'Альянс',mail:'Почта',games:'Игры',info:'Информация',rating:'Рейтинг'};
+    hdr.textContent=tabNames[tab]||tab;
+    bg.appendChild(hdr);
+    // Контент
+    const body=document.createElement('div');
+    body.style.cssText='flex:1;overflow-y:auto;padding:0;';
+    bg.appendChild(body);
+    // Кнопка закрыть
+    const closeRow=document.createElement('div');
+    closeRow.style.cssText='flex-shrink:0;padding:6px 8px;';
+    const cbtn=document.createElement('button');
+    cbtn.style.cssText='width:100%;padding:10px;background:linear-gradient(180deg,#5a2010,#2e0e08);border:2px solid #a07028;border-radius:6px;color:#f0c040;font-size:13px;font-weight:bold;';
+    cbtn.innerHTML='✕ Закрыть';
+    cbtn.onclick=()=>{bg.remove();_cabBg=null;$('#cabinet-bar').classList.remove('vis');};
+    closeRow.appendChild(cbtn);
+    bg.appendChild(closeRow);
+
+    if(tab==='cabinet'){
+      const _rep=S?.player?.reputation||0;
+      const _repBanner=document.createElement('div');
+      _repBanner.style.cssText='padding:10px 14px;background:rgba(200,160,40,.15);border-bottom:1px solid rgba(160,120,40,.3);display:flex;align-items:center;gap:8px;';
+      _repBanner.innerHTML=`<span style="font-size:20px;">👑</span><div style="flex:1"><div style="font-size:13px;font-weight:bold;color:#3a1a08;">${S?.player?.kingdom||S?.player?.username||''}</div><div style="font-size:11px;color:#7a4010;">⭐ Репутация: <b>${_rep}</b> &nbsp;·&nbsp; +1 за каждые 10 🪙</div></div>`;
+      body.appendChild(_repBanner);
+      const items=[
+        ['👑','Профиль',()=>showProfileModal(S?.player?.username)],
+        ['🧙','Советник',showAdvisorModal],
+        ['💰','Казна',showResModal],
+        ['⚔','Армия',showArmyModal],
+        ['🔬','Технологии',showTechModal],
+        ['🏺','Артефакты',showArtifactsModal],
+        ['📜','Задания',showQuestsModal],
+        ['🏪','Рынок',showMarketModal],
+        ['🚪','Выход',()=>{api('/api/logout',{method:'POST'}).then(()=>location.reload());}],
+      ];
+      body.innerHTML='<div style="padding:0;">' + items.map(([i,n])=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid rgba(160,120,40,.25);cursor:pointer;background:rgba(255,255,255,.4);" onclick="this.closest('[data-cab-ctx]')||true" data-act="${n}">
+          <span style="font-size:22px;width:28px;text-align:center;">${i}</span>
+          <span style="font-size:14px;color:#3a1a08;font-weight:bold;">${n}</span>
+          <span style="margin-left:auto;color:#8a6020;font-size:16px;">›</span>
+        </div>`).join('') + '</div>';
+      items.forEach(([,n,fn])=>{
+        [...body.querySelectorAll('[data-act]')].find(el=>el.dataset.act===n)?.addEventListener('click',()=>{cbtn.click();fn();});
+      });
+    } else if(tab==='locations'){
+      const locs=[['🏰','Замок','castle'],['🌾','Земли','lands'],['🌍','Мир','world']];
+      body.innerHTML='<div style="padding:0;">'+locs.map(([i,n,l])=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid rgba(160,120,40,.25);cursor:pointer;background:${LOC===l?'rgba(220,160,40,.2)':'rgba(255,255,255,.4)'};" data-loc="${l}">
+          <span style="font-size:22px;width:28px;text-align:center;">${i}</span>
+          <span style="font-size:14px;color:#3a1a08;font-weight:bold;">${n}</span>
+          ${LOC===l?'<span style="margin-left:auto;color:#c8a030;font-weight:bold;">● Текущая</span>':'<span style="margin-left:auto;color:#8a6020;font-size:16px;">›</span>'}
+        </div>`).join('')+'</div>';
+      body.querySelectorAll('[data-loc]').forEach(el=>el.onclick=()=>{cbtn.click();setLoc(el.dataset.loc);});
+    } else if(tab==='alliance'){
+      setTimeout(()=>{cbtn.onclick();showAllianceModal();},0);
+    } else if(tab==='mail'){
+      setTimeout(()=>{cbtn.click();showInboxModal();},0);
+    } else if(tab==='rating'){
+      setTimeout(()=>{cbtn.click();showRatingModal();},0);
+    } else if(tab==='info'){
+      const infoItems=[['📰','Новости',()=>toast('Раздел новостей будет добавлен','ok')],['❓','Справка',()=>toast('Справка: стройте здания, тренируйте войска, атакуйте врагов!','ok')],['📞','Контакты',()=>toast('Контакты: поддержка в разработке','ok')]];
+      body.innerHTML='<div style="padding:0;">'+infoItems.map(([i,n])=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid rgba(160,120,40,.25);background:rgba(255,255,255,.4);cursor:pointer;" data-n="${n}">
+          <span style="font-size:22px;width:28px;text-align:center;">${i}</span>
+          <span style="font-size:14px;color:#3a1a08;font-weight:bold;">${n}</span>
+          <span style="margin-left:auto;color:#8a6020;font-size:16px;">›</span>
+        </div>`).join('')+'</div>';
+      infoItems.forEach(([,n,fn])=>{
+        [...body.querySelectorAll('[data-n]')].find(el=>el.dataset.n===n)?.addEventListener('click',fn);
+      });
+    } else {
+      body.innerHTML='<p style="padding:20px;text-align:center;color:#8a6020;">Скоро</p>';
+    }
+  }
+
+  $$('.cb-tab').forEach(b=>b.onclick=()=>renderCab(b.dataset.cab));
+  renderCab(startTab||'cabinet');
+}
+
+function showResModal(){
+  if(!S?.player)return;
+  const p=S.player;
+  const oasisBonus={};
+  for(const o of (p.oases||[]))oasisBonus[o.resource]=(oasisBonus[o.resource]||0)+25;
+  const loyalty=p.loyalty??100;
+  const lc=loyalty>=70?'#5cff7a':loyalty>=40?'#ffd44a':loyalty>=20?'#ff8a4a':'#ff4444';
+  const con=document.createElement('div');
+  con.innerHTML='<div style="display:flex;flex-direction:column;gap:6px;">'+
+    RES.map(r=>{
+      const v=p.res[r]||0,mx=p.resMax[r]||0;
+      const pct=mx>0?Math.min(100,Math.round(v/mx*100)):0;
+      const si=spr(RES_I[r]);
+      const oaz=oasisBonus[r]?`<span style="color:#5dff7a;font-size:10px;"> +${oasisBonus[r]}%🌿</span>`:'';
+      const cls=v>=mx?'#ffd44a':v<mx*.1?'#ff8080':'#e0d0a0';
+      return `<div style="background:rgba(0,0,0,.35);border:1px solid #4a2810;border-radius:6px;padding:8px 10px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          ${si?`<img src="${si}" width="16" height="16" style="image-rendering:pixelated;">`:''}
+          <span style="flex:1;font-weight:bold;color:var(--gold2);">${RES_L[r]}</span>
+          <span style="color:${cls};font-weight:bold;">${fmtN(v)}</span>
+          <span style="color:#706050;font-size:10px;">/ ${fmtN(mx)}</span>
+          ${oaz}
+        </div>
+        <div style="height:4px;background:#1a0e04;border-radius:2px;">
+          <div style="height:100%;width:${pct}%;background:${cls};border-radius:2px;transition:width .4s;"></div>
+        </div>
+      </div>`;
+    }).join('')+
+    `<div style="padding:6px 10px;background:rgba(0,0,0,.3);border:1px solid #4a2810;border-radius:6px;">
+      <div style="font-size:11px;color:#a09070;margin-bottom:4px;">Лояльность</div>
+      <div style="height:6px;background:#1a0e04;border-radius:3px;">
+        <div style="height:100%;width:${loyalty}%;background:${lc};border-radius:3px;transition:width .4s;"></div>
+      </div>
+      <div style="text-align:right;font-size:10px;color:${lc};margin-top:2px;">${Math.floor(loyalty)}%</div>
+    </div>`+
+  '</div>';
+  modal({title:'💰 Ресурсы',body:con});
+}
+
 async function enterGame(){
   $('#auth').style.display='none';
-  $('#app').style.display='grid';
+  $('#lang-btn').style.display='none';
+  $('#app').style.display='block';
   preload();
   await refreshState();
-  // Запрашиваем разрешение на уведомления
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission().catch(()=>{});
   }
 
-  // Навигация
-  $$('.tab').forEach(t=>t.addEventListener('click',()=>{
-    const loc=t.dataset.loc;
-    if(loc==='menu'){showMenu();return;}
-    if(loc==='army'){showArmyModal();return;}
-    $$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
-    LOC=loc;selectedWorldHex=null;selectedGridHex=null;
-    if(loc==='world'&&S?.player?.worldPos){
-      // Центрируем на своём замке
-      const R=33,W=R*2,H=Math.round(R*Math.sqrt(3));
-      const {col,row}=S.player.worldPos;
-      const hx=col*(W*0.75), hy=row*H+(col%2)*(H/2);
-      const gridW=20*(R*1.5)+R*0.5, gridH=20*H+H*0.5;
-      const mw=$('#main').clientWidth, mh=$('#main').clientHeight;
-      vpX=gridW/2-hx-R; vpY=gridH/2-hy-H/2;
-    } else { vpX=0;vpY=0; }
-    renderMap();
-  }));
-
-  // Боковая панель — теперь плавная
-  const sbtn=$('#sidebtn');
-  const spanel=$('#sidepanel');
-  sbtn.onclick=()=>{
-    const open=spanel.classList.toggle('open');
-    sbtn.textContent=open?'◀':'▶';
+  // Правая навигационная панель
+  const rnav=$('#rnav'),rtoggle=$('#rnav-toggle');
+  rtoggle.onclick=()=>{
+    const open=rnav.classList.toggle('open');
+    rtoggle.textContent=open?'›':'‹';
   };
-  $$('#sidepanel .sb').forEach(b=>b.addEventListener('click',()=>{
-    const a=b.dataset.a;
-    spanel.classList.remove('open');sbtn.textContent='▶';
-    if(a==='logout'){api('/api/logout',{method:'POST'}).then(()=>location.reload());return;}
-    if(a==='army')showArmyModal();
-    else if(a==='alliance')showAllianceModal();
-    else if(a==='tech')showTechModal();
-    else if(a==='reports')showReportsModal();
-    else if(a==='profile')showProfileModal();
-  }));
+  // Открываем панель по умолчанию
+  rnav.classList.add('open');
 
-  connectWS();initChat();initDrag();startAnim();
+  $$('#rnav .rn-btn[data-loc]').forEach(b=>b.onclick=()=>setLoc(b.dataset.loc));
+  $('#rn-res').onclick=showResModal;
+
+  // Уведомления
+  $('#tn-mail').onclick=()=>showMessenger();
+  $('#tn-report').onclick=()=>showReportsModal();
+
+  // Мессенджер
+  $('#msg-close-btn').onclick=()=>{
+    const threadHidden=$('#mv-thread-wrap').classList.contains('hidden');
+    const newHidden=$('#mv-new').classList.contains('hidden');
+    if(!threadHidden||!newHidden){msgShowView('list');msgLoadContacts();}
+    else closeMessenger();
+  };
+  $('#msg-new-btn').onclick=()=>{msgShowView('new');$('#msg-new-to').focus();};
+  $('#mv-new-send').onclick=()=>msgSendNew();
+
+  // Кнопки внизу
+  $('#btn-menu').onclick=()=>showCabinet();
+  $('#btn-chat').onclick=()=>chatOpen?closeChat():openChat();
+
+  // 7-вкладочная нижняя панель
+  $$('.cb-tab').forEach(b=>b.onclick=()=>showCabinet(b.dataset.cab));
+
+  connectWS();initChat();initDrag();startAnim();initWorldSearch();
 
   // Таймеры
   setInterval(()=>{
@@ -2301,13 +3170,21 @@ async function showAllianceModal(){
         ${alliances.length?alliances.map(a=>`
           <div style="display:flex;justify-content:space-between;align-items:center;padding:7px;background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:4px;margin-bottom:4px;">
             <div>
-              <span style="font-weight:bold;color:var(--gold2);">[${a.tag}] ${a.name}</span>
-              <div style="font-size:11px;color:#a08060;">Лидер: ${a.leader} · ${a.memberCount} чел.</div>
+              <span style="font-weight:bold;color:var(--gold2);">[${escH(a.tag)}] ${escH(a.name)}</span>
+              <div style="font-size:11px;color:#a08060;">Лидер: ${escH(a.leader)} · ${a.memberCount} чел.</div>
             </div>
+            <button class="mbtn gray join-btn" data-id="${a.id}" style="padding:4px 8px;font-size:10px;min-width:auto;">Вступить</button>
           </div>`).join('')
         :'<p style="text-align:center;color:#a08060;padding:12px;">Пока нет альянсов</p>'}
       </div>`;
     const bg=modal({title:'🛡 Альянс',body:con});
+    bg.querySelectorAll('.join-btn').forEach(btn=>{
+      btn.onclick=async()=>{
+        try{await api('/api/alliance/join',{method:'POST',body:{allianceId:btn.dataset.id}});
+          toast('Вы вступили в альянс!','ok');bg.remove();await refreshState();showAllianceModal();}
+        catch(e){toast(e.message,'err');}
+      };
+    });
     bg.querySelector('#al-create-btn').onclick=async()=>{
       const name=bg.querySelector('#al-name').value.trim();
       const tag=bg.querySelector('#al-tag').value.trim();
@@ -2324,8 +3201,9 @@ async function showAllianceModal(){
   const membersHtml=fullAlliance?fullAlliance.members.map(m=>`
     <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:4px;margin-bottom:4px;">
       <div>
-        <span style="font-weight:bold;color:var(--gold2);">${m.username=== fullAlliance.leader?'👑 ':''} ${m.kingdom||m.username}</span>
-        <div style="font-size:11px;color:#a08060;">@${m.username} · ${RACES[m.race]?.name||''} · ⭐${fmtN(m.rating||0)}</div>
+        <span style="font-weight:bold;color:var(--gold2);">${m.username===fullAlliance.leader?'👑 ':''} ${m.kingdom||m.username}</span>
+        <div style="font-size:11px;color:#a08060;">@${m.username} · ${RACES[m.race]?.name||''}</div>
+        <div style="font-size:10px;color:#c0a050;">⚔${fmtN(m.rating||0)} + ⭐${fmtN(m.reputation||0)} = <b style="color:#ffd44a;">${fmtN(m.power||0)}</b> силы</div>
       </div>
       ${isLeader&&m.username!==p.username?`<button class="mbtn red kick-btn" data-u="${m.username}" style="padding:3px 7px;font-size:10px;min-width:auto;">Исключить</button>`:''}
     </div>`).join(''):'<p style="color:#a08060;">Загрузка...</p>';
@@ -2356,6 +3234,7 @@ async function showAllianceModal(){
     <div style="background:linear-gradient(135deg,#1a1a2a,#0a0a1a);border:1px solid #4a5a7a;border-radius:6px;padding:10px;margin-bottom:10px;">
       <div style="font-size:16px;font-weight:bold;color:#7ad4ff;">[${alInfo.tag}] ${alInfo.name}</div>
       <div style="font-size:12px;color:#8a9aaa;margin-top:3px;">Лидер: ${alInfo.leader} · ${alInfo.memberCount} участников</div>
+      <div style="font-size:12px;color:#ffd44a;margin-top:4px;">⚔ Сила альянса: <b>${fmtN(fullAlliance?.alliancePower||0)}</b></div>
     </div>
     <div style="font-size:12px;font-weight:bold;color:var(--gold2);margin-bottom:6px;">👥 Участники:</div>
     <div style="max-height:180px;overflow-y:auto;" id="members-list">${membersHtml}</div>
@@ -2438,30 +3317,6 @@ async function showAllianceModal(){
   });
 }
 
-function showMenu(){
-  const bd=document.createElement('div');
-  bd.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;';
-  [
-    ['👑','Профиль',showProfileModal],
-    ['📨','Отчёты',showReportsModal],
-    ['⚔','Армия',showArmyModal],
-    ['🔬','Технологии',showTechModal],
-    ['🛡','Альянс',()=>showAllianceModal()],
-    ['📜','Задания',showQuestsModal],
-    ['🏪','Рынок',showMarketModal],
-    ['💬','Чат',openChat],
-    ['🏆','Рейтинг',()=>showRatingModal()],
-    ['🚪','Выход',()=>{api('/api/logout',{method:'POST'}).then(()=>location.reload());}],
-  ].forEach(([i,n,h])=>{
-    const c=document.createElement('div');
-    c.style.cssText='padding:10px 4px;background:linear-gradient(180deg,#5a3018,#2a1008);border:2px solid var(--gold3);border-radius:4px;text-align:center;cursor:pointer;transition:border-color .15s;';
-    c.innerHTML=`<div style="font-size:28px;line-height:1;">${i}</div><div style="font-size:11px;color:var(--gold2);font-weight:bold;margin-top:4px;">${n}</div>`;
-    c.onmouseenter=()=>c.style.borderColor='var(--gold2)';
-    c.onmouseleave=()=>c.style.borderColor='var(--gold3)';
-    c.onclick=()=>{bg.remove();h();};bd.appendChild(c);
-  });
-  const bg=modal({title:'📜 Меню',body:bd});
-}
 
 // ── АРТЕФАКТЫ ──────────────────────────────────────────
 const ARTIFACTS = {
@@ -2681,6 +3536,170 @@ const QUESTS_CLIENT = {
   alliance_member:{ name:'Дипломат',      desc:'Вступи в альянс',          goal:{type:'alliance',count:1},    reward:{gold:300} },
   expedition_done:{ name:'Путешественник',desc:'Заверши 3 экспедиции',     goal:{type:'expedition',count:3},  reward:{gold:700} },
 };
+
+function showAdvisorModal(){
+  const p=S.player;
+  if(!p)return;
+  const res=p.res||{}, resMax=p.resMax||{}, queue=p.queue||[], trainQ=p.trainQueue||[];
+  const castle=p.castle||[], lands=p.lands||[];
+  const castleLvl=getCLvl();
+  const allCells=[...castle,...lands];
+  const techs=p.techs||{}, quests=p.quests||{};
+  const army=armyTotal();
+
+  const tips=[];
+  const tip=(priority,icon,title,desc,fn,lbl)=>tips.push({priority,icon,title,desc,fn,lbl});
+
+  // ── ЗАДАНИЯ: можно забрать награду ──
+  const claimable=Object.entries(QUESTS_CLIENT).filter(([id])=>{
+    const q=quests[id]; return q?.done&&!q?.claimed;
+  });
+  if(claimable.length)
+    tip(10,'📜',`Заберите награду! (${claimable.length} задан${claimable.length===1?'ие':'ия'})`,
+      claimable.map(([,q])=>q.name).join(', '),showQuestsModal,'Задания');
+
+  // ── ЕДА критически мала ──
+  if((res.food||0)<50)
+    tip(9,'🌾','Критически мало еды!',
+      `Осталось ${res.food||0} — войска могут взбунтоваться. Стройте или улучшайте фермы.`,
+      ()=>setLoc('lands'),'Земли');
+  else if((res.food||0)<200)
+    tip(7,'🌾','Мало еды',`Запасы еды: ${res.food||0}. Рекомендуем улучшить фермы.`,
+      ()=>setLoc('lands'),'Земли');
+
+  // ── АРМИЯ ──
+  if(army===0)
+    tip(9,'⚔','Нет армии!',
+      'Без войск вы беззащитны. Постройте казарму и наймите солдат.',
+      showArmyModal,'Армия');
+  else if(army<30)
+    tip(7,'⚔',`Армия очень мала (${army} воинов)`,
+      'Противники могут атаковать. Рекомендуем набрать хотя бы 50 воинов.',
+      showArmyModal,'Армия');
+
+  // ── ОЧЕРЕДЬ СТРОИТЕЛЬСТВА ПУСТА ──
+  if(queue.length===0){
+    // Найдём что можно построить/улучшить
+    const upgradeable=castle.filter(c=>{
+      if(!c.bldId)return false;
+      const def=BUILDINGS[c.bldId]; if(!def)return false;
+      if(c.level>=(def.max||20))return false;
+      const cost=calcCost(c.bldId,c.level+1,castleLvl);
+      return canAfford(cost)&&reqOk(c.bldId,allCells);
+    }).slice(0,3);
+    const buildable=Object.keys(BUILDINGS).filter(id=>{
+      if(hasU(id))return false;
+      if(!reqOk(id,allCells))return false;
+      if(!BUILDINGS[id].unique)return false;
+      const cost=calcCost(id,1,castleLvl);
+      return canAfford(cost);
+    }).slice(0,2);
+    const names=[
+      ...upgradeable.map(c=>`↑${BUILDINGS[c.bldId]?.name}`),
+      ...buildable.map(id=>BUILDINGS[id]?.name)
+    ].join(', ');
+    if(names)
+      tip(8,'🏗','Очередь строительства пуста',
+        `Доступно: ${names||'проверьте замок'}`,()=>setLoc('castle'),'Замок');
+    else
+      tip(5,'🏗','Очередь строительства пуста',
+        'Загляните в замок — возможно накоплено достаточно ресурсов.',
+        ()=>setLoc('castle'),'Замок');
+  }
+
+  // ── РЕСУРСЫ ПЕРЕПОЛНЯЮТСЯ ──
+  const resNames={food:'Еда',wood:'Дерево',stone:'Камень',iron:'Железо'};
+  for(const[k,name] of Object.entries(resNames)){
+    const val=res[k]||0, max=resMax[k]||1000;
+    if(max>0&&val/max>0.9)
+      tip(6,'📦',`${name} переполняется (${Math.round(val/max*100)}%)`,
+        'Постройте или улучшите склад, либо потратьте ресурсы на строительство.',
+        showResModal,'Казна');
+  }
+
+  // ── ТЕХНОЛОГИИ ──
+  const affordableTechs=Object.entries(TECHS).filter(([tid,t])=>{
+    if(techs[tid])return false;
+    return canAfford(t.cost)&&reqOk(tid,allCells);
+  });
+  if(affordableTechs.length)
+    tip(5,'🔬',`Доступно технологий для изучения: ${affordableTechs.length}`,
+      affordableTechs.slice(0,3).map(([,t])=>t.name).join(', ')+(affordableTechs.length>3?'…':''),
+      showTechModal,'Технологии');
+
+  // ── АЛЬЯНС ──
+  if(!p.alliance)
+    tip(4,'🤝','Вы не в альянсе',
+      'Союзники защитят вас и помогут в войнах. Создайте или вступите в альянс.',
+      showAllianceModal,'Альянс');
+
+  // ── ЗАДАНИЯ В ПРОГРЕССЕ ──
+  const inProgress=Object.entries(QUESTS_CLIENT).filter(([id,q])=>{
+    const s=quests[id]; return !s?.claimed&&!s?.done&&(s?.progress||0)>0;
+  }).sort(([ia,qa],[ib,qb])=>{
+    const pa=(quests[ia]?.progress||0)/qa.goal.count;
+    const pb=(quests[ib]?.progress||0)/qb.goal.count;
+    return pb-pa;
+  });
+  if(inProgress.length){
+    const[cid,cdef]=inProgress[0], cq=quests[cid];
+    const pct=Math.round((cq?.progress||0)/cdef.goal.count*100);
+    tip(3,'📋',`Задание «${cdef.name}» — ${pct}%`,
+      cdef.desc,showQuestsModal,'Задания');
+  }
+
+  // ── ЗЕМЛИ: пустые клетки ──
+  const emptyLands=lands.filter(c=>!c.bldId&&c.type!=='wall'&&c.type!=='empty');
+  if(emptyLands.length)
+    tip(4,'🌍',`На землях ${emptyLands.length} пустых клеток`,
+      'Постройте фермы, лесопилки или рудники для добычи ресурсов.',
+      ()=>setLoc('lands'),'Земли');
+
+  // ── РЕПУТАЦИЯ ──
+  if((p.reputation||0)<10)
+    tip(2,'⭐','Репутация очень низкая',
+      'Тратьте золото на развитие или подарите репутацию — это влияет на силу в альянсе.',
+      ()=>showRepGiftModal(''),'Репутация');
+
+  tips.sort((a,b)=>b.priority-a.priority);
+
+  // Случайная мудрость короля
+  const wisdom=[
+    '«Великие королевства строятся камень за камнем.»',
+    '«Сильная армия — это мир без войны.»',
+    '«Мудрый правитель слушает советника.»',
+    '«Пустые склады — слабые стены.»',
+    '«Союзники важнее золота.»',
+    '«Технологии решают исход войны.»',
+  ];
+  const quote=wisdom[Math.floor(Date.now()/86400000)%wisdom.length];
+
+  const con=document.createElement('div');
+  con.innerHTML=`<div style="background:linear-gradient(135deg,rgba(200,160,40,.15),rgba(200,160,40,.05));border:1px solid rgba(160,120,40,.4);border-radius:10px;padding:10px 12px;margin-bottom:10px;text-align:center;">
+    <div style="font-size:11px;color:#9a7030;font-style:italic;">${quote}</div>
+  </div>`+
+  (tips.length===0
+    ? '<p style="text-align:center;padding:16px;color:#6a5030;font-size:13px;">👑 Ваше королевство процветает!<br>Нет срочных советов.</p>'
+    : '<div style="display:flex;flex-direction:column;gap:7px;">'+
+      tips.map((t,i)=>`
+        <div data-ti="${i}" style="background:rgba(255,255,255,.5);border-radius:10px;
+          border:1px solid rgba(${t.priority>=8?'200,80,40':'160,120,40'},.4);
+          padding:10px 12px;display:flex;gap:10px;align-items:flex-start;
+          cursor:${t.fn?'pointer':'default'};">
+          <span style="font-size:22px;flex-shrink:0;">${t.icon}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:bold;color:#3a1a08;margin-bottom:2px;">${t.title}</div>
+            <div style="font-size:11px;color:#7a4a20;line-height:1.4;">${t.desc}</div>
+          </div>
+          ${t.fn?'<span style="color:#9a7020;font-size:18px;align-self:center;flex-shrink:0;">›</span>':''}
+        </div>`).join('')+'</div>');
+
+  const bg=modal({title:'🧙 Советник',body:con});
+  tips.forEach((t,i)=>{
+    if(!t.fn)return;
+    con.querySelector(`[data-ti="${i}"]`)?.addEventListener('click',()=>{bg.remove();t.fn();});
+  });
+}
 
 function showQuestsModal() {
   const p = S.player;

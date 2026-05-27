@@ -182,7 +182,7 @@ function ratingDelta(bldId, toLvl) {
 // ─── РАЗМЕРЫ КАРТ ───────────────────────────────────────────────────
 const CASTLE_COLS = 7, CASTLE_ROWS = 7;
 const LANDS_COLS  = 10, LANDS_ROWS = 10;
-const WORLD_COLS  = 20, WORLD_ROWS = 20;
+const WORLD_COLS  = 45, WORLD_ROWS = 45;
 const MAX_PLAYERS_PER_PROVINCE = 10;
 const OASES_PER_PROVINCE = 3;
 
@@ -426,7 +426,7 @@ function reqMet(p, bldId) {
 
 function hasUnique(p, bldId) { if (!BUILDINGS[bldId]?.unique) return false; return p.castle.some(c=>c.bldId===bldId&&c.level>0); }
 function canAfford(p, cost)  { for (const k in cost) if ((p.res[k]||0)<cost[k]) return false; return true; }
-function payCost(p, cost)    { for (const k in cost) p.res[k] -= cost[k]; }
+function payCost(p, cost)    { for (const k in cost) { p.res[k] -= cost[k]; } if (cost.gold) p.reputation = (p.reputation||0) + Math.floor((cost.gold||0)/10); }
 
 function computeRates(p) {
   const techs = p.techs || {};
@@ -793,7 +793,7 @@ function cmdStartExpedition(p) {
     return err('Экспедиция уже идёт');
   }
   if ((p.res.gold || 0) < 500) return err('Нужно 500 золота');
-  p.res.gold -= 500;
+  p.res.gold -= 500; p.reputation = (p.reputation||0) + 50;
   p.expedition = { startedAt: Date.now(), duration: 10 * 60 * 1000 };
   addReport(p, '🗺 Экспедиция запущена! Вернётся через 10 минут.', 'info');
   return ok();
@@ -1274,7 +1274,7 @@ function cmdResurrectGeneral(p, { idx }) {
   const entry = p.deadGenerals[idx];
   if (!entry) return err('Генерал не найден');
   if ((p.res.gold||0) < entry.resurrectCost) return err(`Нужно ${entry.resurrectCost} 🪙 золота`);
-  p.res.gold -= entry.resurrectCost;
+  p.res.gold -= entry.resurrectCost; p.reputation = (p.reputation||0) + Math.floor(entry.resurrectCost/10);
   p.army[entry.uid] = (p.army[entry.uid]||0) + entry.count;
   p.deadGenerals.splice(idx, 1);
   addReport(p, `✅ Генерал «${UNITS[entry.uid]?.name||entry.uid}» воскрешён!`, 'info');
@@ -1304,6 +1304,23 @@ function tickBandits(world, allPlayers) {
 }
 
 // ─── ADMIN-КОМАНДЫ ──────────────────────────────────────────────────
+function cmdAdminGiveUnits(p, { amount } = {}) {
+  const n = Math.max(1, Math.min(99999, parseInt(amount) || 500));
+  for (const uid in UNITS) {
+    if (UNITS[uid].race !== p.race) continue;
+    if (uid.endsWith('_general')) {
+      // Генерал — только 1, + запись XP если нет
+      p.army[uid] = Math.max(p.army[uid] || 0, 1);
+      if (!p.generals) p.generals = {};
+      if (!p.generals[uid]) p.generals[uid] = { xp: 0, level: 1 };
+    } else {
+      p.army[uid] = (p.army[uid] || 0) + n;
+    }
+  }
+  addReport(p, `⚔ Выдано ${n} каждого юнита расы ${p.race}.`, 'info');
+  return ok();
+}
+
 function cmdAdminFill(p) {
   for (const k of RES) { p.res[k] = 999999; p.resMax[k] = 999999; }
   for (const tid of Object.keys(TECHS)) p.techs[tid] = true;
@@ -1723,7 +1740,7 @@ module.exports = {
   cmdBuild, cmdDemolish, cmdTrain, cmdAttack, cmdResearch, cmdResurrectGeneral, cmdRenameGeneral, respawnBandits, tickBandits,
   cmdScout, cmdReinforce,
   cmdStartExpedition, cmdActivateArtifact, cmdDeactivateArtifact, cmdCraftSuperArtifact,
-  cmdAdminFill, cmdAdminComplete, cmdAdminMaxBuildings, cmdAdminFullSetup,
+  cmdAdminFill, cmdAdminComplete, cmdAdminMaxBuildings, cmdAdminFullSetup, cmdAdminGiveUnits,
   cmdAllianceCreate, cmdAllianceInvite, cmdAllianceJoin, cmdAllianceLeave,
   cmdAllianceKick, cmdAllianceTransfer, cmdSendResources,
   nextBuildCost, nextBuildTime, getCastleLevel, reqMet, hasUnique,

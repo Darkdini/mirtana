@@ -2,103 +2,91 @@
 
 cd "$(dirname "$0")"
 
-# ── Цвета и стили ─────────────────────────────────────────
-R='\033[0;31m'    # красный
-G='\033[0;32m'    # зелёный
-Y='\033[1;33m'    # жёлтый (золото)
-B='\033[0;34m'    # синий
-C='\033[0;36m'    # голубой
-M='\033[0;35m'    # фиолетовый
-W='\033[1;37m'    # белый жирный
-D='\033[2;37m'    # серый dim
-NC='\033[0m'      # сброс
-BG='\033[48;5;52m'   # тёмно-красный фон
-GOLD='\033[38;5;214m' # золотой
+# ── Цвета ─────────────────────────────────────────────────
+GOLD='\033[38;5;214m'
+GOLD2='\033[38;5;220m'
+G='\033[0;32m'
+R='\033[0;31m'
+C='\033[0;36m'
+W='\033[1;37m'
+D='\033[2;37m'
+DIM='\033[38;5;240m'
+NC='\033[0m'
 
 clear
 
-# ── Заставка ──────────────────────────────────────────────
 echo ""
-echo -e "${GOLD}  ╔══════════════════════════════════════════════╗${NC}"
-echo -e "${GOLD}  ║                                              ║${NC}"
-echo -e "${GOLD}  ║     ⚔  С Р Е Д Н Е В Е К О В Ь Е  ⚔       ║${NC}"
-echo -e "${GOLD}  ║                                              ║${NC}"
-echo -e "${GOLD}  ║         В О Й Н А   К О Р О Л Е Й           ║${NC}"
-echo -e "${GOLD}  ║                                              ║${NC}"
-echo -e "${GOLD}  ╚══════════════════════════════════════════════╝${NC}"
+echo -e "${GOLD}   ╔════════════════════════════════════════════════╗${NC}"
+echo -e "${GOLD}   ║${GOLD2}                                                ${GOLD}║${NC}"
+echo -e "${GOLD}   ║${GOLD2}        ⚔   С Р Е Д Н Е В Е К О В Ь Е   ⚔    ${GOLD}║${NC}"
+echo -e "${GOLD}   ║${GOLD2}             В О Й Н А   К О Р О Л Е Й         ${GOLD}║${NC}"
+echo -e "${GOLD}   ║${GOLD2}                                                ${GOLD}║${NC}"
+echo -e "${GOLD}   ╚════════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "${Y}  ════════════════════════════════════════════════${NC}"
 
-# ── Анимация загрузки ─────────────────────────────────────
-loading() {
+# ── Функция полоски загрузки ───────────────────────────────
+bar() {
   local msg="$1"
-  local delay=0.04
-  printf "${C}  %-28s${NC} " "$msg"
-  for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-    printf "${GOLD}▓${NC}"
-    sleep $delay
+  printf "   ${C}%-26s${NC} ${DIM}[${NC}" "$msg"
+  for i in $(seq 1 20); do
+    printf "${GOLD}▪${NC}"
+    sleep 0.03
   done
-  printf " ${G}✓${NC}\n"
+  printf "${DIM}]${NC} ${G}✓${NC}\n"
 }
 
-echo ""
-loading "Инициализация..."
-sleep 0.1
-loading "Загрузка мира..."
-sleep 0.1
-loading "Подготовка армий..."
-sleep 0.1
-loading "Открытие ворот..."
-sleep 0.1
-
-echo ""
-echo -e "${Y}  ════════════════════════════════════════════════${NC}"
+# ── Функция спиннер (для git pull) ────────────────────────
+spin() {
+  local pid=$1 msg="$2"
+  local frames=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
+  local i=0
+  while kill -0 "$pid" 2>/dev/null; do
+    printf "\r   ${GOLD}${frames[$i]}${NC}  ${C}%s${NC}..." "$msg"
+    i=$(( (i+1) % ${#frames[@]} ))
+    sleep 0.1
+  done
+  printf "\r   ${G}✓${NC}  ${W}%s${NC}             \n" "$msg"
+}
 
 # ── Проверка Node.js ──────────────────────────────────────
-if ! command -v node &> /dev/null; then
-  echo ""
-  echo -e "  ${R}✗ Node.js не найден!${NC}"
-  echo ""
-  echo -e "  Установи одной командой:"
-  echo -e "  ${GOLD}pkg install nodejs -y${NC}"
+if ! command -v node &>/dev/null; then
+  echo -e "   ${R}✗ Node.js не найден!${NC}"
+  echo -e "   Установи: ${GOLD}pkg install nodejs -y${NC}"
   echo ""
   exit 1
 fi
-
 NODE_VER=$(node --version)
+
+# ── Анимация загрузки ─────────────────────────────────────
 echo ""
-echo -e "  ${G}✓${NC} ${W}Node.js${NC} ${D}${NODE_VER}${NC}"
+bar "Инициализация сервера"
+bar "Загрузка игрового мира"
+bar "Подготовка армий"
+bar "Открытие ворот замка"
+echo ""
 
-# ── Определяем IP ─────────────────────────────────────────
-LOCAL_IP=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K[\d.]+' | head -1)
-[ -z "$LOCAL_IP" ] && LOCAL_IP=$(ip addr show wlan0 2>/dev/null | grep -oP '(?<=inet )\d+\.\d+\.\d+\.\d+' | head -1)
-[ -z "$LOCAL_IP" ] && LOCAL_IP=$(ifconfig 2>/dev/null | grep -oP '(?<=inet )\d+\.\d+\.\d+\.\d+' | grep -v '127.0.0.1' | head -1)
-
-PORT=${PORT:-7777}
-
-if command -v termux-wake-lock &> /dev/null; then
-  termux-wake-lock 2>/dev/null
-  echo -e "  ${G}✓${NC} ${W}Экран не заснёт${NC}"
+# ── Wakee lock ────────────────────────────────────────────
+WAKE_OK=false
+if command -v termux-wake-lock &>/dev/null; then
+  termux-wake-lock 2>/dev/null && WAKE_OK=true
 fi
 
-echo ""
-echo -e "${Y}  ════════════════════════════════════════════════${NC}"
-echo ""
+# ── Порт ──────────────────────────────────────────────────
+PORT=${PORT:-7777}
 
-# ── Адреса для входа ──────────────────────────────────────
-echo -e "  ${GOLD}🏰 ССЫЛКИ ДЛЯ ВХОДА В ИГРУ:${NC}"
+# ── Итоговый баннер ───────────────────────────────────────
+echo -e "   ${DIM}────────────────────────────────────────────────${NC}"
 echo ""
-echo -e "  ${D}┌─────────────────────────────────────────────┐${NC}"
-echo -e "  ${D}│${NC}                                             ${D}│${NC}"
-echo -e "  ${D}│${NC}   ${W}📱 Открой в браузере:${NC}                      ${D}│${NC}"
-echo -e "  ${D}│${NC}                                             ${D}│${NC}"
-echo -e "  ${D}│${NC}      ${GOLD}http://localhost:${PORT}${NC}                   ${D}│${NC}"
-echo -e "  ${D}│${NC}                                             ${D}│${NC}"
-echo -e "  ${D}└─────────────────────────────────────────────┘${NC}"
+echo -e "   ${G}✓${NC}  Node.js ${D}${NODE_VER}${NC}"
+$WAKE_OK && echo -e "   ${G}✓${NC}  Экран не заснёт"
 echo ""
-echo -e "${Y}  ════════════════════════════════════════════════${NC}"
+echo -e "   ${GOLD}🏰  Открой в браузере:${NC}"
 echo ""
-echo -e "  ${D}Ctrl+C — остановить сервер${NC}"
+echo -e "   ${W}  ➜  http://localhost:${PORT}${NC}"
+echo ""
+echo -e "   ${DIM}────────────────────────────────────────────────${NC}"
+echo ""
+echo -e "   ${D}Ctrl+C — остановить сервер${NC}"
 echo ""
 
 # ── Запуск ────────────────────────────────────────────────

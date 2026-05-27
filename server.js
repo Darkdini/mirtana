@@ -35,7 +35,13 @@ function loadState() {
       console.log('[load] Резервная копия сохранена → state.json.backup');
     }
     STATE = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    if (!STATE.world)        { STATE.world=G.createWorldGrid(); G.initProvince(STATE.world); G.initRelics(STATE.world); }
+    if (!STATE.world || STATE.world.length !== G.WORLD_COLS * G.WORLD_ROWS) {
+      console.log('[load] Размер мира изменился — пересоздаём карту');
+      STATE.world = G.createWorldGrid(); G.initProvince(STATE.world); G.initRelics(STATE.world);
+      for (const [uname, p] of Object.entries(STATE.players||{})) {
+        p.worldPos = G.placePlayerOnWorld(STATE.world, uname, p.race||'human');
+      }
+    }
     if (!STATE.chat)          STATE.chat=[];
     if (!STATE.alliances)     STATE.alliances={};
     if (!STATE.allianceWars)  STATE.allianceWars={};
@@ -139,6 +145,7 @@ function serializePlayer(p) {
     techs:           p.techs || {},
     alliance:        getAllianceInfo(p),
     rating:          G.calcRating(p),
+    reputation:      p.reputation || 0,
     avatar:          p.avatar   || null,
     avatarBg:        p.avatarBg || null,
     photo:           p.photo    || null,
@@ -148,6 +155,7 @@ function serializePlayer(p) {
     protectedUntil:  p.protectedUntil || 0,
     deadGenerals:    p.deadGenerals   || [],
     generals:        p.generals       || {},
+    mailUnread:      (p.mail||[]).filter(m=>!m.read).length,
     artifacts:       p.artifacts      || [],
     activeArtifacts: p.activeArtifacts || [],
     expedition:      p.expedition     || null,
@@ -316,7 +324,7 @@ async function router(req, res) {
     const rem = Math.max(0, Math.ceil((job.end - Date.now()) / 1000));
     const cost = Math.max(1, Math.ceil(rem / 60) * 2);
     if ((p.res.gold||0) < cost) return send(res, 400, { error: `Нужно ${cost} золота` });
-    p.res.gold -= cost;
+    p.res.gold -= cost; p.reputation = (p.reputation||0) + Math.floor(cost/10);
     job.end = Date.now();
     G.tickPlayer(p, STATE.world, STATE.players, STATE);
     saveState();
@@ -353,10 +361,13 @@ async function router(req, res) {
     if (!a) return send(res, 200, { alliance: null });
     const members = a.members.map(u => {
       const mp = STATE.players[u];
-      return { username: u, kingdom: mp?.kingdom, race: mp?.race, rating: mp ? G.calcRating(mp) : 0, isLeader: u === a.leader, allianceId: u };
+      const mRating = mp ? G.calcRating(mp) : 0;
+      const mRep = mp?.reputation || 0;
+      return { username: u, kingdom: mp?.kingdom, race: mp?.race, rating: mRating, reputation: mRep, power: mRating + mRep, isLeader: u === a.leader };
     });
+    const alliancePower = members.reduce((s, m) => s + m.power, 0);
     const invites = a.invites.map(u => ({ username: u, kingdom: STATE.players[u]?.kingdom }));
-    return send(res, 200, { alliance: { ...a, members, invites } });
+    return send(res, 200, { alliance: { ...a, members, invites, alliancePower } });
   }
 
   if (pathname === '/api/alliances' && req.method === 'GET') {
@@ -408,6 +419,83 @@ async function router(req, res) {
     const result = G.cmdAllianceTransfer(STATE, p, body);
     if (!result.ok) return send(res, 400, { error: result.error });
     saveState(); return send(res, 200, result);
+  }
+
+  // ── Публичный профиль игрока ─────────────────────────────────────
+  if (pathname.startsWith('/api/player/') && req.method === 'GET') {
+    const name = decodeURIComponent(pathname.slice('/api/player/'.length));
+    const tp = STATE.players[name];
+    if (!tp) return send(res, 404, { error: 'Игрок не найден' });
+    const pa = tp.allianceId && STATE.alliances?.[tp.allianceId];
+    const castleCell = (tp.castle || []).find(c => c.bldId === 'castle');
+    const power = Object.entries(tp.army || {}).reduce((s,[uid,n])=>{
+      const u = G.UNITS[uid]; return s + n*(u?(u.atk+u.def):10);
+    },0);
+    return send(res, 200, {
+      username:    tp.username,
+      kingdom:     tp.kingdom || tp.username,
+      race:        tp.race,
+      avatar:      tp.avatar || null,
+      avatarBg:    tp.avatarBg || null,
+      photo:       tp.photo || null,
+      allianceTag: pa?.tag || null,
+      allianceName:pa?.name || null,
+      castleLevel: castleCell?.level || 1,
+      rating:      G.calcRating(tp),
+      reputation:  tp.reputation || 0,
+      power:       power,
+      armySize:    Object.values(tp.army||{}).reduce((a,b)=>a+(+b||0), 0),
+      worldPos:    tp.worldPos || null,
+    });
+  }
+
+  // ── Письма ───────────────────────────────────────────────────────
+  if (pathname === '/api/mail' && req.method === 'GET') {
+    if (!p.mail) p.mail = [];
+    return send(res, 200, { mail: p.mail });
+  }
+  if (pathname === '/api/mail/send' && req.method === 'POST') {
+    const { to, text } = await readBody(req);
+    if (!to || !text) return send(res, 400, { error: 'Укажи получателя и текст' });
+    const target = STATE.players[to];
+    if (!target) return send(res, 404, { error: 'Игрок не найден' });
+    if (to === p.username) return send(res, 400, { error: 'Нельзя писать самому себе' });
+    const msg = { from: p.username, text: String(text).slice(0, 500), time: Date.now(), read: false };
+    if (!target.mail) target.mail = [];
+    target.mail.push(msg);
+    if (target.mail.length > 100) target.mail = target.mail.slice(-100);
+    const sent = { to, text: String(text).slice(0, 500), time: msg.time };
+    if (!p.sentMail) p.sentMail = [];
+    p.sentMail.push(sent);
+    if (p.sentMail.length > 200) p.sentMail = p.sentMail.slice(-200);
+    saveState();
+    return send(res, 200, { ok: true });
+  }
+  if (pathname === '/api/mail/sent' && req.method === 'GET') {
+    return send(res, 200, { sentMail: p.sentMail || [] });
+  }
+  if (pathname === '/api/mail/thread' && req.method === 'GET') {
+    const partner = u.searchParams.get('with');
+    if (!partner) return send(res, 400, { error: 'Укажи собеседника' });
+    const inbox = (p.mail || []).filter(m => m.from === partner).map(m => ({...m, dir: 'in'}));
+    const sentArr = (p.sentMail || []).filter(m => m.to === partner).map(m => ({...m, dir: 'out'}));
+    const thread = [...inbox, ...sentArr].sort((a, b) => a.time - b.time);
+    if (p.mail) p.mail.forEach(m => { if (m.from === partner) m.read = true; });
+    saveState();
+    return send(res, 200, { thread });
+  }
+  if (pathname === '/api/mail/read' && req.method === 'POST') {
+    if (!p.mail) p.mail = [];
+    p.mail.forEach(m => m.read = true);
+    saveState();
+    return send(res, 200, { ok: true });
+  }
+  if (pathname === '/api/mail/delete' && req.method === 'POST') {
+    const { idx } = await readBody(req);
+    if (!p.mail) p.mail = [];
+    if (idx >= 0 && idx < p.mail.length) p.mail.splice(idx, 1);
+    saveState();
+    return send(res, 200, { ok: true });
   }
 
   // ── Переименование генерала ──────────────────────────────────────
@@ -495,20 +583,23 @@ async function router(req, res) {
 
   // ── Рейтинг ──────────────────────────────────────────────────────
   if (pathname === '/api/rating' && req.method === 'GET') {
-    const top = Object.values(STATE.players)
+    const allPlayers = Object.values(STATE.players);
+    const top = allPlayers
       .map(pl => ({
-        username:  pl.username,
-        kingdom:   pl.kingdom,
-        race:      pl.race,
-        rating:    G.calcRating(pl),
-        armySize:  Object.values(pl.army||{}).reduce((a,b)=>a+(+b||0), 0),
-        castleLvl: (pl.castle||[]).find(c=>c.bldId==='castle')?.level || 1,
-        avatar:    pl.avatar || null,
-        avatarBg:  pl.avatarBg || null,
+        username:   pl.username,
+        kingdom:    pl.kingdom,
+        race:       pl.race,
+        rating:     G.calcRating(pl),
+        reputation: pl.reputation || 0,
+        armySize:   Object.values(pl.army||{}).reduce((a,b)=>a+(+b||0), 0),
+        castleLvl:  (pl.castle||[]).find(c=>c.bldId==='castle')?.level || 1,
+        avatar:     pl.avatar || null,
+        avatarBg:   pl.avatarBg || null,
+        photo:      pl.photo   || null,
       }))
       .sort((a,b) => b.rating - a.rating)
       .slice(0, 50);
-    return send(res, 200, { top });
+    return send(res, 200, { top, total: allPlayers.length });
   }
 
   // ── История чата ─────────────────────────────────────────────────
@@ -520,11 +611,13 @@ async function router(req, res) {
   if (pathname.startsWith('/api/admin/') && req.method === 'POST') {
     if (!ADMINS.has(p.username)) return send(res, 403, { error: 'Нет прав администратора' });
     const action = pathname.slice('/api/admin/'.length);
+    const body = await readBody(req);
     let result;
     if      (action === 'fill')          result = G.cmdAdminFill(p);
     else if (action === 'complete')      { result = G.cmdAdminComplete(p); G.tickPlayer(p, STATE.world, STATE.players, STATE); }
     else if (action === 'max-buildings') result = G.cmdAdminMaxBuildings(p);
     else if (action === 'full-setup')    { result = G.cmdAdminFullSetup(p); G.tickPlayer(p, STATE.world, STATE.players, STATE); }
+    else if (action === 'give-units')    result = G.cmdAdminGiveUnits(p, body);
     else return send(res, 404, { error: 'Unknown admin action' });
     if (!result.ok) return send(res, 400, { error: result.error });
     saveState();
@@ -612,6 +705,28 @@ async function router(req, res) {
     if (!result.ok) return send(res, 400, { error: result.error });
     saveState();
     return send(res, 200, result);
+  }
+
+  if (pathname === '/api/reputation/gift' && req.method === 'POST') {
+    const body = await readBody(req);
+    const gold = Math.max(1, parseInt(body.gold) || 0);
+    const target = (body.target || '').trim();
+    if (gold < 1) return send(res, 400, { error: 'Укажи количество золота' });
+    if ((p.res.gold || 0) < gold) return send(res, 400, { error: 'Недостаточно золота' });
+    const rep = gold * 3;
+    p.res.gold -= gold;
+    if (!target || target === p.username) {
+      p.reputation = (p.reputation || 0) + rep;
+      G.addReport(p, `⭐ +${rep} репутации (потрачено ${gold}🪙)`, 'info');
+    } else {
+      const tp = STATE.players[target];
+      if (!tp) return send(res, 404, { error: 'Игрок не найден' });
+      tp.reputation = (tp.reputation || 0) + rep;
+      G.addReport(p, `⭐ Подарено +${rep} реп. игроку ${target} за ${gold}🪙`, 'info');
+      G.addReport(tp, `⭐ +${rep} репутации — подарок от ${p.username} (${gold}🪙)`, 'info');
+    }
+    saveState();
+    return send(res, 200, { ok: true, rep, gold });
   }
 
   return send(res, 404, { error: 'Not found' });
