@@ -992,34 +992,33 @@ function worldHexFill(c){
 // Цвет заливки гекса по типу
 function hexFill(c,loc,col,row,cols,rows){
   if(loc==='castle'){
-    // Центральный гекс (ратуша) — золотистый
     const cx=Math.floor(cols/2),cy=Math.floor(rows/2);
     const dist=Math.max(Math.abs(col-cx),Math.abs(row-cy));
-    if(dist===0) return '#6a5a20';  // центр — золото
-    if(dist===1) return '#5a7030';  // вокруг — светлее
-    if(dist===2) return '#4a6828';  // средний пояс
-    return '#3a5820';               // края
+    if(dist===0) return 'rgba(120,100,30,.55)';
+    if(dist===1) return 'rgba(80,110,40,.4)';
+    if(dist===2) return 'rgba(60,90,30,.35)';
+    return 'rgba(40,70,20,.3)';
   }
-  if(c.type==='forest')return '#2a5a18';
-  if(c.type==='stone') return '#58524a';
-  if(c.type==='grass') return '#4a7a28';
-  if(c.type==='player')  return '#3a4a7a';
-  if(c.type==='bandit')  return '#5a3a18';
-  if(c.type==='oasis')   return '#2a6a4a';
-  if(c.type==='caravan') return '#4a5a20';
-  return '#4a6a2a';
+  if(c.type==='forest')return 'rgba(30,70,15,.45)';
+  if(c.type==='stone') return 'rgba(80,75,60,.45)';
+  if(c.type==='grass') return 'rgba(60,110,30,.35)';
+  if(c.type==='player')  return 'rgba(50,60,110,.45)';
+  if(c.type==='bandit')  return 'rgba(90,50,20,.45)';
+  if(c.type==='oasis')   return 'rgba(30,100,65,.45)';
+  if(c.type==='caravan') return 'rgba(70,85,25,.4)';
+  return 'rgba(55,90,35,.35)';
 }
 function hexStroke(c,loc,col,row,cols,rows){
   if(loc==='castle'){
     const cx=Math.floor(cols/2),cy=Math.floor(rows/2);
     const dist=Math.max(Math.abs(col-cx),Math.abs(row-cy));
-    if(dist===0) return 'rgba(212,162,54,.8)';  // золотой ободок у ратуши
-    if(dist===1) return 'rgba(160,130,60,.5)';
-    return 'rgba(0,0,0,.3)';
+    if(dist===0) return 'rgba(212,162,54,.9)';
+    if(dist===1) return 'rgba(180,150,70,.55)';
+    return 'rgba(255,255,255,.18)';
   }
-  if(c.type==='forest')return 'rgba(0,0,0,.4)';
-  if(c.type==='stone') return 'rgba(0,0,0,.4)';
-  return 'rgba(0,0,0,.3)';
+  if(c.type==='forest')return 'rgba(255,255,255,.15)';
+  if(c.type==='stone') return 'rgba(255,255,255,.2)';
+  return 'rgba(255,255,255,.15)';
 }
 
 let hitHexes=[];
