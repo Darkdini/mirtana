@@ -475,7 +475,7 @@ async function router(req, res) {
     return send(res, 200, { sentMail: p.sentMail || [] });
   }
   if (pathname === '/api/mail/thread' && req.method === 'GET') {
-    const partner = new URL('http://x'+url).searchParams.get('with');
+    const partner = u.searchParams.get('with');
     if (!partner) return send(res, 400, { error: 'Укажи собеседника' });
     const inbox = (p.mail || []).filter(m => m.from === partner).map(m => ({...m, dir: 'in'}));
     const sentArr = (p.sentMail || []).filter(m => m.to === partner).map(m => ({...m, dir: 'out'}));
