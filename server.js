@@ -163,6 +163,7 @@ function serializePlayer(p) {
     spyCooldown:     p.spyCooldown    || 0,
     marketOrders:    p.marketOrders   || [],
     quests:          p.quests         || {},
+    diplomacy:       p.diplomacy      || {},
     allianceWars:    p.allianceId ? Object.fromEntries(
       Object.entries(STATE.allianceWars || {}).filter(([k]) => k.includes(p.allianceId))
     ) : {},
@@ -265,7 +266,7 @@ async function router(req, res) {
       if (c.type === 'player' && c.player && STATE.players[c.player]) {
         const pp = STATE.players[c.player];
         const pa = pp.allianceId && STATE.alliances?.[pp.allianceId];
-        worldPlayers[c.player] = { allianceId: pp.allianceId || null, allianceTag: pa?.tag || null };
+        worldPlayers[c.player] = { allianceId: pp.allianceId || null, allianceTag: pa?.tag || null, protectedUntil: pp.protectedUntil || 0 };
       }
     }
     return send(res, 200, {
@@ -503,6 +504,52 @@ async function router(req, res) {
     if (idx >= 0 && idx < p.mail.length) p.mail.splice(idx, 1);
     saveState();
     return send(res, 200, { ok: true });
+  }
+
+  // ── Дипломатия ──────────────────────────────────────────────────
+  if (pathname === '/api/diplomacy' && req.method === 'GET') {
+    return send(res, 200, { diplomacy: p.diplomacy || {} });
+  }
+
+  if (pathname === '/api/diplomacy/propose' && req.method === 'POST') {
+    const { target, action } = await readBody(req);
+    if (!target || !action) return send(res, 400, { error: 'Укажи цель и действие' });
+    const tp = STATE.players[target];
+    if (!tp) return send(res, 404, { error: 'Игрок не найден' });
+    if (target === p.username) return send(res, 400, { error: 'Нельзя' });
+    if (!p.diplomacy) p.diplomacy = {};
+    if (!tp.diplomacy) tp.diplomacy = {};
+
+    if (action === 'war') {
+      p.diplomacy[target] = 'war';
+      tp.diplomacy[p.username] = 'war';
+      if (!tp.mail) tp.mail = [];
+      tp.mail.push({ from: 'Система', text: `⚔ ${p.username} объявил вам войну!`, time: Date.now(), read: false });
+      push(target, { type: 'state', player: serializePlayer(tp) });
+    } else if (action === 'ally') {
+      if (tp.diplomacy[p.username] === 'ally_request') {
+        p.diplomacy[target] = 'ally';
+        tp.diplomacy[p.username] = 'ally';
+        if (!tp.mail) tp.mail = [];
+        tp.mail.push({ from: 'Система', text: `🤝 ${p.username} принял ваш союз!`, time: Date.now(), read: false });
+        push(target, { type: 'state', player: serializePlayer(tp) });
+      } else {
+        p.diplomacy[target] = 'ally_request';
+        tp.diplomacy[p.username] = 'ally_request';
+        if (!tp.mail) tp.mail = [];
+        tp.mail.push({ from: 'Система', text: `🤝 ${p.username} предлагает союз. Открой его профиль чтобы ответить.`, time: Date.now(), read: false });
+        push(target, { type: 'state', player: serializePlayer(tp) });
+      }
+    } else if (action === 'peace') {
+      p.diplomacy[target] = 'neutral';
+      tp.diplomacy[p.username] = 'neutral';
+      if (!tp.mail) tp.mail = [];
+      tp.mail.push({ from: 'Система', text: `☮ ${p.username} предлагает мир.`, time: Date.now(), read: false });
+      push(target, { type: 'state', player: serializePlayer(tp) });
+    }
+
+    saveState();
+    return send(res, 200, { ok: true, diplomacy: p.diplomacy });
   }
 
   // ── Переименование генерала ──────────────────────────────────────
