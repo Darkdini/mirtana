@@ -553,6 +553,16 @@ async function router(req, res) {
   }
 
   // ── Смена пароля ────────────────────────────────────────────────
+  if (pathname === '/api/notes' && req.method === 'GET') {
+    return send(res, 200, { notes: p.notes || '' });
+  }
+  if (pathname === '/api/notes' && req.method === 'POST') {
+    const { notes } = await readBody(req);
+    p.notes = String(notes || '').slice(0, 2000);
+    saveState();
+    return send(res, 200, { ok: true });
+  }
+
   if (pathname === '/api/change-password' && req.method === 'POST') {
     const { oldPassword, newPassword } = await readBody(req);
     if (!oldPassword || !newPassword) return send(res, 400, { error: 'Заполни все поля' });
