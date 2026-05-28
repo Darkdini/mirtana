@@ -72,25 +72,49 @@ if (BOT_CFG.botToken) {
 async function handleTgUpdate(upd) {
   if (!STATE.tgLinks) STATE.tgLinks = {};
 
-  // /start username — привязка аккаунта
+  // /start payload — payload формат: USERNAME или USERNAME_STARS
   if (upd.message?.text?.startsWith('/start')) {
     const chatId = upd.message.chat.id;
     const args = upd.message.text.split(' ').slice(1).join('').trim();
-    if (args && STATE.players[args]) {
-      STATE.tgLinks[chatId] = args;
+
+    // Парсим формат USERNAME_STARS (прямо из игры с конкретным пакетом)
+    const match = args.match(/^(.+)_(\d+)$/);
+    const username = match ? match[1] : args;
+    const directStars = match ? parseInt(match[2]) : null;
+
+    if (username && STATE.players[username]) {
+      STATE.tgLinks[chatId] = username;
       saveState();
-      // Показываем меню пополнения
+
+      if (directStars) {
+        // Сразу шлём инвойс на нужный пакет
+        const pack = GOLD_PACKS.find(p => p.stars === directStars);
+        if (pack) {
+          await tgApi('sendMessage', { chat_id: chatId, text: `✅ Аккаунт *${username}* привязан! Отправляю счёт...`, parse_mode:'Markdown' });
+          await tgApi('sendInvoice', {
+            chat_id: chatId,
+            title: `${pack.gold} 🪙 Золото`,
+            description: `Пополнение золота в Средневековье для игрока ${username}`,
+            payload: JSON.stringify({ username, gold: pack.gold, stars: pack.stars }),
+            currency: 'XTR',
+            prices: [{ label: `${pack.gold} золота`, amount: pack.stars }]
+          });
+          return;
+        }
+      }
+
+      // Показываем меню пакетов
       const kb = GOLD_PACKS.map(p => ([{ text: p.label, callback_data: 'buy_' + p.stars }]));
       await tgApi('sendMessage', {
         chat_id: chatId,
-        text: `✅ Аккаунт *${args}* привязан!\n\nВыбери пакет пополнения:\n_(1 ⭐ ≈ 1 руб = 3 🪙)_`,
+        text: `✅ Аккаунт *${username}* привязан!\n\nВыбери пакет пополнения:\n_(1 ⭐ ≈ 1 руб = 3 🪙)_`,
         parse_mode: 'Markdown',
         reply_markup: { inline_keyboard: kb }
       });
     } else {
       await tgApi('sendMessage', {
         chat_id: chatId,
-        text: args ? `❌ Игрок *${args}* не найден. Проверь ник в игре.` : `👋 Отправь команду:\n/start ТвойНик\n\nНик можно найти в профиле игры.`,
+        text: username ? `❌ Игрок *${username}* не найден. Проверь ник в игре.` : `👋 Нажми кнопку пополнения в игре (Казна) чтобы начать.`,
         parse_mode: 'Markdown'
       });
     }
