@@ -1431,14 +1431,23 @@ function drawWorldHex(){
         const cw=Math.round(R*1.8),ch=Math.round(castleS.naturalHeight/castleS.naturalWidth*cw);
         ctx.drawImage(castleS,cx2-cw/2,cy2-ch*0.75,cw,ch);
       }
-      // Ободок: золото — я, зелёный — союзник
+      // Ободок: золото — я, зелёный — союзник альянса
       if(isMe||isAlly){
         ctx.strokeStyle=isMe?'#f0c958':'#5cff7a';ctx.lineWidth=2.5;
         roundedHexPath(ctx,pts,R*0.15);ctx.stroke();
       }
-      // Щит защиты новичка
-      const defPlayer=S.player.username===c.player?S.player:null;
-      if(defPlayer?.protectedUntil>Date.now()){
+      // Ободок дипломатии: красный — война, зелёный — союз
+      if(!isMe){
+        const myDip=(S.player?.diplomacy||{})[c.player];
+        if(myDip==='war'){
+          hexPath();ctx.strokeStyle='rgba(255,60,60,0.8)';ctx.lineWidth=3;ctx.stroke();
+        }else if(myDip==='ally'){
+          hexPath();ctx.strokeStyle='rgba(60,255,100,0.8)';ctx.lineWidth=3;ctx.stroke();
+        }
+      }
+      // Щит защиты новичка — для себя или других игроков через worldPlayers
+      const protectedUntil=isMe?(S.player.protectedUntil||0):(cellPlayer?.protectedUntil||0);
+      if(protectedUntil>Date.now()){
         ctx.font=`${R*0.5}px serif`;ctx.textAlign='center';
         ctx.fillText('🛡',cx2+R*0.6,cy2-R*0.5);
       }
