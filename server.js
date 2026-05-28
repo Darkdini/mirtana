@@ -394,6 +394,12 @@ async function router(req, res) {
 
   // ── Регистрация ──────────────────────────────────────────────────
   if (pathname === '/api/bot-info' && req.method === 'GET') {
+    if (!BOT_CFG.botUsername && BOT_CFG.botToken) {
+      try {
+        const me = await tgApi('getMe', {});
+        if (me.ok) BOT_CFG.botUsername = me.result.username;
+      } catch {}
+    }
     return send(res, 200, { botUsername: BOT_CFG.botUsername || '' });
   }
 
