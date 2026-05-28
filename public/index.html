@@ -3084,6 +3084,66 @@ function updateWorldCoords(){
 
 // ── Кабинет (7-вкладочное меню) ──────────────────────────
 let _cabBg=null;
+function showChangePasswordModal(){
+  const con=document.createElement('div');
+  con.innerHTML=`
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;color:#a09070;margin-bottom:4px;">Текущий пароль</div>
+      <input id="cp-old" type="password" placeholder="Текущий пароль" maxlength="60"
+        style="width:100%;background:rgba(0,0,0,.4);border:1px solid #5a3510;color:#f0d060;padding:8px 10px;border-radius:6px;font-family:inherit;font-size:13px;outline:none;box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;color:#a09070;margin-bottom:4px;">Новый пароль</div>
+      <input id="cp-new" type="password" placeholder="Новый пароль" maxlength="60"
+        style="width:100%;background:rgba(0,0,0,.4);border:1px solid #5a3510;color:#f0d060;padding:8px 10px;border-radius:6px;font-family:inherit;font-size:13px;outline:none;box-sizing:border-box;">
+    </div>
+    <div id="cp-err" style="color:#ff8080;font-size:12px;min-height:16px;text-align:center;"></div>`;
+  modal({title:'🔑 Сменить пароль',body:con,actions:[
+    {label:'Сохранить',kind:'gold',handler:async()=>{
+      const oldPw=$('#cp-old').value;
+      const newPw=$('#cp-new').value.trim();
+      if(!oldPw||!newPw){$('#cp-err').textContent='Заполни оба поля';return false;}
+      if(newPw.length<4){$('#cp-err').textContent='Пароль минимум 4 символа';return false;}
+      try{
+        await api('/api/change-password',{method:'POST',body:{oldPassword:oldPw,newPassword:newPw}});
+        toast('Пароль изменён','ok');
+      }catch(e){$('#cp-err').textContent=e.message;return false;}
+    },close:true},
+  ]});
+}
+
+function showChangeUsernameModal(){
+  const gold=S?.player?.res?.gold||0;
+  const con=document.createElement('div');
+  con.innerHTML=`
+    <div style="text-align:center;padding:6px 0 12px;color:#a09070;font-size:13px;">
+      Стоимость: <b style="color:#f0c040;">200 🪙</b> &nbsp;·&nbsp; У тебя: <b style="color:${gold>=200?'#5cff7a':'#ff8080'};">${gold} 🪙</b>
+    </div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;color:#a09070;margin-bottom:4px;">Новый ник</div>
+      <input id="cu-name" type="text" placeholder="Новое имя" maxlength="20"
+        style="width:100%;background:rgba(0,0,0,.4);border:1px solid #5a3510;color:#f0d060;padding:8px 10px;border-radius:6px;font-family:inherit;font-size:13px;outline:none;box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;color:#a09070;margin-bottom:4px;">Пароль для подтверждения</div>
+      <input id="cu-pw" type="password" placeholder="Пароль" maxlength="60"
+        style="width:100%;background:rgba(0,0,0,.4);border:1px solid #5a3510;color:#f0d060;padding:8px 10px;border-radius:6px;font-family:inherit;font-size:13px;outline:none;box-sizing:border-box;">
+    </div>
+    <div id="cu-err" style="color:#ff8080;font-size:12px;min-height:16px;text-align:center;"></div>`;
+  modal({title:'✏ Сменить ник',body:con,actions:[
+    {label:'Сменить за 200 🪙',kind:'gold',handler:async()=>{
+      const name=$('#cu-name').value.trim();
+      const pw=$('#cu-pw').value;
+      if(!name||!pw){$('#cu-err').textContent='Заполни все поля';return false;}
+      try{
+        await api('/api/change-username',{method:'POST',body:{newUsername:name,password:pw}});
+        toast('Ник изменён на '+name,'ok');
+        await refreshState();
+      }catch(e){$('#cu-err').textContent=e.message;return false;}
+    },close:true},
+  ]});
+}
+
 function showCabinet(startTab){
   if(!S?.player)return;
   if(_cabBg){_cabBg.remove();_cabBg=null;}
@@ -3131,6 +3191,8 @@ function showCabinet(startTab){
         ['🏺','Артефакты',showArtifactsModal],
         ['📜','Задания',showQuestsModal],
         ['🏪','Рынок',showMarketModal],
+        ['🔑','Сменить пароль',showChangePasswordModal],
+        ['✏','Сменить ник (200 🪙)',showChangeUsernameModal],
         ['🚪','Выход',()=>{api('/api/logout',{method:'POST'}).then(()=>location.reload());}],
       ];
       body.innerHTML='<div style="padding:0;">' + items.map(([i,n])=>`

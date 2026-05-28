@@ -552,6 +552,48 @@ async function router(req, res) {
     return send(res, 200, { ok: true, diplomacy: p.diplomacy });
   }
 
+  // ── Смена пароля ────────────────────────────────────────────────
+  if (pathname === '/api/change-password' && req.method === 'POST') {
+    const { oldPassword, newPassword } = await readBody(req);
+    if (!oldPassword || !newPassword) return send(res, 400, { error: 'Заполни все поля' });
+    if (newPassword.length < 4) return send(res, 400, { error: 'Пароль минимум 4 символа' });
+    if (hashPw(oldPassword, p.passwordSalt) !== p.passwordHash)
+      return send(res, 403, { error: 'Неверный текущий пароль' });
+    const salt = newSalt();
+    p.passwordSalt = salt;
+    p.passwordHash = hashPw(newPassword, salt);
+    saveState();
+    return send(res, 200, { ok: true });
+  }
+
+  // ── Смена ника ──────────────────────────────────────────────────
+  if (pathname === '/api/change-username' && req.method === 'POST') {
+    const { newUsername, password } = await readBody(req);
+    if (!newUsername || !password) return send(res, 400, { error: 'Заполни все поля' });
+    const clean = newUsername.trim();
+    if (clean.length < 2 || clean.length > 20) return send(res, 400, { error: 'Ник: 2–20 символов' });
+    if (!/^[a-zA-Zа-яА-ЯёЁ0-9_\- ]+$/.test(clean)) return send(res, 400, { error: 'Недопустимые символы' });
+    if (hashPw(password, p.passwordSalt) !== p.passwordHash)
+      return send(res, 403, { error: 'Неверный пароль' });
+    if ((p.res.gold || 0) < 200) return send(res, 400, { error: 'Нужно 200 🪙 золота' });
+    if (STATE.players[clean] && clean !== p.username) return send(res, 400, { error: 'Ник уже занят' });
+    const oldName = p.username;
+    // перенос данных на новый ник
+    p.username = clean;
+    p.res.gold -= 200;
+    STATE.players[clean] = p;
+    delete STATE.players[oldName];
+    // обновить сессию
+    const sid = getCookie(req, 'sid');
+    if (sid) STATE.sessions[sid] = clean;
+    // обновить позицию на карте мира
+    if (STATE.world) {
+      STATE.world.forEach(c => { if (c.player === oldName) c.player = clean; });
+    }
+    saveState();
+    return send(res, 200, { ok: true });
+  }
+
   // ── Переименование генерала ──────────────────────────────────────
   if (pathname === '/api/rename-general' && req.method === 'POST') {
     const { uid, name } = await readBody(req);
