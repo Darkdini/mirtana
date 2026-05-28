@@ -1,0 +1,12 @@
+{
+  "name": "mirtana",
+  "version": "1.0.0",
+  "description": "Средневековье — браузерная MMO стратегия",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
