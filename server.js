@@ -56,8 +56,17 @@ async function setTgWebhook(url) {
   if (me.ok) { BOT_CFG.botUsername = me.result.username; console.log('[tg] Bot: @' + me.result.username); }
 }
 
-if (BOT_CFG.botToken && BOT_CFG.webhookUrl) {
-  setTgWebhook(BOT_CFG.webhookUrl).catch(console.error);
+if (BOT_CFG.botToken) {
+  // Получаем username бота при каждом запуске
+  tgApi('getMe', {}).then(me => {
+    if (me.ok) {
+      BOT_CFG.botUsername = me.result.username;
+      console.log('[tg] Bot: @' + me.result.username);
+    }
+  }).catch(() => {});
+  if (BOT_CFG.webhookUrl) {
+    setTgWebhook(BOT_CFG.webhookUrl).catch(console.error);
+  }
 }
 
 async function handleTgUpdate(upd) {
