@@ -2292,6 +2292,10 @@ async function msgOpenThread(username) {
   wrap.innerHTML = '<div style="padding:20px;text-align:center;color:#706050;">Загрузка...</div>';
   try {
     const { thread } = await api(`/api/mail/thread?with=${encodeURIComponent(username)}`);
+    // обновляем бадж почты
+    if(S.player.mail)S.player.mail.forEach(m=>{if(m.from===username)m.read=true;});
+    const mailN=(S.player.mail||[]).filter(m=>!m.read).length;
+    const nb=$('#tn-mail-n');if(nb){nb.textContent=mailN||'';nb.classList.toggle('vis',mailN>0);}
     wrap.innerHTML = '';
     if (!thread || !thread.length) {
       wrap.innerHTML = '<div style="padding:20px;text-align:center;color:#706050;">Начни переписку ниже</div>';
@@ -2363,6 +2367,10 @@ async function msgSendNew() {
 function showInboxModal() { showMessenger(); }
 
 function showReportsModal(filterKind){
+  api('/api/reports/read',{method:'POST',body:{}}).then(()=>{
+    if(S.player.reports)S.player.reports.forEach(r=>r.read=true);
+    const nb=$('#tn-rep-n');if(nb){nb.textContent='';nb.classList.remove('vis');}
+  });
   let reps=(S.player.reports||[]).slice().reverse();
   if(filterKind)reps=reps.filter(r=>r.kind===filterKind);
   const con = document.createElement('div');

@@ -490,6 +490,12 @@ async function router(req, res) {
     saveState();
     return send(res, 200, { ok: true });
   }
+  if (pathname === '/api/reports/read' && req.method === 'POST') {
+    if (!p.reports) p.reports = [];
+    p.reports.forEach(r => r.read = true);
+    saveState();
+    return send(res, 200, { ok: true });
+  }
   if (pathname === '/api/mail/delete' && req.method === 'POST') {
     const { idx } = await readBody(req);
     if (!p.mail) p.mail = [];
