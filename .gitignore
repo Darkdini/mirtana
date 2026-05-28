@@ -4,3 +4,4 @@ state.json
 state.json.backup
 node_modules/
 *.7z
+config.json

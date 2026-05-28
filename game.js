@@ -430,8 +430,7 @@ function payCost(p, cost)    { for (const k in cost) { p.res[k] -= cost[k]; } if
 
 function computeRates(p) {
   const techs = p.techs || {};
-  const r = { gold:50, wood:0, stone:0, food:0, iron:0, people:0 };
-  if (techs.trade_routes) r.gold += 50;
+  const r = { gold:0, wood:0, stone:0, food:0, iron:0, people:0 };
   for (const c of p.lands) {
     if (!c.bldId) continue;
     const def = LAND_BUILDINGS[c.bldId]; if (!def?.produces) continue;

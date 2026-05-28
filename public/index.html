@@ -3185,7 +3185,7 @@ function showCabinet(startTab){
       const items=[
         ['👑','Профиль',()=>showProfileModal(S?.player?.username)],
         ['🧙','Советник',showAdvisorModal],
-        ['💰','Казна',showResModal],
+        ['💰','Казна',showTreasuryModal],
         ['⚔','Армия',showArmyModal],
         ['🔬','Технологии',showTechModal],
         ['🏺','Артефакты',showArtifactsModal],
@@ -3267,6 +3267,58 @@ function showCabinet(startTab){
 
   $$('.cb-tab').forEach(b=>b.onclick=()=>renderCab(b.dataset.cab));
   renderCab(startTab||'cabinet');
+}
+
+function showTreasuryModal(){
+  const gold=S?.player?.res?.gold||0;
+  const con=document.createElement('div');
+  con.innerHTML=`
+    <div style="text-align:center;padding:10px 0 16px;">
+      <div style="font-size:36px;">🪙</div>
+      <div style="font-size:22px;font-weight:bold;color:#f0c040;">${gold.toLocaleString()}</div>
+      <div style="font-size:11px;color:#a09070;margin-top:2px;">текущий баланс золота</div>
+    </div>
+    <div style="background:rgba(0,0,0,.25);border-radius:10px;padding:12px;margin-bottom:12px;">
+      <div style="font-size:12px;color:#c8a030;font-weight:bold;margin-bottom:8px;">💳 ПОПОЛНИТЬ ЧЕРЕЗ TELEGRAM</div>
+      <div style="font-size:12px;color:#d0c0a0;margin-bottom:10px;">1 ⭐ Star ≈ 1 руб = 3 🪙 золота</div>
+      <div id="tg-packs" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+    <div style="background:rgba(0,0,0,.2);border-radius:10px;padding:10px;font-size:12px;color:#a09070;line-height:1.6;">
+      <b style="color:#c8a030;">Как пополнить:</b><br>
+      1. Открой бота <span id="tg-bot-link" style="color:#7ab4ff;cursor:pointer;"></span><br>
+      2. Отправь: <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:4px;">/start ${escH(S?.player?.username||'')}</code><br>
+      3. Выбери пакет и оплати Stars
+    </div>`;
+  const packs=[
+    {stars:30, gold:90,   rub:'~30 руб'},
+    {stars:100,gold:300,  rub:'~100 руб'},
+    {stars:300,gold:900,  rub:'~300 руб'},
+    {stars:1000,gold:3000,rub:'~1000 руб'},
+  ];
+  const packsDiv=con.querySelector('#tg-packs');
+  packs.forEach(p=>{
+    const btn=document.createElement('div');
+    btn.style.cssText='display:flex;justify-content:space-between;align-items:center;background:rgba(200,160,40,.15);border:1px solid rgba(200,160,40,.3);border-radius:8px;padding:10px 12px;cursor:pointer;';
+    btn.innerHTML=`<span style="font-size:14px;font-weight:bold;color:#f0d070;">${p.gold} 🪙</span><span style="font-size:12px;color:#a09070;">${p.stars} ⭐ · ${p.rub}</span>`;
+    btn.onclick=()=>{
+      const username=S?.player?.username||'';
+      const botUser=window._tgBotUsername||'';
+      if(botUser) window.open(`https://t.me/${botUser}?start=${encodeURIComponent(username)}`,'_blank');
+      else toast('Бот пока не настроен','err');
+    };
+    packsDiv.appendChild(btn);
+  });
+  // Загружаем username бота
+  fetch('/api/bot-info').then(r=>r.json()).then(d=>{
+    if(d.botUsername){
+      window._tgBotUsername=d.botUsername;
+      const link=con.querySelector('#tg-bot-link');
+      if(link){link.textContent='@'+d.botUsername;link.onclick=()=>window.open('https://t.me/'+d.botUsername,'_blank');}
+    }
+  }).catch(()=>{});
+  modal({title:'💰 Казна',body:con,actions:[
+    {label:'📊 Ресурсы',kind:'gray',handler:()=>showResModal(),close:true},
+  ]});
 }
 
 function showResModal(){

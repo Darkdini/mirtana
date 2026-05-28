@@ -2,6 +2,7 @@
 // server.js — СРЕДНЕВЕКОВЬЕ. HTTP + WebSocket + игровой цикл.
 
 const http   = require('http');
+const https  = require('https');
 const fs     = require('fs');
 const path   = require('path');
 const crypto = require('crypto');
@@ -12,6 +13,134 @@ const G      = require('./game');
 const PORT       = parseInt(process.env.PORT || '7777', 10);
 const STATE_FILE = process.env.STATE_PATH || path.join(__dirname, 'state.json');
 const PUBLIC     = path.join(__dirname, 'public');
+
+// ── TELEGRAM BOT ─────────────────────────────────────────────────────
+let BOT_CFG = { botToken:'', botUsername:'', webhookUrl:'' };
+try {
+  const cfgPath = path.join(__dirname, 'config.json');
+  if (fs.existsSync(cfgPath)) BOT_CFG = { ...BOT_CFG, ...JSON.parse(fs.readFileSync(cfgPath, 'utf8')) };
+} catch {}
+
+// Пакеты пополнения: [stars, gold, label]
+const GOLD_PACKS = [
+  { stars:30,  gold:90,   label:'30 ⭐ → 90 🪙'   },
+  { stars:100, gold:300,  label:'100 ⭐ → 300 🪙'  },
+  { stars:300, gold:900,  label:'300 ⭐ → 900 🪙'  },
+  { stars:1000,gold:3000, label:'1000 ⭐ → 3000 🪙' },
+];
+
+function tgApi(method, body) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify(body);
+    const req = https.request({
+      hostname: 'api.telegram.org',
+      path: `/bot${BOT_CFG.botToken}/${method}`,
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Content-Length':Buffer.byteLength(data) }
+    }, res => {
+      let buf = '';
+      res.on('data', c => buf += c);
+      res.on('end', () => { try { resolve(JSON.parse(buf)); } catch { resolve({}); } });
+    });
+    req.on('error', reject);
+    req.write(data); req.end();
+  });
+}
+
+async function setTgWebhook(url) {
+  if (!BOT_CFG.botToken || !url) return;
+  const r = await tgApi('setWebhook', { url: url + '/tg-webhook', allowed_updates: ['message','pre_checkout_query','successful_payment'] });
+  console.log('[tg] Webhook:', r.ok ? 'OK → ' + url : r.description);
+  // Получаем username бота
+  const me = await tgApi('getMe', {});
+  if (me.ok) { BOT_CFG.botUsername = me.result.username; console.log('[tg] Bot: @' + me.result.username); }
+}
+
+if (BOT_CFG.botToken && BOT_CFG.webhookUrl) {
+  setTgWebhook(BOT_CFG.webhookUrl).catch(console.error);
+}
+
+async function handleTgUpdate(upd) {
+  if (!STATE.tgLinks) STATE.tgLinks = {};
+
+  // /start username — привязка аккаунта
+  if (upd.message?.text?.startsWith('/start')) {
+    const chatId = upd.message.chat.id;
+    const args = upd.message.text.split(' ').slice(1).join('').trim();
+    if (args && STATE.players[args]) {
+      STATE.tgLinks[chatId] = args;
+      saveState();
+      // Показываем меню пополнения
+      const kb = GOLD_PACKS.map(p => ([{ text: p.label, callback_data: 'buy_' + p.stars }]));
+      await tgApi('sendMessage', {
+        chat_id: chatId,
+        text: `✅ Аккаунт *${args}* привязан!\n\nВыбери пакет пополнения:\n_(1 ⭐ ≈ 1 руб = 3 🪙)_`,
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: kb }
+      });
+    } else {
+      await tgApi('sendMessage', {
+        chat_id: chatId,
+        text: args ? `❌ Игрок *${args}* не найден. Проверь ник в игре.` : `👋 Отправь команду:\n/start ТвойНик\n\nНик можно найти в профиле игры.`,
+        parse_mode: 'Markdown'
+      });
+    }
+  }
+
+  // Нажатие на кнопку пакета
+  if (upd.callback_query) {
+    const chatId = upd.callback_query.message.chat.id;
+    const data = upd.callback_query.data;
+    await tgApi('answerCallbackQuery', { callback_query_id: upd.callback_query.id });
+    if (data.startsWith('buy_')) {
+      const stars = parseInt(data.replace('buy_', ''));
+      const pack = GOLD_PACKS.find(p => p.stars === stars);
+      if (!pack) return;
+      const username = STATE.tgLinks[chatId];
+      if (!username) {
+        await tgApi('sendMessage', { chat_id: chatId, text: '❌ Сначала привяжи аккаунт: /start ТвойНик' });
+        return;
+      }
+      await tgApi('sendInvoice', {
+        chat_id: chatId,
+        title: `${pack.gold} 🪙 Золото`,
+        description: `Пополнение золота в игре Средневековье для игрока ${username}`,
+        payload: JSON.stringify({ username, gold: pack.gold, stars: pack.stars }),
+        currency: 'XTR',
+        prices: [{ label: `${pack.gold} золота`, amount: pack.stars }]
+      });
+    }
+  }
+
+  // Подтверждение платежа
+  if (upd.pre_checkout_query) {
+    await tgApi('answerPreCheckoutQuery', {
+      pre_checkout_query_id: upd.pre_checkout_query.id,
+      ok: true
+    });
+  }
+
+  // Успешная оплата — начисляем золото
+  if (upd.message?.successful_payment) {
+    const chatId = upd.message.chat.id;
+    const pay = upd.message.successful_payment;
+    try {
+      const payload = JSON.parse(pay.invoice_payload);
+      const p = STATE.players[payload.username];
+      if (p) {
+        p.res.gold = Math.min(p.resMax?.gold || 99999, (p.res.gold || 0) + payload.gold);
+        saveState();
+        push(payload.username, { type: 'state', player: serializePlayer(p) });
+        await tgApi('sendMessage', {
+          chat_id: chatId,
+          text: `✅ Зачислено *${payload.gold} 🪙 золота* игроку *${payload.username}*!\n\nХорошей игры! ⚔`,
+          parse_mode: 'Markdown'
+        });
+        console.log(`[tg] Пополнение: ${payload.username} +${payload.gold} gold`);
+      }
+    } catch (e) { console.error('[tg] payment error:', e.message); }
+  }
+}
 
 // ── АДМИНИСТРАТОРЫ ───────────────────────────────────────────────────
 const ADMINS = new Set(['Admin']); // встроенный аккаунт всегда админ
@@ -26,7 +155,7 @@ try {
 (process.env.ADMIN_USERS || '').split(',').filter(Boolean).forEach(u => ADMINS.add(u.trim()));
 
 // ── СОСТОЯНИЕ ───────────────────────────────────────────────────────
-let STATE = { players:{}, world:null, sessions:{}, chat:[], alliances:{}, allianceWars:{} };
+let STATE = { players:{}, world:null, sessions:{}, chat:[], alliances:{}, allianceWars:{}, tgLinks:{} };
 
 function loadState() {
   try {
@@ -199,6 +328,24 @@ async function router(req, res) {
   const u = new URL(req.url, 'http://x');
   const pathname = u.pathname;
 
+  // ── Telegram Webhook ─────────────────────────────────────────────
+  if (pathname === '/tg-webhook' && req.method === 'POST') {
+    const upd = await readBody(req).catch(() => null);
+    if (upd) handleTgUpdate(upd).catch(console.error);
+    return send(res, 200, { ok: true });
+  }
+
+  // ── Установка Webhook (только для админа) ────────────────────────
+  if (pathname === '/api/admin/set-webhook' && req.method === 'POST') {
+    const p = getPlayer(req);
+    if (!p || !ADMINS.has(p.username)) return send(res, 403, { error: 'Нет доступа' });
+    const { url } = await readBody(req);
+    if (!url) return send(res, 400, { error: 'Укажи url' });
+    BOT_CFG.webhookUrl = url;
+    await setTgWebhook(url);
+    return send(res, 200, { ok: true, botUsername: BOT_CFG.botUsername });
+  }
+
   // ── Статика ──────────────────────────────────────────────────────
   if (!pathname.startsWith('/api/')) {
     const filePath = pathname === '/'
@@ -213,6 +360,10 @@ async function router(req, res) {
   }
 
   // ── Регистрация ──────────────────────────────────────────────────
+  if (pathname === '/api/bot-info' && req.method === 'GET') {
+    return send(res, 200, { botUsername: BOT_CFG.botUsername || '' });
+  }
+
   if (pathname === '/api/register' && req.method === 'POST') {
     if (checkRateLimit(req.socket.remoteAddress, 5)) return send(res, 429, { error: 'Слишком много попыток. Подождите минуту.' });
     const { username, password, race, kingdom } = await readBody(req);
