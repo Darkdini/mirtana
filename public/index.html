@@ -1051,9 +1051,9 @@ function renderTopbar(){renderNotifs();}
 function renderNotifs(){
   if(!S?.player)return;
   const p=S.player;
-  const mailN=(p.mail||[]).filter(m=>!m.read).length;
+  const mailN=p.mail!=null?(p.mail||[]).filter(m=>!m.read).length:(p.mailUnread||0);
   const nb1=$('#tn-mail-n');
-  if(nb1){nb1.textContent=mailN;nb1.classList.toggle('vis',mailN>0);}
+  if(nb1){nb1.textContent=mailN||'';nb1.classList.toggle('vis',mailN>0);}
   const repN=(p.reports||[]).filter(r=>!r.read).length;
   const nb2=$('#tn-rep-n');
   if(nb2){nb2.textContent=repN;nb2.classList.toggle('vis',repN>0);}

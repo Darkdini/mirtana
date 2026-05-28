@@ -469,6 +469,7 @@ async function router(req, res) {
     p.sentMail.push(sent);
     if (p.sentMail.length > 200) p.sentMail = p.sentMail.slice(-200);
     saveState();
+    push(to, { type: 'state', player: serializePlayer(target) });
     return send(res, 200, { ok: true });
   }
   if (pathname === '/api/mail/sent' && req.method === 'GET') {
