@@ -3191,8 +3191,6 @@ function showCabinet(startTab){
         ['🏺','Артефакты',showArtifactsModal],
         ['📜','Задания',showQuestsModal],
         ['🏪','Рынок',showMarketModal],
-        ['🔑','Сменить пароль',showChangePasswordModal],
-        ['✏','Сменить ник (200 🪙)',showChangeUsernameModal],
         ['🚪','Выход',()=>{api('/api/logout',{method:'POST'}).then(()=>location.reload());}],
       ];
       body.innerHTML='<div style="padding:0;">' + items.map(([i,n])=>`
