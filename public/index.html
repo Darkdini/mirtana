@@ -984,7 +984,7 @@ function gi(k){
 function preload(){
   const keys=['ground/grass.png','ground/ground.png','ground/stone1.png',
     'ground/lumber.png','ground/mount.png','ground/castle_small.png','ground/bandit_camp.png',
-    'ground/grass_texture.jpg'];
+    'ground/grass_texture.jpg','lands_bg.png'];
   for(const b of Object.values({...BUILDINGS,...LAND_BUILDINGS})){
     keys.push(b.img);
     if(b.lvlImg)b.lvlImg.forEach(i=>keys.push(i));
@@ -1211,14 +1211,25 @@ function drawHexGrid(cells,cols,rows,loc){
   const ox=(mw-gridW)/2+vpX;
   const oy=(mh-gridH)/2+vpY;
 
-  // Фон — трава
-  const _gt=gi('ground/grass_texture.jpg');
-  if(_gt?.complete&&_gt.naturalWidth){
-    ctx.fillStyle=ctx.createPattern(_gt,'repeat');
+  // Фон — трава для замка, пейзаж для земель
+  if(loc==='lands'){
+    const _lb=gi('lands_bg.png');
+    if(_lb?.complete&&_lb.naturalWidth){
+      // Растягиваем на весь canvas сохраняя пропорции (cover)
+      const sx=mw/_lb.naturalWidth, sy=mh/_lb.naturalHeight;
+      const sc=Math.max(sx,sy);
+      const dw=_lb.naturalWidth*sc, dh=_lb.naturalHeight*sc;
+      ctx.drawImage(_lb,(mw-dw)/2,(mh-dh)/2,dw,dh);
+    } else { ctx.fillStyle='#2a5a10'; ctx.fillRect(0,0,mw,mh); }
   } else {
-    ctx.fillStyle=loc==='castle'?'#2a4a18':'#1a3a0a';
+    const _gt=gi('ground/grass_texture.jpg');
+    if(_gt?.complete&&_gt.naturalWidth){
+      ctx.fillStyle=ctx.createPattern(_gt,'repeat');
+    } else {
+      ctx.fillStyle='#2a4a18';
+    }
+    ctx.fillRect(0,0,mw,mh);
   }
-  ctx.fillRect(0,0,mw,mh);
 
   hitHexes=[];
   const now=Date.now();
