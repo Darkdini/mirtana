@@ -1211,23 +1211,14 @@ function drawHexGrid(cells,cols,rows,loc){
   const ox=(mw-gridW)/2+vpX;
   const oy=(mh-gridH)/2+vpY;
 
-  // Фон — трава для замка, пейзаж только за сотами для земель
-  ctx.fillStyle='#1a1a0e';
-  ctx.fillRect(0,0,mw,mh);
+  // Фон — трава для замка, пейзаж на весь экран для земель
   if(loc==='lands'){
     const _lb=gi('lands_bg.png');
     if(_lb?.complete&&_lb.naturalWidth){
-      // Рисуем только за областью сот
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(ox,oy,gridW,gridH);
-      ctx.clip();
-      const sx=gridW/_lb.naturalWidth, sy=gridH/_lb.naturalHeight;
-      const sc=Math.max(sx,sy);
+      const sc=Math.max(mw/_lb.naturalWidth, mh/_lb.naturalHeight);
       const dw=_lb.naturalWidth*sc, dh=_lb.naturalHeight*sc;
-      ctx.drawImage(_lb,ox+(gridW-dw)/2,oy+(gridH-dh)/2,dw,dh);
-      ctx.restore();
-    }
+      ctx.drawImage(_lb,(mw-dw)/2,(mh-dh)/2,dw,dh);
+    } else { ctx.fillStyle='#2a5a10'; ctx.fillRect(0,0,mw,mh); }
   } else {
     const _gt=gi('ground/grass_texture.jpg');
     if(_gt?.complete&&_gt.naturalWidth){
