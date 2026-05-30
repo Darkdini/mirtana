@@ -313,6 +313,9 @@ function serializePlayer(p) {
     photo:           p.photo    || null,
     rulerName:       p.rulerName || p.username,
     isAdmin:         ADMINS.has(p.username),
+    isModerator:     p.isModerator  || false,
+    banned:          p.banned       || false,
+    chatBanned:      p.chatBanned   || false,
     loyalty:         p.loyalty       ?? 100,
     oases:           p.oases         || [],
     protectedUntil:  p.protectedUntil || 0,
@@ -438,6 +441,7 @@ async function router(req, res) {
     const { username, password } = await readBody(req);
     const player = STATE.players[username];
     if (!player || player.passwordHash !== hashPw(password, player.passwordSalt)) return send(res, 401, { error: 'Неверный логин или пароль' });
+    if (player.banned) return send(res, 403, { error: '⛔ Ваш аккаунт заблокирован администратором.' });
     const sid = newSid();
     STATE.sessions[sid] = username;
     saveState();
@@ -646,6 +650,8 @@ async function router(req, res) {
       power:       power,
       armySize:    Object.values(tp.army||{}).reduce((a,b)=>a+(+b||0), 0),
       worldPos:    tp.worldPos || null,
+      isModerator: tp.isModerator || false,
+      chatBanned:  tp.chatBanned  || false,
     });
   }
 
@@ -1019,10 +1025,66 @@ async function router(req, res) {
       push(body.username, { type: 'state', player: serializePlayer(target) });
       return send(res, 200, { ok: true, gold: target.res.gold });
     }
+    else if (action === 'give-resources') {
+      const target = STATE.players[body.username];
+      if (!target) return send(res, 404, { error: 'Игрок не найден' });
+      const RES_NAMES = { wood:'🪵 Дерево', stone:'🪨 Камень', iron:'⚙ Железо', food:'🌾 Еда', people:'👥 Население' };
+      const amount = Math.max(1, parseInt(body.amount) || 0);
+      const resKey = body.resource;
+      if (!RES_NAMES[resKey]) return send(res, 400, { error: 'Неверный ресурс' });
+      target.res[resKey] = Math.min(target.resMax?.[resKey] || 99999, (target.res[resKey] || 0) + amount);
+      if (!target.mail) target.mail = [];
+      target.mail.push({ from: 'Администрация', text: `${RES_NAMES[resKey]} +${amount} зачислено в вашу казну.`, time: Date.now(), read: false });
+      if (target.mail.length > 100) target.mail = target.mail.slice(-100);
+      saveState();
+      push(body.username, { type: 'state', player: serializePlayer(target) });
+      return send(res, 200, { ok: true });
+    }
+    else if (action === 'ban') {
+      const target = STATE.players[body.username];
+      if (!target) return send(res, 404, { error: 'Игрок не найден' });
+      if (ADMINS.has(body.username)) return send(res, 400, { error: 'Нельзя заблокировать администратора' });
+      target.banned = !target.banned;
+      if (target.banned) {
+        const wsc = wsClients.get(body.username);
+        if (wsc) { try { wsc.socket?.destroy(); } catch {} }
+        wsClients.delete(body.username);
+        for (const [sid, u] of Object.entries(STATE.sessions)) { if (u === body.username) delete STATE.sessions[sid]; }
+      }
+      if (!target.mail) target.mail = [];
+      target.mail.push({ from: 'Администрация', text: target.banned ? '⛔ Ваш аккаунт заблокирован.' : '✅ Блокировка аккаунта снята.', time: Date.now(), read: false });
+      saveState();
+      return send(res, 200, { ok: true, banned: target.banned });
+    }
+    else if (action === 'set-moderator') {
+      const target = STATE.players[body.username];
+      if (!target) return send(res, 404, { error: 'Игрок не найден' });
+      target.isModerator = !target.isModerator;
+      if (!target.mail) target.mail = [];
+      target.mail.push({ from: 'Администрация', text: target.isModerator ? '🛡 Вы назначены модератором форума.' : 'Полномочия модератора сняты.', time: Date.now(), read: false });
+      saveState();
+      push(body.username, { type: 'state', player: serializePlayer(target) });
+      return send(res, 200, { ok: true, isModerator: target.isModerator });
+    }
     else return send(res, 404, { error: 'Unknown admin action' });
     if (!result.ok) return send(res, 400, { error: result.error });
     saveState();
     return send(res, 200, result);
+  }
+
+  // ── Модератор: бан чата ───────────────────────────────────────────
+  if (pathname === '/api/mod/chat-ban' && req.method === 'POST') {
+    if (!p?.isModerator && !ADMINS.has(p?.username)) return send(res, 403, { error: 'Нет прав модератора' });
+    const body = await readBody(req);
+    const target = STATE.players[body.username];
+    if (!target) return send(res, 404, { error: 'Игрок не найден' });
+    if (ADMINS.has(body.username) || target.isModerator) return send(res, 400, { error: 'Нельзя забанить модератора или администратора' });
+    target.chatBanned = !target.chatBanned;
+    if (!target.mail) target.mail = [];
+    target.mail.push({ from: 'Модерация', text: target.chatBanned ? '⛔ Вы заблокированы в чате за нарушение правил.' : '✅ Блокировка чата снята.', time: Date.now(), read: false });
+    saveState();
+    push(body.username, { type: 'state', player: serializePlayer(target) });
+    return send(res, 200, { ok: true, chatBanned: target.chatBanned });
   }
 
   // ── Шпионаж ──────────────────────────────────────────────────────
@@ -1176,6 +1238,7 @@ server.on('upgrade', (req, socket) => {
         const text = String(m.text||'').trim().slice(0, 200);
         if (!text) return;
         const pl = STATE.players[username];
+        if (pl?.chatBanned) return;
         const msg = { t:Date.now(), username, race:pl?.race, kingdom:pl?.kingdom, text };
         STATE.chat.push(msg);
         if (STATE.chat.length > 200) STATE.chat.shift();

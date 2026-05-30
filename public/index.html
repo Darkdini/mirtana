@@ -2257,11 +2257,19 @@ function renderBattleReport(report) {
 async function showPlayerProfile(name){
   const con=document.createElement('div');
   con.innerHTML='<p style="text-align:center;color:#a09070;padding:16px;">Загрузка...</p>';
-  const bg=modal({title:`👤 ${name}`,body:con,actions:[
+  const isMod=S.player?.isModerator||S.player?.isAdmin;
+  const actions=[
     {label:'⭐ Подарить реп.',kind:'gold',handler:()=>showRepGiftModal(name),close:true},
     {label:'✉ Написать',kind:'gray',handler:()=>showCompose(name),close:true},
     {label:'⚔ Атаковать',kind:'red',handler:()=>{toast('Найдите игрока на карте мира для атаки','err');},close:true},
-  ]});
+  ];
+  if(isMod) actions.push({label:'⛔ Бан чата',kind:'red',handler:async()=>{
+    try{
+      const r=await api('/api/mod/chat-ban',{method:'POST',body:{username:name}});
+      toast(r.chatBanned?`⛔ ${name} забанен в чате`:`✅ ${name} разбанен в чате`,'ok');
+    }catch(e){toast(e.message,'err');}
+  },close:false});
+  const bg=modal({title:`👤 ${name}`,body:con,actions});
   try{
     const d=await api('/api/player/'+encodeURIComponent(name));
     const mhead=bg.querySelector('.mhead');
@@ -2272,12 +2280,15 @@ async function showPlayerProfile(name){
       ?`<img src="${d.photo}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);display:block;margin:0 auto 10px;">`
       :`<div style="width:72px;height:72px;border-radius:50%;background:${d.avatarBg||'#3a2a10'};border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 10px;">${d.avatar||RACE_G[d.race]||'👤'}</div>`;
     const repColor=d.reputation>500?'#ff9090':d.reputation>200?'#ffd44a':'#a0c090';
+    const modBadge=d.isModerator?`<div style="margin-bottom:6px;display:inline-block;background:rgba(0,40,80,.7);border:1px solid #3080c0;border-radius:4px;padding:2px 10px;font-size:11px;color:#80c0ff;font-weight:bold;letter-spacing:1px;">🛡 МОДЕРАТОР</div>`:'';
+    const chatBanBadge=d.chatBanned?`<div style="margin-bottom:6px;display:inline-block;background:rgba(80,0,0,.5);border:1px solid #903030;border-radius:4px;padding:2px 10px;font-size:11px;color:#ff9090;font-weight:bold;">⛔ Бан чата</div>`:'';
     const profileDiv=document.createElement('div');
-    profileDiv.style.cssText='padding:4px 0;';
+    profileDiv.style.cssText='padding:4px 0;text-align:center;';
     profileDiv.innerHTML=`
         ${avi}
+        ${modBadge}${chatBanBadge}
         <p style="text-align:center;font-size:18px;font-weight:bold;color:var(--gold2);margin-bottom:10px;">${escH(d.kingdom)}</p>
-        <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;">
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;text-align:left;">
           <p>Правитель: <b>${escH(d.rulerName||d.username)}</b></p>
           <p>Народ: <b>${RACES[d.race]?.name||d.race}</b> ${RACE_G[d.race]||''}</p>
           ${alliLine}
@@ -2969,6 +2980,7 @@ function showProfileModal(username){
         <div style="font-size:13px;color:#e0d0b0;margin-top:4px;">${RACES[p.race]?.name} ${RACE_G[p.race]||''}</div>
         <div style="margin-top:6px;font-size:14px;font-weight:bold;color:${rankColor};">${rankTitle}</div>
         ${p.isAdmin?`<div style="margin-top:5px;display:inline-block;background:rgba(60,0,0,.7);border:1px solid #c03030;border-radius:4px;padding:2px 10px;font-size:11px;color:#ff9090;font-weight:bold;letter-spacing:1px;">⚙ АДМИНИСТРАТОР</div>`:''}
+        ${p.isModerator&&!p.isAdmin?`<div style="margin-top:5px;display:inline-block;background:rgba(0,40,80,.7);border:1px solid #3080c0;border-radius:4px;padding:2px 10px;font-size:11px;color:#80c0ff;font-weight:bold;letter-spacing:1px;">🛡 МОДЕРАТОР</div>`:''}
       </div>
     </div>
 
@@ -3069,6 +3081,50 @@ function showProfileModal(username){
           </div>
           <div id="admin-gold-result" style="font-size:11px;color:#80ff80;margin-top:4px;min-height:14px;"></div>
         </div>
+
+        <!-- ВЫДАТЬ РЕСУРСЫ -->
+        <div style="border-top:1px solid #501010;padding-top:10px;margin-top:4px;">
+          <div style="font-size:11px;color:#80c0ff;font-weight:bold;margin-bottom:6px;">📦 ВЫДАТЬ РЕСУРСЫ ИГРОКУ</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <input id="admin-res-nick" type="text" placeholder="Ник игрока" maxlength="30"
+              style="flex:2;min-width:90px;background:rgba(0,0,0,.5);border:1px solid #3080c0;border-radius:6px;color:#a0d0ff;font-size:13px;padding:8px 10px;font-family:inherit;outline:none;">
+            <select id="admin-res-type"
+              style="flex:1;min-width:90px;background:rgba(0,0,0,.6);border:1px solid #3080c0;border-radius:6px;color:#a0d0ff;font-size:13px;padding:8px 6px;font-family:inherit;outline:none;">
+              <option value="wood">🪵 Дерево</option>
+              <option value="stone">🪨 Камень</option>
+              <option value="iron">⚙ Железо</option>
+              <option value="food">🌾 Еда</option>
+              <option value="people">👥 Люди</option>
+            </select>
+            <input id="admin-res-n" type="number" min="1" value="500" max="999999"
+              style="flex:1;min-width:60px;background:rgba(0,0,0,.5);border:1px solid #3080c0;border-radius:6px;color:#a0d0ff;font-size:13px;padding:8px 10px;font-family:inherit;outline:none;">
+            <button id="admin-give-res-btn" style="padding:9px 12px;background:linear-gradient(180deg,#003060,#001830);border:2px solid #3080c0;border-radius:6px;color:#80c0ff;font-size:12px;font-weight:bold;cursor:pointer;">📦 Выдать</button>
+          </div>
+          <div id="admin-res-result" style="font-size:11px;color:#80ff80;margin-top:4px;min-height:14px;"></div>
+        </div>
+
+        <!-- БАН ИГРОКА -->
+        <div style="border-top:1px solid #501010;padding-top:10px;margin-top:4px;">
+          <div style="font-size:11px;color:#ff6060;font-weight:bold;margin-bottom:6px;">⛔ БАН ИГРОКА</div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input id="admin-ban-nick" type="text" placeholder="Ник игрока" maxlength="30"
+              style="flex:1;background:rgba(0,0,0,.5);border:1px solid #903030;border-radius:6px;color:#faa;font-size:13px;padding:8px 10px;font-family:inherit;outline:none;">
+            <button id="admin-ban-btn" style="padding:9px 12px;background:linear-gradient(180deg,#600000,#300000);border:2px solid #903030;border-radius:6px;color:#ff9090;font-size:12px;font-weight:bold;cursor:pointer;">⛔ Бан / Разбан</button>
+          </div>
+          <div id="admin-ban-result" style="font-size:11px;color:#ff9090;margin-top:4px;min-height:14px;"></div>
+        </div>
+
+        <!-- НАЗНАЧИТЬ МОДЕРАТОРА -->
+        <div style="border-top:1px solid #501010;padding-top:10px;margin-top:4px;">
+          <div style="font-size:11px;color:#80c0ff;font-weight:bold;margin-bottom:6px;">🛡 МОДЕРАТОР ФОРУМА</div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input id="admin-mod-nick" type="text" placeholder="Ник игрока" maxlength="30"
+              style="flex:1;background:rgba(0,0,0,.5);border:1px solid #3080c0;border-radius:6px;color:#a0d0ff;font-size:13px;padding:8px 10px;font-family:inherit;outline:none;">
+            <button id="admin-mod-btn" style="padding:9px 12px;background:linear-gradient(180deg,#003060,#001830);border:2px solid #3080c0;border-radius:6px;color:#80c0ff;font-size:12px;font-weight:bold;cursor:pointer;">🛡 Назначить / Снять</button>
+          </div>
+          <div id="admin-mod-result" style="font-size:11px;color:#80c0ff;margin-top:4px;min-height:14px;"></div>
+        </div>
+
       </div>
     </div>`:''}`;
 
@@ -3114,6 +3170,55 @@ function showProfileModal(username){
           const r=await api('/api/admin/give-gold',{method:'POST',body:{username:nick,amount}});
           if(result)result.textContent=`✓ ${nick} получил ${amount}🪙 (итого: ${r.gold})`;
           toast(`Выдано ${amount}🪙 → ${nick}`,'ok');
+        }catch(e){if(result)result.textContent='Ошибка: '+e.message;}
+      };
+    }
+
+    // Кнопка выдачи ресурсов
+    const giveResBtn=con.querySelector('#admin-give-res-btn');
+    if(giveResBtn){
+      giveResBtn.onclick=async()=>{
+        const nick=(con.querySelector('#admin-res-nick')?.value||'').trim();
+        const resource=con.querySelector('#admin-res-type')?.value;
+        const amount=parseInt(con.querySelector('#admin-res-n')?.value)||0;
+        const result=con.querySelector('#admin-res-result');
+        if(!nick||!amount){if(result)result.textContent='Заполни ник и количество';return;}
+        try{
+          await api('/api/admin/give-resources',{method:'POST',body:{username:nick,resource,amount}});
+          if(result)result.textContent=`✓ ${nick} получил ${amount} ${resource}`;
+          toast(`Выдано ${amount} ${resource} → ${nick}`,'ok');
+        }catch(e){if(result)result.textContent='Ошибка: '+e.message;}
+      };
+    }
+
+    // Кнопка бана
+    const banBtn=con.querySelector('#admin-ban-btn');
+    if(banBtn){
+      banBtn.onclick=async()=>{
+        const nick=(con.querySelector('#admin-ban-nick')?.value||'').trim();
+        const result=con.querySelector('#admin-ban-result');
+        if(!nick){if(result)result.textContent='Введи ник';return;}
+        try{
+          const r=await api('/api/admin/ban',{method:'POST',body:{username:nick}});
+          const status=r.banned?'⛔ Заблокирован':'✅ Разблокирован';
+          if(result)result.textContent=`${nick}: ${status}`;
+          toast(`${nick}: ${status}`,'ok');
+        }catch(e){if(result)result.textContent='Ошибка: '+e.message;}
+      };
+    }
+
+    // Кнопка назначения модератора
+    const modBtn=con.querySelector('#admin-mod-btn');
+    if(modBtn){
+      modBtn.onclick=async()=>{
+        const nick=(con.querySelector('#admin-mod-nick')?.value||'').trim();
+        const result=con.querySelector('#admin-mod-result');
+        if(!nick){if(result)result.textContent='Введи ник';return;}
+        try{
+          const r=await api('/api/admin/set-moderator',{method:'POST',body:{username:nick}});
+          const status=r.isModerator?'🛡 Назначен модератором':'Полномочия сняты';
+          if(result)result.textContent=`${nick}: ${status}`;
+          toast(`${nick}: ${status}`,'ok');
         }catch(e){if(result)result.textContent='Ошибка: '+e.message;}
       };
     }
