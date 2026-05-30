@@ -2264,6 +2264,8 @@ async function showPlayerProfile(name){
   ]});
   try{
     const d=await api('/api/player/'+encodeURIComponent(name));
+    const mhead=bg.querySelector('.mhead');
+    if(mhead){const xb=mhead.querySelector('.xb');mhead.textContent=`👤 ${d.rulerName||d.username}`;mhead.appendChild(xb);}
     const alliLine=d.allianceName?`<p>Альянс: <b style="color:#5cff7a;">[${d.allianceTag}] ${d.allianceName}</b></p>`:'<p style="color:#806050;">Без альянса</p>';
     const powerLabel=d.power>5000?'💀 Грозный':d.power>2000?'⚔ Сильный':d.power>500?'🛡 Средний':'🐣 Слабый';
     const avi=d.photo
