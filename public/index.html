@@ -2269,6 +2269,12 @@ async function showPlayerProfile(name){
       toast(r.chatBanned?`⛔ ${name} забанен в чате`:`✅ ${name} разбанен в чате`,'ok');
     }catch(e){toast(e.message,'err');}
   },close:false});
+  if(S.player?.isAdmin) actions.push({label:'🛡 Мод / Снять',kind:'gray',handler:async()=>{
+    try{
+      const r=await api('/api/admin/set-moderator',{method:'POST',body:{username:name}});
+      toast(r.isModerator?`🛡 ${name} назначен модератором`:`${name}: полномочия сняты`,'ok');
+    }catch(e){toast(e.message,'err');}
+  },close:false});
   const bg=modal({title:`👤 ${name}`,body:con,actions});
   try{
     const d=await api('/api/player/'+encodeURIComponent(name));
