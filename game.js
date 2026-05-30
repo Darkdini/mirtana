@@ -267,8 +267,8 @@ function createPlayer(race, kingdom) {
   const now = Date.now();
   return {
     race, kingdom, ts: now, created: now,
-    res:    { gold:0,    wood:6000, stone:6000, food:5000, iron:3000, people:150 },
-    resMax: { gold:20000,wood:10000,stone:10000,food:10000,iron:8000, people:500 },
+    res:    { gold:0, wood:600, stone:500, food:250, iron:150, people:30 },
+    resMax: { gold:10000,wood:3000,stone:3000,food:3000,iron:3000,people:100 },
     castle: createCastleGrid(),
     lands:  createLandsGrid(strHash(kingdom)),
     queue: [], trainQueue: [], army: {}, marches: [],
