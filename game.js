@@ -600,179 +600,328 @@ function resolveBattle(p, world, march, allPlayers, state) {
   const battleType = march.type || 'attack';
   const techs = p.techs || {};
   const bonuses = getCombatBonuses(p);
-  let atkMult = bonuses.atkBonus * (1 + (techs.iron_working ? 0.10 : 0));
-  if (p.race === 'orc') atkMult *= 2.0; // орки: двойная атака
-  if (battleType === 'raid') atkMult *= 0.65; // набег — меньше напора
+  const raceData = RACES[p.race] || {};
 
-  // Бонус генерала из уровня прокачки
-  let genBonus = 0;
+  // ── Атакующий: множитель атаки ──────────────────────────────────────
+  let atkMult = bonuses.atkBonus
+    * (1 + (techs.iron_working  ? 0.12 : 0))
+    * (1 + (techs.armor_forging ? 0.12 : 0));  // armor_forging affects both
+  // Расовый множитель
+  if (raceData.atkMult) atkMult *= raceData.atkMult;          // орки ×1.6
+  if (battleType === 'raid') atkMult *= 0.65;
+
+  // Бонус поля для эльфов (не при штурме замка)
+  const cell = world.find(c=>c.col===march.target.col&&c.row===march.target.row);
+  if (!cell) return { win:false, survivors:{}, losses:march.units, lossesTxt:'цель не найдена', loot:null };
+  const isVsPlayerCastle = cell.type === 'player';
+  if (p.race === 'elf' && !isVsPlayerCastle && raceData.fieldAtkBonus) {
+    atkMult *= (1 + raceData.fieldAtkBonus);
+  }
+
+  // Штраф защиты орков (применяется к их defPow если они защищают)
+  // (handled on defender side below)
+
+  // Бонус генерала — атака и кап +50%
+  let genBonus = 0, genMedicine = 0, genSiegePierce = 0;
+  let isAssault = battleType === 'assault';
   for (const uid in march.units) {
     if (uid.endsWith('_general') && march.units[uid] > 0) {
       const gb = getGeneralBonus(p, uid);
-      genBonus = Math.min(genBonus + gb.cmdAtk, 0.30);
+      genBonus = Math.min(0.50, genBonus + gb.cmdAtk);
+      genMedicine = Math.max(genMedicine, gb.doubledMed ? gb.medicine * 2 : gb.medicine);
+      genSiegePierce = Math.max(genSiegePierce, gb.siegePierce);
+      // Loot bonus at level 20
+      if (gb.capstone) isAssault = true; // capstone general counts assault for loot
     }
   }
   atkMult *= (1 + genBonus);
 
-  // Бонус из активных артефактов
-  if (!p.activeArtifacts) p.activeArtifacts = [];
-  for (const artId of p.activeArtifacts) {
-    const art = ARTIFACTS[artId];
-    if (!art) continue;
-    if (art.atkBonus) atkMult *= (1 + art.atkBonus);
-    if (art.allBonus) atkMult *= (1 + art.allBonus);
-  }
-
+  // ── Сила атаки по типам юнитов ──────────────────────────────────────
   let atkPow = 0;
-  for (const uid in march.units) atkPow += (march.units[uid]||0) * (UNITS[uid]?.atk||0);
+  for (const uid in march.units) {
+    const u = UNITS[uid]; if (!u) continue;
+    const count = march.units[uid] || 0;
+    let unitAtk = u.atk * count;
+    // Бонус казармы для пехоты
+    if (u.kind === 'infantry' && bonuses.infantryAtkBonus) unitAtk *= (1 + bonuses.infantryAtkBonus);
+    // Бонус конюшни для кавалерии
+    if (u.kind === 'cavalry' && bonuses.cavalryAtkBonus) unitAtk *= (1 + bonuses.cavalryAtkBonus);
+    // Магическая школа для кастеров
+    if (u.kind === 'caster') unitAtk *= bonuses.magBonus;
+    atkPow += unitAtk;
+  }
   atkPow = Math.round(atkPow * atkMult);
 
-  const cell = world.find(c=>c.col===march.target.col&&c.row===march.target.row);
-  if (!cell) return { win:false, survivors:{}, losses:march.units, lossesTxt:'цель не найдена', loot:null };
-
   // Бонус войны альянсов +10%
-  if (cell.type === 'player' && state) {
+  if (isVsPlayerCastle && state) {
     atkPow = Math.round(atkPow * getAllianceWarAtkBonus(p, cell.player, state));
   }
 
-  let defPow=0, trapDamage=0;
-  let lootMult = battleType==='assault' ? 0.6 : battleType==='raid' ? 0.5 : 0.3;
+  // ── Сила защиты ─────────────────────────────────────────────────────
+  let defPow = 0, trapDamage = 0;
+  const lootMult = battleType==='assault' ? 0.6 : battleType==='raid' ? 0.5 : 0.3;
 
-  if (cell.type==='bandit') {
-    defPow = cell.power||100;
-  } else if (cell.type==='oasis') {
-    defPow = (cell.owner ? 80 : 30);
-  } else if (cell.type==='player') {
+  if (cell.type === 'bandit') {
+    defPow = cell.power || 100;
+  } else if (cell.type === 'oasis') {
+    defPow = cell.owner ? 80 : 30;
+  } else if (cell.type === 'player') {
     const defender = allPlayers?.[cell.player];
-    // Проверка защиты новичка
     if (defender && (defender.protectedUntil||0) > Date.now()) {
       return { win:false, survivors:march.units, losses:{}, lossesTxt:'цель под защитой', loot:null, protected:true };
     }
     defPow = (cell.lvl||1) * 200;
     if (defender) {
       const db = getCombatBonuses(defender);
-      defPow = Math.round(defPow * db.wallBonus * db.defBonus);
-      trapDamage = db.trapPower;
-      // Элитные ловушки бьют сильнее по кавалерии
-      if (db.trapType === 'elite' || db.trapType === 'universal') trapDamage = Math.round(trapDamage * 1.5);
+      const defRaceData = RACES[defender.race] || {};
+      // Орки: штраф защиты
+      const orcDefPenalty = defRaceData.defPenalty ? (1 - defRaceData.defPenalty) : 1;
+      // Люди: бонус в своём замке
+      const humanCastle = (defRaceData.castleDefBonus || 0);
+      // Гномы: бонус защиты
+      const dwarfDef = (defRaceData.defBonus || 0);  // already in defBonus via getCombatBonuses
+      defPow = Math.round(defPow
+        * db.wallBonus
+        * db.defBonus
+        * (1 + db.guardTowerDef)
+        * (1 + db.magTowerDef)
+        * (1 + humanCastle)
+        * orcDefPenalty);
+
+      // Бонус защиты технологий
+      if (defender.techs?.armor_forging) defPow = Math.round(defPow * 1.12);
+
+      // Бонус генерала защитника
+      for (const uid in (defender.army || {})) {
+        if (uid.endsWith('_general') && (defender.army[uid] || 0) > 0) {
+          const defGenBonus = getGeneralBonus(defender, uid);
+          defPow = Math.round(defPow * (1 + defGenBonus.cmdDef));
+          break; // один генерал-защитник
+        }
+      }
+
+      // Гномы: бонус ловушек +25%
+      const trapMult = defRaceData.trapBonus ? (1 + defRaceData.trapBonus) : 1;
+      // Ловушки масштабируются с defPow
+      if (db.trapLvl > 0) {
+        trapDamage = Math.round(db.trapLvl * (40 + 0.04 * defPow) * trapMult);
+        if (db.trapType === 'elite' || db.trapType === 'universal') trapDamage = Math.round(trapDamage * 1.5);
+      }
     }
   }
 
-  // Ловушки снижают атаку ДО боя
-  if (trapDamage > 0 && cell.type==='player') {
-    const reduction = Math.min(0.35, trapDamage / Math.max(1, atkPow));
+  // ── Башня артиллерии: контр осадным ─────────────────────────────────
+  if (cell.type === 'player') {
+    const defender = allPlayers?.[cell.player];
+    if (defender) {
+      const db = getCombatBonuses(defender);
+      if (db.magTowerAntiSiege > 0) {
+        // Снижаем вклад осадных юнитов
+        let siegeAtk = 0;
+        for (const uid in march.units) {
+          if (UNITS[uid]?.kind === 'siege') siegeAtk += (march.units[uid]||0) * (UNITS[uid]?.atk||0);
+        }
+        const reduction = Math.round(siegeAtk * atkMult * db.magTowerAntiSiege);
+        atkPow = Math.max(0, atkPow - reduction);
+      }
+    }
+  }
+
+  // ── Башня стражи: первый удар ────────────────────────────────────────
+  if (cell.type === 'player') {
+    const defender = allPlayers?.[cell.player];
+    if (defender) {
+      const db = getCombatBonuses(defender);
+      if (db.guardFirstStrike > 0) {
+        atkPow = Math.round(atkPow * (1 - db.guardFirstStrike));
+      }
+    }
+  }
+
+  // ── Ловушки снижают атаку ДО боя ────────────────────────────────────
+  if (trapDamage > 0 && cell.type === 'player') {
+    const techs2 = (allPlayers?.[cell.player]?.techs) || {};
+    const trapFinalDmg = techs2.sapper_corps ? Math.round(trapDamage * 1.5) : trapDamage;
+    const reduction = Math.min(0.35, trapFinalDmg / Math.max(1, atkPow));
     atkPow = Math.round(atkPow * (1 - reduction));
   }
 
-  const win = atkPow > defPow * 0.9;
-  const lossK = battleType==='raid' ? 0.6 : 1.0;
-  const baseLr = win
-    ? Math.min(0.6,  defPow / Math.max(1,atkPow) * 0.5 * lossK)
-    : Math.min(0.95, defPow / Math.max(1,atkPow) * 0.8 * lossK);
-  const lr = techs.magic_shield ? baseLr * 0.80 : baseLr;
-
-  const survivors={}, losses={};
-  for (const uid in march.units) {
-    const start=march.units[uid], lost=Math.min(start,Math.round(start*lr)), surv=start-lost;
-    if (surv>0) survivors[uid]=surv;
-    if (lost>0) losses[uid]=lost;
+  // ── Осадные: ×1.5 против замка, ×0.4 в поле ─────────────────────────
+  // Already handled above through atkPow — apply castle siege bonus here
+  if (cell.type === 'player') {
+    let siegeBonus = 0;
+    let siegeBase = 0;
+    for (const uid in march.units) {
+      if (UNITS[uid]?.kind === 'siege') siegeBase += (march.units[uid]||0) * (UNITS[uid]?.atk||0);
+    }
+    if (siegeBase > 0 && techs.siege_eng) {
+      // siege_eng: +15% siege atk vs castles
+      atkPow = Math.round(atkPow + siegeBase * atkMult * 0.15);
+    }
   }
-  // Генералы не погибают насовсем — они попадают в список «павших» для воскрешения
-  if (!p.deadGenerals) p.deadGenerals=[];
+  // Siege vs field (bandit/oasis): reduce siege contribution
+  if (cell.type !== 'player') {
+    let nonSiegeAtk = 0, siegeAtk = 0;
+    for (const uid in march.units) {
+      const u = UNITS[uid]; if (!u) continue;
+      const base = (march.units[uid]||0) * u.atk;
+      if (u.kind === 'siege') siegeAtk += base;
+      else nonSiegeAtk += base;
+    }
+    // Recompute: siege counts only 40% in open field
+    const totalBase = nonSiegeAtk + siegeAtk;
+    if (totalBase > 0) {
+      const scaledBase = nonSiegeAtk + siegeAtk * 0.4;
+      atkPow = Math.round(atkPow * (scaledBase / Math.max(1, totalBase)));
+    }
+  }
+
+  // Генерал уровня 15: игнорирует 25% wallBonus при штурме
+  if (genSiegePierce > 0 && cell.type === 'player' && battleType === 'assault') {
+    defPow = Math.round(defPow / Math.max(1, 1 + genSiegePierce * 0.4));
+  }
+
+  // ── Исход боя ────────────────────────────────────────────────────────
+  const win = atkPow > defPow * 0.85;
+  const lossK = battleType === 'raid' ? 0.6 : 1.0;
+
+  // Кровавая зона: оба теряют больше при равных силах
+  const powerRatio = atkPow / Math.max(1, defPow);
+  const bloodyZone = powerRatio > 0.85 && powerRatio < 1.15;
+  const bloodyMult = bloodyZone ? 1.15 : 1.0;
+
+  const baseLr = win
+    ? Math.min(0.60, defPow / Math.max(1, atkPow) * 0.5 * lossK * bloodyMult)
+    : Math.min(0.95, defPow / Math.max(1, atkPow) * 0.8 * lossK * bloodyMult);
+
+  // magic_shield теперь работает для атакующего И для защитника (применяется к атакующему lr)
+  let lr = techs.magic_shield ? baseLr * 0.85 : baseLr;
+  // battle_drill: −10% потери
+  if (techs.battle_drill) lr = Math.max(0, lr * 0.90);
+
+  const survivors = {}, losses = {};
+  for (const uid in march.units) {
+    const start = march.units[uid];
+    const lost = Math.min(start, Math.round(start * lr));
+    const surv = start - lost;
+    if (surv > 0) survivors[uid] = surv;
+    if (lost > 0) losses[uid] = lost;
+  }
+
+  // Медицина генерала: возвращает часть потерь
+  if (genMedicine > 0) {
+    for (const uid in losses) {
+      if (!uid.endsWith('_general')) {
+        const revived = Math.round(losses[uid] * genMedicine);
+        if (revived > 0) {
+          losses[uid] -= revived;
+          survivors[uid] = (survivors[uid] || 0) + revived;
+          if (losses[uid] <= 0) delete losses[uid];
+        }
+      }
+    }
+  }
+
+  // Генералы не погибают — попадают в список «павших»
+  if (!p.deadGenerals) p.deadGenerals = [];
   for (const uid of Object.keys(losses)) {
     if (uid.endsWith('_general')) {
       const genAtk = UNITS[uid]?.atk || 150;
-      const cost = Math.max(500, genAtk * 5);
-      p.deadGenerals.push({ uid, count:losses[uid], diedAt:Date.now(), resurrectCost:cost });
-      delete losses[uid]; // убираем из обычных потерь — генерал «ранен», не убит
-      addReport(p, `⚰ Генерал «${UNITS[uid]?.name||uid}» пал в бою! Воскресите его в Военном штабе за ${cost} 🪙`, 'battle-loss');
+      const baseCost = Math.max(500, genAtk * 5);
+      const gb = getGeneralBonus(p, uid);
+      const cost = gb.capstone ? Math.round(baseCost * 0.5) : baseCost;
+      p.deadGenerals.push({ uid, count: losses[uid], diedAt: Date.now(), resurrectCost: cost });
+      delete losses[uid];
+      addReport(p, `⚰ Генерал «${UNITS[uid]?.name||uid}» пал в бою! Воскресите за ${cost} 🪙`, 'battle-loss');
     }
   }
-  const lossesTxt = Object.entries(losses).map(([u,n])=>`${UNITS[u]?.name||u}×${n}`).join(', ')||'нет';
 
-  // Начисляем XP генералам в отряде
+  const lossesTxt = Object.entries(losses).map(([u,n])=>`${UNITS[u]?.name||u}×${n}`).join(', ') || 'нет';
+
+  // XP генералам
   for (const uid in march.units) {
     if (uid.endsWith('_general') && march.units[uid] > 0) {
-      awardGeneralXP(p, uid, win);
+      awardGeneralXP(p, uid, win, battleType === 'assault');
     }
   }
 
-  let loot=null, destroyedBuildings=[], captured=false;
+  // Loot +10% для генерала уровня 20
+  const capstoneActive = Object.keys(march.units).some(uid => uid.endsWith('_general') && march.units[uid] > 0 && getGeneralBonus(p, uid).capstone);
+
+  let loot = null, destroyedBuildings = [], captured = false;
 
   if (win) {
-    if (cell.type==='bandit') {
-      const t=(cell.power||100)*3;
-      loot={gold:0,wood:Math.round(t*.3),stone:Math.round(t*.3),food:Math.round(t*.4)};
-      // Реликвия!
+    if (cell.type === 'bandit') {
+      const t = (cell.power||100) * 3;
+      loot = {gold:0, wood:Math.round(t*.3), stone:Math.round(t*.3), food:Math.round(t*.4)};
       if (cell.relic) {
         const relicId = cell.relic;
         const relicName = RELICS[relicId] || relicId;
         if (!p.relics) p.relics = [];
-        // Если в альянсе — реликвия достаётся альянсу (добавляем в p.relics)
         p.relics.push(relicId);
         addReport(p, `⚡ Реликвия «${relicName}» захвачена!`, 'info');
         cell.relic = null;
         updateQuestProgress(p, 'relic');
       }
-      cell.type='empty'; cell.power=0;
-    } else if (cell.type==='oasis') {
-      // Оазис даёт постоянный +25% к ресурсу (не одноразовый)
-      if (!p.oases) p.oases=[];
-      const maxOases=3;
+      cell.type = 'empty'; cell.power = 0;
+    } else if (cell.type === 'oasis') {
+      if (!p.oases) p.oases = [];
       const prevOwner = cell.owner && allPlayers?.[cell.owner];
       if (prevOwner?.oases) prevOwner.oases = prevOwner.oases.filter(o=>!(o.col===cell.col&&o.row===cell.row));
-      if (p.oases.length < maxOases) {
+      if (p.oases.length < 3) {
         p.oases.push({ resource:cell.resource, col:cell.col, row:cell.row });
         cell.owner = p.username;
         addReport(p, `🌿 Захвачен оазис ${RES_LABEL[cell.resource]||cell.resource} (+25% производства)`, 'capture');
       } else {
         loot = { [cell.resource]: 500 };
-        addReport(p, `Оазис ${RES_LABEL[cell.resource]||cell.resource} захвачен, но лимит 3 оазиса достигнут — получен разовый ресурс`, 'info');
+        addReport(p, `Оазис захвачен, лимит 3 оазиса — получен разовый ресурс`, 'info');
       }
-    } else if (cell.type==='player') {
-      const t=(cell.lvl||1)*300*lootMult;
-      loot={gold:0,wood:Math.round(t*.35),stone:Math.round(t*.35),iron:Math.round(t*.3)};
+    } else if (cell.type === 'player') {
+      let t = (cell.lvl||1) * 300 * lootMult;
+      if (capstoneActive) t *= 1.10; // +10% грабёж генерал лв.20
+      loot = {gold:0, wood:Math.round(t*.35), stone:Math.round(t*.35), iron:Math.round(t*.3)};
       const defender = allPlayers?.[cell.player];
       const db = defender ? getCombatBonuses(defender) : {};
-      // Набег — только грабёж, зданий не трогает
       if (battleType !== 'raid' && defender) {
         const buildable = defender.castle.filter(c=>c.bldId&&c.bldId!=='castle'&&c.level>0);
-        const destroyCount = battleType==='assault' ? 2 : 1;
+        const destroyCount = battleType === 'assault' ? 2 : 1;
         for (let i=0; i<destroyCount && buildable.length; i++) {
           if (Math.random() < (1 - (db.buildingDefense||0))) {
             const ri = Math.floor(Math.random()*buildable.length);
             const bc = buildable.splice(ri,1)[0];
-            bc.level = Math.max(0, bc.level-1);
+            bc.level = Math.max(0, bc.level - 1);
             const bname = BUILDINGS[bc.bldId]?.name || bc.bldId;
-            if (bc.level===0) bc.bldId=null;
+            if (bc.level === 0) bc.bldId = null;
             destroyedBuildings.push(bname);
-            if (defender) addReport(defender,`🔥 Здание «${bname}» повреждено в бою!`,'battle-loss');
+            addReport(defender, `🔥 Здание «${bname}» повреждено в бою!`, 'battle-loss');
           }
         }
-        // Штурм при подавляющем превосходстве — двойной грабёж
-        if (battleType==='assault' && atkPow > defPow*1.5) {
-          for (const k in loot) loot[k] = Math.round(loot[k]*1.8);
+        if (battleType === 'assault' && atkPow > defPow * 1.5) {
+          for (const k in loot) loot[k] = Math.round(loot[k] * 1.8);
         }
-        // Снижение лояльности обороняющегося
         if (defender && 'loyalty' in defender) {
           defender.loyalty = Math.max(0, defender.loyalty - (battleType==='assault'?20:10));
         }
-        addReport(defender, `⚔️ Нападение ${p.username} [${battleType==='assault'?'штурм':'атака'}]! Потери врага: ${lossesTxt}`, 'battle-loss');
-      } else if (battleType==='raid' && defender) {
+        // magic_shield защитника: снижает его потери (информационно — он и так не теряет войска из записи, но отчёт)
+        const defShieldNote = defender?.techs?.magic_shield ? ' [щит −15%]' : '';
+        addReport(defender, `⚔️ Нападение ${p.username} [${battleType==='assault'?'штурм':'атака'}]! Потери врага: ${lossesTxt}${defShieldNote}`, 'battle-loss');
+      } else if (battleType === 'raid' && defender) {
         addReport(defender, `🏃 Набег ${p.username}! Похищены ресурсы.`, 'battle-loss');
       }
     }
-    // Ограничение грабежа вместимостью войска
     if (loot) {
-      let cap=0;
-      for (const uid in survivors) cap += survivors[uid]*(UNITS[uid]?.carry||50);
-      const tl=Object.values(loot).reduce((a,b)=>a+b,0);
-      if (tl>cap) { const k2=cap/tl; for(const r in loot) loot[r]=Math.floor(loot[r]*k2); }
+      let cap = 0;
+      for (const uid in march.units) cap += (march.units[uid]||0) * (UNITS[uid]?.carry||0);
+      const total = Object.values(loot).reduce((a,b)=>a+b,0);
+      if (total > cap) {
+        const factor = cap / Math.max(1, total);
+        for (const k in loot) loot[k] = Math.round(loot[k] * factor);
+      }
     }
   } else {
     // Поражение: небольшой штраф лояльности атакующего
     if ('loyalty' in p) p.loyalty = Math.max(0, p.loyalty - 5);
-    if (cell.type==='player') {
+    if (cell.type === 'player') {
       const defender = allPlayers?.[cell.player];
       if (defender) addReport(defender, `✅ Атака ${p.username} отражена! Потери врага: ${lossesTxt}`, 'battle-win');
     }
@@ -794,7 +943,7 @@ function resolveBattle(p, world, march, allPlayers, state) {
       }
     }
   }
-  const generalXP = (win ? 50 : 20) * Object.keys(march.units).filter(u => u.endsWith('_general') && march.units[u] > 0).length;
+  const generalXP = (win ? (battleType==='assault'?100:60) : 25) * Object.keys(march.units).filter(u => u.endsWith('_general') && march.units[u] > 0).length;
   const battleLog = {
     win,
     attacker: { username: p.username || '', race: p.race || '' },
