@@ -2605,31 +2605,233 @@ async function msgSendNew() {
 // Старая функция showInboxModal (не удаляем — используем для обратной совместимости)
 function showInboxModal() { showMessenger(); }
 
-function showReportsModal(filterKind){
+// ── ОТЧЁТЫ (SMS-стиль панель) ──────────────────────────────────
+const REP_RES_EMO={gold:'🪙',wood:'🌲',stone:'⛰',iron:'⛏',food:'🌾',people:'👥'};
+
+function repMeta(r){
+  // Возвращает {cls,icon,title} для строки/детали
+  switch(r.kind){
+    case 'battle-win': return {cls:'win', icon:'🏆', title:'Победа!'};
+    case 'battle-loss':return {cls:'loss',icon:'💀', title:'Поражение'};
+    case 'build':      return {cls:'build',icon:'🏗', title:'Построено'};
+    case 'train':      return {cls:'train',icon:'👥', title:'Армия'};
+    case 'danger':     return {cls:'danger',icon:'⚠', title:'Важное'};
+    case 'march':      return {cls:'',icon:'🏇', title:'Марш'};
+    case 'capture':    return {cls:'',icon:'🚩', title:'Захват'};
+    default:           return {cls:'',icon:'📋', title:'Отчёт'};
+  }
+}
+function repGroupOf(r){
+  if(r.kind==='battle-win'||r.kind==='battle-loss')return 'battle';
+  if(r.kind==='build')return 'build';
+  if(r.kind==='train')return 'army';
+  if(r.kind==='danger')return 'important';
+  return 'other';
+}
+const REP_GROUPS=[
+  {id:'battle',   head:'⚔ Битвы'},
+  {id:'build',    head:'🏗 Строительство'},
+  {id:'army',     head:'👥 Армия'},
+  {id:'important',head:'⚠ Важное'},
+  {id:'other',    head:'📋 Прочее'},
+];
+function repTime(t){return new Date(t).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
+
+let repCurrentView='list';
+
+function showReportsModal(){
   api('/api/reports/read',{method:'POST',body:{}}).then(()=>{
     if(S.player.reports)S.player.reports.forEach(r=>r.read=true);
     const nb=$('#tn-rep-n');if(nb){nb.textContent='';nb.classList.remove('vis');}
   });
-  let reps=(S.player.reports||[]).slice().reverse();
-  if(filterKind)reps=reps.filter(r=>r.kind===filterKind);
-  const con = document.createElement('div');
-  if (!reps.length) {
-    con.innerHTML = '<p style="text-align:center;color:#a89070;padding:16px;">Нет отчётов</p>';
-  } else {
-    con.innerHTML = '<div style="display:flex;flex-direction:column;gap:4px;">' +
-      reps.map(r=>{
-        const t=new Date(r.t).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
-        const col=r.kind==='battle-win'?'#5cff7a':r.kind==='battle-loss'?'#ff8080':r.kind==='build'?'#7ad4ff':'#e0d0b0';
-        const icon=r.kind==='battle-win'?'🏆':r.kind==='battle-loss'?'💀':r.kind==='build'?'🏗':r.kind==='train'?'👥':'📋';
-        const battleDetails = (r.kind==='battle-win'||r.kind==='battle-loss') && r.data
-          ? renderBattleReport(r.data) : '';
-        return `<div style="padding:6px 8px;border:1px solid rgba(255,255,255,.08);border-radius:4px;color:${col};font-size:12px;background:rgba(0,0,0,.3);">
-          <span style="color:var(--gold);font-family:monospace;font-size:10px;">[${t}]</span> ${icon} ${escH(r.txt)}
-          ${battleDetails}
-        </div>`;
-      }).join('') + '</div>';
+  $('#reports-panel').classList.add('open');
+  repLoadList();
+}
+
+function closeReportsPanel(){
+  $('#reports-panel').classList.remove('open');
+}
+
+function repShowListView(){
+  repCurrentView='list';
+  $('#rv-list').style.display='block';
+  $('#rv-detail').style.display='none';
+  $('#rep-topbar-title').textContent='Отчёты';
+}
+
+function repLoadList(){
+  repShowListView();
+  const list=$('#rv-list');
+  // отчёты с индексом для открытия детали
+  const reps=(S.player.reports||[]).map((r,i)=>({...r,_i:i})).reverse();
+  if(!reps.length){
+    list.innerHTML='<div class="rep-empty">Нет отчётов<br><span style="font-size:12px;">Здесь появятся вести о битвах и стройках</span></div>';
+    return;
   }
-  modal({title:'📨 Отчёты',body:con});
+  // группировка
+  const buckets={};
+  reps.forEach(r=>{const g=repGroupOf(r);(buckets[g]=buckets[g]||[]).push(r);});
+  let html='';
+  REP_GROUPS.forEach(g=>{
+    const arr=buckets[g.id];
+    if(!arr||!arr.length)return;
+    html+=`<div class="rep-section-head">${g.head}</div>`;
+    arr.forEach(r=>{
+      const m=repMeta(r);
+      const prev=escH(String(r.txt||'').slice(0,60))+(String(r.txt||'').length>60?'…':'');
+      html+=`<div class="rep-row ${m.cls}" data-i="${r._i}">
+        <div class="rep-icon">${m.icon}</div>
+        <div class="rep-row-info">
+          <div class="rep-row-title">${m.title}</div>
+          <div class="rep-row-preview">${prev}</div>
+        </div>
+        <div class="rep-row-side">
+          <div class="rep-row-time">${repTime(r.t)}</div>
+          ${r.read?'':'<div class="rep-unread-dot"></div>'}
+        </div>
+      </div>`;
+    });
+  });
+  list.innerHTML=html;
+  list.querySelectorAll('.rep-row').forEach(row=>{
+    row.onclick=()=>{
+      const idx=+row.dataset.i;
+      const rep=(S.player.reports||[])[idx];
+      if(rep)repOpenDetail(rep);
+    };
+  });
+}
+
+function repOpenDetail(r){
+  repCurrentView='detail';
+  const m=repMeta(r);
+  const det=$('#rv-detail');
+  $('#rv-list').style.display='none';
+  det.style.display='flex';
+  $('#rep-topbar-title').textContent=m.title;
+  let body='';
+  if((r.kind==='battle-win'||r.kind==='battle-loss')&&r.data){
+    body=repRenderBattle(r.data,r.kind,r.t);
+  }else if(r.kind==='build'){
+    body=repRenderBuild(r);
+  }else{
+    body=repRenderGeneric(r,m);
+  }
+  det.innerHTML=`<div style="padding:12px;overflow-y:auto;flex:1;">${body}</div>`;
+}
+
+function repUnitRows(units,mode){
+  // mode 'atk' -> {sent,lost}, 'def' -> {had,lost}
+  const ents=Object.entries(units||{}).filter(([,d])=>(mode==='atk'?d.sent:d.had)>0);
+  if(!ents.length)return '<div class="bcard-empty-units">—</div>';
+  return ents.map(([uid,d])=>{
+    const u=UNITS[uid];
+    const total=mode==='atk'?d.sent:d.had;
+    const lost=d.lost||0;
+    const lossStr=lost>0?` <span style="color:#ff8080;">(−${lost})</span>`:'';
+    return `<div class="bcard-unit"><span>${u?.name||uid}</span><span class="uq">${total}${lossStr}</span></div>`;
+  }).join('');
+}
+
+function repRenderBattle(data,kind,t){
+  const win=kind==='battle-win'||data.win;
+  const cls=win?'win':'loss';
+  const result=win?'🏆 ПОБЕДА':'💀 ПОРАЖЕНИЕ';
+  const atk=data.attacker||{},def=data.defender||{};
+  const raceName=rc=>RACES[rc]?.name||rc||'?';
+  // потери своей армии
+  const myLost=Object.values(data.attackerUnits||{}).reduce((a,d)=>a+(d.lost||0),0);
+  const foeLost=Object.values(data.defenderUnits||{}).reduce((a,d)=>a+(d.lost||0),0);
+  // добыча
+  const loot=Object.entries(data.loot||{}).filter(([,v])=>v>0);
+  let html=`<div class="bcard ${cls}">
+    <div class="bcard-head">
+      <div class="bcard-result ${cls}">${result}</div>
+      <div class="bcard-sub">⚔ ${escH(atk.username||'?')} [${raceName(atk.race)}] → 🛡 ${escH(def.username||'?')} [${raceName(def.race)}]</div>
+      ${data.atkBonus?`<div class="bcard-sub">Бонус атаки: +${data.atkBonus}%</div>`:''}
+    </div>
+    <div class="bcard-armies">
+      <div class="bcard-army you">
+        <div class="bcard-army-title">ВАША АРМИЯ</div>
+        ${repUnitRows(data.attackerUnits,'atk')}
+      </div>
+      <div class="bcard-army foe">
+        <div class="bcard-army-title">АРМИЯ ВРАГА</div>
+        ${repUnitRows(data.defenderUnits,'def')}
+      </div>
+    </div>`;
+  // потери
+  if(myLost||foeLost){
+    html+=`<div class="bcard-block">
+      <div class="bcard-block-title">Потери</div>
+      <div class="bcard-tags">
+        ${myLost?`<span class="bcard-tag loss">Ваши: −${myLost}</span>`:''}
+        ${foeLost?`<span class="bcard-tag loss">Враг: −${foeLost}</span>`:''}
+      </div>
+    </div>`;
+  }
+  // добыча
+  if(loot.length){
+    html+=`<div class="bcard-block">
+      <div class="bcard-block-title">Добыча</div>
+      <div class="bcard-tags">
+        ${loot.map(([k,v])=>`<span class="bcard-tag loot">${REP_RES_EMO[k]||''} ${RES_L[k]||k} +${fmtN(v)}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+  // разрушения
+  if(data.destroyed&&data.destroyed.length){
+    html+=`<div class="bcard-block">
+      <div class="bcard-block-title">Разрушено</div>
+      <div class="bcard-tags">
+        ${data.destroyed.map(b=>`<span class="bcard-tag fire">🔥 ${escH(b)}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+  // опыт
+  if(data.generalXP>0){
+    html+=`<div class="bcard-block">
+      <div class="bcard-block-title">Опыт</div>
+      <div class="bcard-tags"><span class="bcard-tag xp">⭐ Генерал +${data.generalXP}</span></div>
+    </div>`;
+  }
+  html+=`<div class="bcard-foot">🕓 ${new Date(t||Date.now()).toLocaleString('ru-RU')}</div></div>`;
+  return html;
+}
+
+function repRenderBuild(r){
+  // r.txt пример: «Казармы» ур.3 построено
+  const m=String(r.txt||'').match(/«(.+?)».*?ур\.?\s*(\d+)/i);
+  const name=m?m[1]:null;
+  const lvl=m?m[2]:null;
+  return `<div class="rep-detail-card">
+    <div class="rdc-head">
+      <div class="rdc-ico">🏗</div>
+      <div>
+        <div class="rdc-title">Строительство завершено</div>
+        <div class="rdc-time">🕓 ${new Date(r.t).toLocaleString('ru-RU')}</div>
+      </div>
+    </div>
+    <div class="rdc-body">
+      ${name?`<div class="rdc-row"><span>Здание</span><b>${escH(name)}</b></div>`:''}
+      ${lvl?`<div class="rdc-row"><span>Уровень</span><b>Ур. ${lvl}</b></div>`:''}
+      <div class="rdc-row"><span>Время</span><b>${new Date(r.t).toLocaleTimeString('ru-RU')}</b></div>
+      ${!name?`<div style="margin-top:8px;">${escH(r.txt||'')}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function repRenderGeneric(r,m){
+  return `<div class="rep-detail-card">
+    <div class="rdc-head">
+      <div class="rdc-ico">${m.icon}</div>
+      <div>
+        <div class="rdc-title">${m.title}</div>
+        <div class="rdc-time">🕓 ${new Date(r.t).toLocaleString('ru-RU')}</div>
+      </div>
+    </div>
+    <div class="rdc-body">${escH(r.txt||'')}</div>
+  </div>`;
 }
 
 function showTechModal(){
@@ -3523,6 +3725,12 @@ async function enterGame(){
   };
   $('#msg-new-btn').onclick=()=>{msgShowView('new');$('#msg-new-to').focus();};
   $('#mv-new-send').onclick=()=>msgSendNew();
+
+  // Отчёты: ✕ в детали возвращает к списку, в списке — закрывает панель
+  $('#rep-close-btn').onclick=()=>{
+    if(repCurrentView==='detail')repLoadList();
+    else closeReportsPanel();
+  };
 
   // Кнопки внизу
   $('#btn-menu').onclick=()=>showCabinet();
