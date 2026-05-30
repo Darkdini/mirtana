@@ -1588,8 +1588,14 @@ function drawWorldHex(){
       // Щит защиты новичка — для себя или других игроков через worldPlayers
       const protectedUntil=isMe?(S.player.protectedUntil||0):(cellPlayer?.protectedUntil||0);
       if(protectedUntil>Date.now()){
-        ctx.font=`${R*0.5}px serif`;ctx.textAlign='center';
-        ctx.fillText('🛡',cx2+R*0.6,cy2-R*0.5);
+        const sx=cx2+R*0.62,sy=cy2-R*0.52,sr=R*0.32;
+        ctx.save();
+        ctx.beginPath();ctx.arc(sx,sy,sr,0,Math.PI*2);
+        ctx.fillStyle='rgba(30,80,200,.75)';ctx.fill();
+        ctx.strokeStyle='rgba(140,200,255,.9)';ctx.lineWidth=1.5;ctx.stroke();
+        ctx.font=`${R*0.42}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText('🛡',sx,sy+1);
+        ctx.restore();
       }
       // Тег альянса
       const allianceTag=cellPlayer?.allianceTag||null;
