@@ -914,6 +914,15 @@ async function router(req, res) {
     else if (action === 'max-buildings') result = G.cmdAdminMaxBuildings(p);
     else if (action === 'full-setup')    { result = G.cmdAdminFullSetup(p); G.tickPlayer(p, STATE.world, STATE.players, STATE); }
     else if (action === 'give-units')    result = G.cmdAdminGiveUnits(p, body);
+    else if (action === 'give-gold') {
+      const target = STATE.players[body.username];
+      if (!target) return send(res, 404, { error: 'Игрок не найден' });
+      const amount = Math.max(1, parseInt(body.amount) || 0);
+      target.res.gold = Math.min(target.resMax?.gold || 99999, (target.res.gold || 0) + amount);
+      saveState();
+      push(body.username, { type: 'state', player: serializePlayer(target) });
+      return send(res, 200, { ok: true, gold: target.res.gold });
+    }
     else return send(res, 404, { error: 'Unknown admin action' });
     if (!result.ok) return send(res, 400, { error: result.error });
     saveState();

@@ -264,7 +264,7 @@ function createPlayer(race, kingdom) {
   const now = Date.now();
   return {
     race, kingdom, ts: now, created: now,
-    res:    { gold:8000, wood:6000, stone:6000, food:5000, iron:3000, people:150 },
+    res:    { gold:0,    wood:6000, stone:6000, food:5000, iron:3000, people:150 },
     resMax: { gold:20000,wood:10000,stone:10000,food:10000,iron:8000, people:500 },
     castle: createCastleGrid(),
     lands:  createLandsGrid(strHash(kingdom)),
@@ -674,7 +674,7 @@ function resolveBattle(p, world, march, allPlayers, state) {
   if (win) {
     if (cell.type==='bandit') {
       const t=(cell.power||100)*3;
-      loot={gold:Math.round(t*.4),wood:Math.round(t*.2),stone:Math.round(t*.2),food:Math.round(t*.2)};
+      loot={gold:0,wood:Math.round(t*.3),stone:Math.round(t*.3),food:Math.round(t*.4)};
       // Реликвия!
       if (cell.relic) {
         const relicId = cell.relic;
@@ -703,7 +703,7 @@ function resolveBattle(p, world, march, allPlayers, state) {
       }
     } else if (cell.type==='player') {
       const t=(cell.lvl||1)*300*lootMult;
-      loot={gold:Math.round(t*.5),wood:Math.round(t*.2),stone:Math.round(t*.15),iron:Math.round(t*.15)};
+      loot={gold:0,wood:Math.round(t*.35),stone:Math.round(t*.35),iron:Math.round(t*.3)};
       const defender = allPlayers?.[cell.player];
       const db = defender ? getCombatBonuses(defender) : {};
       // Набег — только грабёж, зданий не трогает

@@ -3026,6 +3026,21 @@ function showProfileModal(username){
             ⚔ Выдать юнитов своей расы
           </button>
         </div>
+        <div style="border-top:1px solid #501010;padding-top:10px;margin-top:4px;">
+          <div style="font-size:11px;color:#f0c040;font-weight:bold;margin-bottom:6px;">🪙 ВЫДАТЬ ЗОЛОТО ИГРОКУ</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <input id="admin-gold-nick" type="text" placeholder="Ник игрока" maxlength="30"
+              style="flex:2;min-width:100px;background:rgba(0,0,0,.5);border:1px solid #c8a030;border-radius:6px;
+                     color:#f0d060;font-size:13px;padding:8px 10px;font-family:inherit;outline:none;">
+            <input id="admin-gold-n" type="number" min="1" value="100" max="999999"
+              style="flex:1;min-width:70px;background:rgba(0,0,0,.5);border:1px solid #c8a030;border-radius:6px;
+                     color:#f0d060;font-size:13px;padding:8px 10px;font-family:inherit;outline:none;">
+            <button id="admin-give-gold-btn" style="padding:9px 12px;background:linear-gradient(180deg,#5a4a00,#2a2200);border:2px solid #c8a030;border-radius:6px;color:#f0c040;font-size:12px;font-weight:bold;cursor:pointer;">
+              💰 Выдать
+            </button>
+          </div>
+          <div id="admin-gold-result" style="font-size:11px;color:#80ff80;margin-top:4px;min-height:14px;"></div>
+        </div>
       </div>
     </div>`:''}`;
 
@@ -3058,6 +3073,22 @@ function showProfileModal(username){
         btn.disabled=false;btn.style.opacity='1';
       };
     });
+
+    // Кнопка выдачи золота
+    const giveGoldBtn=con.querySelector('#admin-give-gold-btn');
+    if(giveGoldBtn){
+      giveGoldBtn.onclick=async()=>{
+        const nick=(con.querySelector('#admin-gold-nick')?.value||'').trim();
+        const amount=parseInt(con.querySelector('#admin-gold-n')?.value)||0;
+        const result=con.querySelector('#admin-gold-result');
+        if(!nick||!amount){if(result)result.textContent='Заполни ник и сумму';return;}
+        try{
+          const r=await api('/api/admin/give-gold',{method:'POST',body:{username:nick,amount}});
+          if(result)result.textContent=`✓ ${nick} получил ${amount}🪙 (итого: ${r.gold})`;
+          toast(`Выдано ${amount}🪙 → ${nick}`,'ok');
+        }catch(e){if(result)result.textContent='Ошибка: '+e.message;}
+      };
+    }
   }
 
   // Логика аватар-редактора
