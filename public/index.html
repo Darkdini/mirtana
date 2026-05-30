@@ -601,6 +601,107 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 .dip-status.war{background:rgba(120,20,20,.5);color:#ff8080;border:1px solid #cc4040;}
 .dip-status.ally{background:rgba(20,80,20,.5);color:#80ff80;border:1px solid #40cc60;}
 .dip-status.ally_request{background:rgba(60,60,20,.5);color:#f0d070;border:1px solid #c8a030;}
+/* ── ОТЧЁТЫ (SMS-стиль) ── */
+#reports-panel{
+  position:fixed;inset:0;z-index:150;
+  background:linear-gradient(180deg,#1a0a04 0%,#0e0602 100%);
+  display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+#reports-panel.open{transform:translateX(0);pointer-events:all;}
+#rep-topbar{
+  background:linear-gradient(180deg,#3a1e08,#250f04);
+  border-bottom:2px solid #c8a030;
+  padding:10px 12px;display:flex;align-items:center;gap:10px;
+  min-height:52px;
+}
+#rep-topbar #rep-topbar-title{flex:1;font-size:16px;font-weight:bold;color:var(--gold2);text-align:center;}
+#rep-topbar button{
+  width:36px;height:36px;background:rgba(0,0,0,.4);border:1px solid #7a5020;
+  border-radius:8px;color:#e0c060;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+#rep-topbar button:active{filter:brightness(1.4);}
+#rep-views{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column;}
+#rv-list{overflow-y:auto;height:100%;}
+#rv-detail{overflow-y:auto;padding:12px;}
+.rep-section-head{
+  font-size:11px;font-weight:bold;letter-spacing:.5px;color:#a08850;
+  padding:14px 14px 6px;text-transform:uppercase;
+}
+.rep-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-bottom:1px solid rgba(200,160,48,.1);
+  cursor:pointer;transition:background .15s;border-left:3px solid transparent;
+  background:rgba(0,0,0,.12);
+}
+.rep-row:active{background:rgba(200,140,40,.12);}
+.rep-row.win{border-left-color:#3aaa4a;background:linear-gradient(90deg,rgba(40,120,50,.16),rgba(0,0,0,.12));}
+.rep-row.loss{border-left-color:#cc4040;background:linear-gradient(90deg,rgba(140,30,30,.16),rgba(0,0,0,.12));}
+.rep-row.build{border-left-color:#3a80cc;background:linear-gradient(90deg,rgba(30,70,140,.16),rgba(0,0,0,.12));}
+.rep-row.train{border-left-color:#c8a030;}
+.rep-icon{
+  width:44px;height:44px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,#3a1f08,#1a0d03);
+  border:2px solid #7a5020;display:flex;align-items:center;justify-content:center;
+  font-size:22px;
+}
+.rep-row.win .rep-icon{border-color:#3aaa4a;}
+.rep-row.loss .rep-icon{border-color:#cc4040;}
+.rep-row.build .rep-icon{border-color:#3a80cc;}
+.rep-row-info{flex:1;min-width:0;}
+.rep-row-title{font-size:14px;font-weight:bold;color:#f0d080;margin-bottom:2px;}
+.rep-row-preview{font-size:12px;color:#908070;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rep-row-side{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
+.rep-row-time{font-size:10px;color:#706050;}
+.rep-unread-dot{width:10px;height:10px;border-radius:50%;background:#e03030;box-shadow:0 0 5px rgba(224,48,48,.7);}
+.rep-empty{padding:40px 20px;text-align:center;color:#706050;font-size:14px;}
+/* Карточка боя в детальном виде */
+.bcard{border-radius:14px;overflow:hidden;border:1px solid;margin-bottom:12px;}
+.bcard.win{border-color:#3aaa4a;background:linear-gradient(180deg,rgba(30,80,35,.35),rgba(0,0,0,.3));}
+.bcard.loss{border-color:#cc4040;background:linear-gradient(180deg,rgba(110,25,25,.35),rgba(0,0,0,.3));}
+.bcard-head{text-align:center;padding:16px 12px 12px;}
+.bcard-result{font-size:24px;font-weight:bold;letter-spacing:1px;}
+.bcard-result.win{color:#5cff7a;text-shadow:0 0 12px rgba(92,255,122,.4);}
+.bcard-result.loss{color:#ff8080;text-shadow:0 0 12px rgba(255,80,80,.35);}
+.bcard-sub{font-size:12px;color:#c0a080;margin-top:6px;}
+.bcard-armies{display:flex;gap:10px;padding:4px 12px 12px;}
+.bcard-army{flex:1;background:rgba(0,0,0,.3);border:1px solid rgba(200,160,48,.2);border-radius:10px;padding:10px;min-width:0;}
+.bcard-army-title{font-size:11px;font-weight:bold;text-align:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(200,160,48,.18);}
+.bcard-army.you .bcard-army-title{color:#7ad4ff;}
+.bcard-army.foe .bcard-army-title{color:#ff9090;}
+.bcard-unit{display:flex;justify-content:space-between;font-size:11px;color:#d8c8a0;margin-bottom:4px;gap:6px;}
+.bcard-unit .uq{color:#f0d080;font-weight:bold;flex-shrink:0;}
+.bcard-empty-units{font-size:11px;color:#807060;text-align:center;}
+.bcard-block{margin:0 12px 12px;background:rgba(0,0,0,.28);border:1px solid rgba(200,160,48,.18);border-radius:10px;padding:10px;}
+.bcard-block-title{font-size:11px;font-weight:bold;color:var(--gold2);margin-bottom:6px;}
+.bcard-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.bcard-tag{font-size:11px;border-radius:6px;padding:3px 8px;}
+.bcard-tag.loss{background:rgba(200,60,60,.2);border:1px solid #804040;color:#ffb0b0;}
+.bcard-tag.loot{background:rgba(60,180,90,.18);border:1px solid #3a8a4a;color:#9cf0b0;}
+.bcard-tag.fire{background:rgba(220,120,40,.18);border:1px solid #a06020;color:#ffc090;}
+.bcard-tag.xp{background:rgba(220,190,60,.16);border:1px solid #9a7a20;color:#f0d070;}
+.bcard-foot{text-align:center;font-size:11px;color:#807060;padding:0 12px 12px;}
+.rep-detail-card{
+  background:rgba(0,0,0,.3);border:1px solid #5a3a18;border-radius:14px;
+  padding:14px;color:#f0ddb0;
+}
+.rep-detail-card .rdc-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.rep-detail-card .rdc-ico{
+  width:48px;height:48px;border-radius:12px;flex-shrink:0;font-size:26px;
+  background:linear-gradient(135deg,#3a1f08,#1a0d03);border:2px solid #7a5020;
+  display:flex;align-items:center;justify-content:center;
+}
+.rep-detail-card .rdc-title{font-size:18px;font-weight:bold;color:#f0d080;}
+.rep-detail-card .rdc-time{font-size:11px;color:#807060;margin-top:2px;}
+.rep-detail-card .rdc-body{font-size:14px;line-height:1.5;color:#e8d8b0;}
+.rep-detail-card .rdc-row{
+  display:flex;justify-content:space-between;gap:10px;font-size:13px;
+  padding:7px 0;border-bottom:1px solid rgba(200,160,48,.12);
+}
+.rep-detail-card .rdc-row:last-child{border-bottom:none;}
+.rep-detail-card .rdc-row b{color:#f0d080;}
 </style>
 </head>
 <body>
@@ -746,6 +847,19 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
       <button id="mv-new-send">Отправить</button>
       <div id="msg-new-err" style="color:#ff8080;font-size:12px;margin-top:8px;text-align:center;"></div>
     </div>
+  </div>
+</div>
+
+<!-- ОТЧЁТЫ -->
+<div id="reports-panel">
+  <div id="rep-topbar">
+    <button id="rep-close-btn">✕</button>
+    <span id="rep-topbar-title">Отчёты</span>
+    <div style="width:36px"></div>
+  </div>
+  <div id="rep-views">
+    <div id="rv-list"></div>
+    <div id="rv-detail" style="display:none;flex-direction:column;height:100%;"></div>
   </div>
 </div>
 
