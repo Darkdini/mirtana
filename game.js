@@ -335,44 +335,59 @@ function getDiplomatLevel(p) {
 // каждый уровень: +3% cmdAtk, +2% cmdDef, +1% medicine
 function getGeneralBonus(p, uid) {
   const g = (p.generals || {})[uid];
-  const level = g ? g.level : 1;
+  const level = Math.min(g ? g.level : 1, 20);
   return {
-    cmdAtk:   (2 + level * 3) / 100,   // level1=5%, level2=8%, ...
-    cmdDef:   (1 + level * 2) / 100,   // level1=3%, level2=5%, ...
-    medicine: (level - 1) / 100,        // level1=0%, level2=1%, ...
+    cmdAtk:   Math.min(0.50, 0.04 + level * 0.025),
+    cmdDef:   Math.min(0.30, 0.02 + level * 0.015),
+    medicine: Math.min(0.15, level * 0.01),
+    // Milestone abilities
+    extraSlot:    level >= 5,
+    doubledMed:   level >= 10,
+    siegePierce:  level >= 15 ? 0.25 : 0,
+    capstone:     level >= 20,
   };
 }
 
 // Начисление XP генералу и проверка левелапа
-function awardGeneralXP(p, uid, win) {
+function awardGeneralXP(p, uid, win, isAssault) {
   if (!uid || !uid.endsWith('_general')) return;
   if (!p.generals) p.generals = {};
   if (!p.generals[uid]) p.generals[uid] = { xp: 0, level: 1 };
   const g = p.generals[uid];
-  g.xp += win ? 50 : 20;
-  const xpNeed = 100 * Math.pow(g.level, 2);
+  if (g.level >= 20) return;
+  const xpGain = win ? (isAssault ? 100 : 60) : 25;
+  g.xp += xpGain;
+  const xpNeed = Math.round(80 * Math.pow(g.level, 1.8));
   if (g.xp >= xpNeed) {
     g.xp -= xpNeed;
-    g.level += 1;
+    g.level = Math.min(20, g.level + 1);
     const genName = UNITS[uid]?.name || uid;
-    addReport(p, `⭐ Генерал «${genName}» достиг уровня ${g.level}!`, 'info');
+    let milestoneMsg = '';
+    if (g.level === 5)  milestoneMsg = ' — способность: Тактик (+5% армии, 2 слота)';
+    if (g.level === 10) milestoneMsg = ' — способность: Ветеран (медицина ×2)';
+    if (g.level === 15) milestoneMsg = ' — способность: Полководец (игнорирует 25% wallBonus)';
+    if (g.level === 20) milestoneMsg = ' — способность: Легенда (−50% воскрешения, +10% грабёж)';
+    addReport(p, `⭐ Генерал «${genName}» достиг уровня ${g.level}!${milestoneMsg}`, 'info');
   }
 }
 
 // Возвращает боевые бонусы из построенных зданий и артефактов
 function getCombatBonuses(p) {
   let smithyLvl=0, magSchoolLvl=0, wallLvl=0, trapLvl=0, kazenotosLvl=0;
+  let guardTowerLvl=0, magTowerLvl=0, barracksLvl=0, stablesLvl=0;
   for (const c of p.castle) {
     if (c.bldId==='smithy')      smithyLvl    = Math.max(smithyLvl,    c.level);
-    if (c.bldId==='magicschool') magSchoolLvl = Math.max(magSchoolLvl, c.level);
+    if (c.bldId==='magicschool'||c.bldId==='magscool') magSchoolLvl = Math.max(magSchoolLvl, c.level);
     if (c.bldId==='wall')        wallLvl      = Math.max(wallLvl,      c.level);
     if (c.bldId==='trap')        trapLvl      = Math.max(trapLvl,      c.level);
     if (c.bldId==='kazenotos')   kazenotosLvl = Math.max(kazenotosLvl, c.level);
+    if (c.bldId==='guard_tower') guardTowerLvl= Math.max(guardTowerLvl,c.level);
+    if (c.bldId==='magtower')    magTowerLvl  = Math.max(magTowerLvl,  c.level);
+    if (c.bldId==='barracks')    barracksLvl  = Math.max(barracksLvl,  c.level);
+    if (c.bldId==='stables')     stablesLvl   = Math.max(stablesLvl,   c.level);
   }
-  // Типы ловушек по уровню: 1-3=простые, 4-6=элитные, 7-10=универсальные
   const trapType = trapLvl >= 7 ? 'universal' : trapLvl >= 4 ? 'elite' : 'simple';
   let atkMul = 1, defMul = 1, magMul = 1;
-  // Бонусы артефактов
   for (const artId of (p.activeArtifacts || [])) {
     const art = ARTIFACTS[artId];
     if (!art) continue;
@@ -381,14 +396,24 @@ function getCombatBonuses(p) {
     if (art.magAtkBonus) magMul *= (1 + art.magAtkBonus);
     if (art.allBonus)  { atkMul *= (1 + art.allBonus); defMul *= (1 + art.allBonus); magMul *= (1 + art.allBonus); }
   }
+  // Race bonuses
+  const raceData = RACES[p.race] || {};
+  if (raceData.defBonus) defMul *= (1 + raceData.defBonus);
   return {
-    atkBonus:       (1 + smithyLvl    * 0.03) * atkMul,
-    defBonus:       (1 + smithyLvl    * 0.02) * defMul,
-    magBonus:       (1 + magSchoolLvl * 0.02) * magMul,
-    wallBonus:      1 + wallLvl      * 0.05,   // +5% защиты замка/уровень
-    trapPower:      trapLvl * 30,              // урон ловушек
+    atkBonus:         (1 + smithyLvl * 0.025) * atkMul,
+    defBonus:         (1 + smithyLvl * 0.025) * defMul,
+    magBonus:         (1 + magSchoolLvl * 0.025) * magMul,
+    wallBonus:        1 + Math.min(20, wallLvl) * 0.04,
+    trapLvl,
     trapType,
-    buildingDefense: kazenotosLvl * 0.05,     // снижение разрушения зданий
+    kazenotosLvl,
+    buildingDefense:  kazenotosLvl * 0.05,
+    guardTowerDef:    Math.min(0.20, guardTowerLvl * 0.02),
+    guardFirstStrike: Math.min(0.15, guardTowerLvl * 0.005),
+    magTowerAntiSiege:Math.min(0.60, magTowerLvl * 0.04),
+    magTowerDef:      Math.min(0.10, magTowerLvl * 0.01),
+    infantryAtkBonus: Math.min(0.30, barracksLvl * 0.015),
+    cavalryAtkBonus:  Math.min(0.30, stablesLvl  * 0.015),
   };
 }
 
