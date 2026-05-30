@@ -942,16 +942,37 @@ function resolveBattle(p, world, march, allPlayers, state) {
         defenderUnits[uid] = { had: hadCount, lost: lostCount };
       }
     }
+  } else if (cell.type === 'bandit') {
+    // Оцениваем гарнизон лагеря бандитов по его силе
+    const estimatedCount = Math.max(1, Math.ceil((cell.power || 100) / 40));
+    defenderUnits['__bandit__'] = {
+      had: estimatedCount,
+      lost: win ? estimatedCount : Math.round(estimatedCount * 0.3),
+      power: cell.power || 0,
+    };
   }
+
+  const sentTotal = Object.values(march.units).reduce((a,b)=>a+b,0);
+  const myLostTotal = Object.values(losses).reduce((a,b)=>a+b,0);
+  const survTotal = sentTotal - myLostTotal;
   const generalXP = (win ? (battleType==='assault'?100:60) : 25) * Object.keys(march.units).filter(u => u.endsWith('_general') && march.units[u] > 0).length;
   const battleLog = {
     win,
-    attacker: { username: p.username || '', race: p.race || '' },
-    defender: cell.type === 'player' ? { username: cell.player || '', race: cell.race || '' } : { username: 'бандиты', race: 'bandit' },
+    battleType,
+    targetType: cell.type,
+    targetPos: { col: cell.col, row: cell.row },
+    targetPower: cell.power || 0,
+    attacker: { username: p.rulerName || p.username || '', race: p.race || '' },
+    defender: cell.type === 'player'
+      ? { username: (allPlayers?.[cell.player]?.rulerName || cell.player || ''), race: cell.race || '' }
+      : { username: cell.type === 'bandit' ? '🐺 Анархисты' : 'Оазис', race: 'bandit' },
     attackerUnits,
     defenderUnits,
     atkBonus: Math.round((atkMult - 1) * 100),
-    defBonus: 0,
+    sentTotal,
+    myLostTotal,
+    survTotal,
+    trapDamage: trapDamage || 0,
     loot: loot || {},
     destroyed: destroyedBuildings,
     generalXP,
@@ -1176,8 +1197,11 @@ function tickPlayer(p, world, allPlayers, state) {
       for (const uid in m.units) p.army[uid]=(p.army[uid]||0)+m.units[uid];
       if (m.loot) for (const k in m.loot) p.res[k]=Math.min(p.resMax[k]||9e9,(p.res[k]||0)+m.loot[k]);
       p.marches.splice(i,1);
-      const r=m.battleResult, lt=r.loot?Object.entries(r.loot).filter(([,v])=>v).map(([k,v])=>`${k}+${v}`).join(' '):'';
-      const reportTxt = `${r.win?'🏆 Победа':'⚔ Поражение'} · потери: ${r.lossesTxt}${lt?' · добыча: '+lt:''}`;
+      const r=m.battleResult;
+      const bl=r.battleLog||{};
+      const lt=r.loot?Object.entries(r.loot).filter(([,v])=>v).map(([k,v])=>`${RES_LABEL[k]||k}+${v}`).join(', '):'';
+      const targetDesc = bl.targetType==='bandit' ? `Лагерь (сила ${bl.targetPower})` : bl.targetType==='oasis' ? 'Оазис' : `замок ${bl.defender?.username||'?'}`;
+      const reportTxt = `${r.win?'🏆 Победа':'💀 Поражение'} — ${targetDesc} · Послано: ${bl.sentTotal}, вернулось: ${bl.survTotal}, потери: ${r.lossesTxt||'нет'}${lt?' · Добыча: '+lt:''}`;
       addReport(p, reportTxt, r.win?'battle-win':'battle-loss', r.battleLog || null);
       // Обновляем квесты
       if (m.battleTarget === 'bandit' && r.win) updateQuestProgress(p, 'bandit_kill');

@@ -2732,15 +2732,16 @@ function repOpenDetail(r){
 }
 
 function repUnitRows(units,mode){
-  // mode 'atk' -> {sent,lost}, 'def' -> {had,lost}
-  const ents=Object.entries(units||{}).filter(([,d])=>(mode==='atk'?d.sent:d.had)>0);
+  const ents=Object.entries(units||{}).filter(([uid,d])=>uid!=='__bandit__'&&(mode==='atk'?d.sent:d.had)>0);
   if(!ents.length)return '<div class="bcard-empty-units">—</div>';
   return ents.map(([uid,d])=>{
     const u=UNITS[uid];
     const total=mode==='atk'?d.sent:d.had;
     const lost=d.lost||0;
+    const surv=mode==='atk'?(total-lost):null;
     const lossStr=lost>0?` <span style="color:#ff8080;">(−${lost})</span>`:'';
-    return `<div class="bcard-unit"><span>${u?.name||uid}</span><span class="uq">${total}${lossStr}</span></div>`;
+    const survStr=surv!=null&&surv<total?` <span style="color:#80ff80;">→${surv}</span>`:'';
+    return `<div class="bcard-unit"><span>${u?.name||uid}</span><span class="uq">${total}${lossStr}${survStr}</span></div>`;
   }).join('');
 }
 
@@ -2750,34 +2751,49 @@ function repRenderBattle(data,kind,t){
   const result=win?'🏆 ПОБЕДА':'💀 ПОРАЖЕНИЕ';
   const atk=data.attacker||{},def=data.defender||{};
   const raceName=rc=>RACES[rc]?.name||rc||'?';
-  // потери своей армии
+  const isBandit=data.targetType==='bandit';
+  const banditData=data.defenderUnits?.['__bandit__'];
+  // потери
   const myLost=Object.values(data.attackerUnits||{}).reduce((a,d)=>a+(d.lost||0),0);
-  const foeLost=Object.values(data.defenderUnits||{}).reduce((a,d)=>a+(d.lost||0),0);
-  // добыча
+  const foeLost=isBandit?(banditData?.lost||0):Object.values(data.defenderUnits||{}).reduce((a,d)=>a+(d.lost||0),0);
   const loot=Object.entries(data.loot||{}).filter(([,v])=>v>0);
+  // Заголовок: для бандитов показываем силу лагеря
+  const defLabel=isBandit?`🐺 Анархисты (сила ${data.targetPower||banditData?.power||'?'})`:escH(def.username||'?')+` [${raceName(def.race)}]`;
+  const posLabel=data.targetPos?` · (${data.targetPos.col},${data.targetPos.row})`:'';
   let html=`<div class="bcard ${cls}">
     <div class="bcard-head">
       <div class="bcard-result ${cls}">${result}</div>
-      <div class="bcard-sub">⚔ ${escH(atk.username||'?')} [${raceName(atk.race)}] → 🛡 ${escH(def.username||'?')} [${raceName(def.race)}]</div>
-      ${data.atkBonus?`<div class="bcard-sub">Бонус атаки: +${data.atkBonus}%</div>`:''}
-    </div>
-    <div class="bcard-armies">
+      <div class="bcard-sub">⚔ ${escH(atk.username||'?')} [${raceName(atk.race)}] → 🛡 ${defLabel}${posLabel}</div>
+      ${data.atkBonus?`<div class="bcard-sub" style="font-size:11px;color:#a09060;">Бонус атаки: +${data.atkBonus}%</div>`:''}
+      ${data.trapDamage>0?`<div class="bcard-sub" style="font-size:11px;color:#ff9060;">⚙ Ловушки нанесли урон атаке</div>`:''}
+    </div>`;
+  // Сводка войска
+  if(data.sentTotal!=null){
+    html+=`<div style="display:flex;justify-content:center;gap:16px;padding:6px 12px;font-size:12px;color:#c0a070;border-bottom:1px solid rgba(200,160,48,.15);">
+      <span>Послано: <b style="color:#f0d080;">${data.sentTotal}</b></span>
+      <span>Вернулось: <b style="color:${data.survTotal>0?'#80ff80':'#ff8080'};">${data.survTotal??data.sentTotal-myLost}</b></span>
+      <span>Потери: <b style="color:#ff8080;">${myLost||0}</b></span>
+    </div>`;
+  }
+  html+=`<div class="bcard-armies">
       <div class="bcard-army you">
         <div class="bcard-army-title">ВАША АРМИЯ</div>
         ${repUnitRows(data.attackerUnits,'atk')}
       </div>
       <div class="bcard-army foe">
-        <div class="bcard-army-title">АРМИЯ ВРАГА</div>
-        ${repUnitRows(data.defenderUnits,'def')}
+        <div class="bcard-army-title">${isBandit?'ГАРНИЗОН ЛАГЕРЯ':'АРМИЯ ВРАГА'}</div>
+        ${isBandit&&banditData
+          ? `<div class="bcard-unit"><span>🐺 Бандиты</span><span class="uq">${banditData.had} <span style="color:#ff8080;">(−${banditData.lost})</span></span></div>`
+          : repUnitRows(data.defenderUnits,'def')}
       </div>
     </div>`;
   // потери
   if(myLost||foeLost){
     html+=`<div class="bcard-block">
-      <div class="bcard-block-title">Потери</div>
+      <div class="bcard-block-title">Итог боя</div>
       <div class="bcard-tags">
-        ${myLost?`<span class="bcard-tag loss">Ваши: −${myLost}</span>`:''}
-        ${foeLost?`<span class="bcard-tag loss">Враг: −${foeLost}</span>`:''}
+        ${myLost?`<span class="bcard-tag loss">Ваши потери: −${myLost}</span>`:'<span class="bcard-tag loot">Без потерь ✓</span>'}
+        ${foeLost?`<span class="bcard-tag loss">${isBandit?'Уничтожено':'Враг потерял'}: −${foeLost}</span>`:''}
       </div>
     </div>`;
   }
