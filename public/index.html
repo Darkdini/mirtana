@@ -1582,7 +1582,8 @@ function drawWorldHex(){
       }
       // Тег альянса
       const allianceTag=cellPlayer?.allianceTag||null;
-      const lbl=(isMe?'★':'')+( allianceTag?'['+allianceTag+'] ':'' )+(c.player||'');
+      const displayName=cellPlayer?.rulerName||c.player||'';
+      const lbl=(isMe?'★':'')+( allianceTag?'['+allianceTag+'] ':'' )+displayName;
       ctx.fillStyle='rgba(0,0,0,.8)';
       const tw=Math.max(40,ctx.measureText(lbl).width+8);
       ctx.fillRect(cx2-tw/2,cy2+R*0.5,tw,13);
