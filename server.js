@@ -318,6 +318,9 @@ function serializePlayer(p) {
     protectedUntil:  p.protectedUntil || 0,
     deadGenerals:    p.deadGenerals   || [],
     generals:        p.generals       || {},
+    generalNames:    p.generalNames   || {},
+    commanderUid:    p.commanderUid   || null,
+    armies:          p.armies         || [],
     mailUnread:      (p.mail||[]).filter(m=>!m.read).length,
     artifacts:       p.artifacts      || [],
     activeArtifacts: p.activeArtifacts || [],
@@ -817,6 +820,46 @@ async function router(req, res) {
     if (!result.ok) return send(res, 400, { error: result.error });
     saveState();
     return send(res, 200, result);
+  }
+
+  // ── Назначение командующего (генерала в штаб) ────────────────────
+  if (pathname === '/api/set-commander' && req.method === 'POST') {
+    const { uid } = await readBody(req);
+    if (uid && !uid.endsWith('_general')) return send(res, 400, { error: 'Не генерал' });
+    if (uid && (!p.army[uid] || p.army[uid] < 1)) return send(res, 400, { error: 'Генерал не в армии' });
+    p.commanderUid = uid || null;
+    saveState();
+    push(p.username, { type: 'state', player: serializePlayer(p) });
+    return send(res, 200, { ok: true });
+  }
+
+  // ── Управление именованными армиями ──────────────────────────────
+  if (pathname === '/api/armies' && req.method === 'POST') {
+    const { action, id, name, units } = await readBody(req);
+    if (!p.armies) p.armies = [];
+    if (action === 'create') {
+      const newId = Date.now().toString();
+      const safeUnits = {};
+      for (const uid in (units || {})) {
+        const available = (p.army[uid] || 0);
+        const inOtherArmies = p.armies.reduce((s, a) => s + (a.units[uid] || 0), 0);
+        const free = available - inOtherArmies;
+        const req2 = Math.min(units[uid] || 0, free);
+        if (req2 > 0) safeUnits[uid] = req2;
+      }
+      if (Object.keys(safeUnits).length === 0) return send(res, 400, { error: 'Нет свободных войск' });
+      p.armies.push({ id: newId, name: String(name || 'Армия').slice(0, 30), units: safeUnits });
+    } else if (action === 'dissolve') {
+      p.armies = p.armies.filter(a => a.id !== id);
+    } else if (action === 'rename') {
+      const arm = p.armies.find(a => a.id === id);
+      if (arm) arm.name = String(name || 'Армия').slice(0, 30);
+    } else {
+      return send(res, 400, { error: 'Unknown action' });
+    }
+    saveState();
+    push(p.username, { type: 'state', player: serializePlayer(p) });
+    return send(res, 200, { ok: true, armies: p.armies });
   }
 
   if (pathname === '/api/trade' && req.method === 'POST') {
