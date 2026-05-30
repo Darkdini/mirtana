@@ -919,6 +919,9 @@ async function router(req, res) {
       if (!target) return send(res, 404, { error: 'Игрок не найден' });
       const amount = Math.max(1, parseInt(body.amount) || 0);
       target.res.gold = Math.min(target.resMax?.gold || 99999, (target.res.gold || 0) + amount);
+      if (!target.mail) target.mail = [];
+      target.mail.push({ from: 'Администрация', text: `🪙 Вам пополнена казна на ${amount} монет. Ваш баланс: ${target.res.gold}🪙`, time: Date.now(), read: false });
+      if (target.mail.length > 100) target.mail = target.mail.slice(-100);
       saveState();
       push(body.username, { type: 'state', player: serializePlayer(target) });
       return send(res, 200, { ok: true, gold: target.res.gold });
