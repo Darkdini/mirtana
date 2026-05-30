@@ -9,7 +9,6 @@ const crypto = require('crypto');
 const os     = require('os');
 const WS     = require('./ws');
 const G      = require('./game');
-const nodemailer = require('nodemailer');
 
 const PORT       = parseInt(process.env.PORT || '7777', 10);
 const STATE_FILE = process.env.STATE_PATH || path.join(__dirname, 'state.json');
@@ -17,45 +16,10 @@ const PUBLIC     = path.join(__dirname, 'public');
 
 // ── TELEGRAM BOT ─────────────────────────────────────────────────────
 let BOT_CFG = { botToken:'', botUsername:'', webhookUrl:'' };
-let SMTP_CFG = { host:'smtp.gmail.com', port:587, user:'', pass:'', from:'' };
 try {
   const cfgPath = path.join(__dirname, 'config.json');
-  if (fs.existsSync(cfgPath)) {
-    const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-    BOT_CFG  = { ...BOT_CFG,  ...cfg };
-    if (cfg.smtp) SMTP_CFG = { ...SMTP_CFG, ...cfg.smtp };
-  }
+  if (fs.existsSync(cfgPath)) BOT_CFG = { ...BOT_CFG, ...JSON.parse(fs.readFileSync(cfgPath, 'utf8')) };
 } catch {}
-
-// ── ОТПРАВКА EMAIL ───────────────────────────────────────────────────
-let mailer = null;
-function getMailer() {
-  if (mailer) return mailer;
-  if (!SMTP_CFG.user || !SMTP_CFG.pass) return null;
-  mailer = nodemailer.createTransport({
-    host: SMTP_CFG.host,
-    port: SMTP_CFG.port,
-    secure: SMTP_CFG.port === 465,
-    auth: { user: SMTP_CFG.user, pass: SMTP_CFG.pass },
-  });
-  return mailer;
-}
-
-async function sendEmail(to, subject, text) {
-  const t = getMailer();
-  if (!t || !to) return false;
-  try {
-    await t.sendMail({
-      from: SMTP_CFG.from || `СРЕДНЕВЕКОВЬЕ <${SMTP_CFG.user}>`,
-      to, subject, text,
-    });
-    return true;
-  } catch (e) {
-    console.error('[mail]', e.message);
-    mailer = null; // сброс при ошибке
-    return false;
-  }
-}
 
 // Пакеты пополнения: [stars, gold, label]
 const GOLD_PACKS = [
