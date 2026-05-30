@@ -947,6 +947,21 @@ async function router(req, res) {
     return send(res, 200, { top, total: allPlayers.length });
   }
 
+  // ── Онлайн-лидерборд ─────────────────────────────────────────────
+  if (pathname === '/api/online-leaderboard' && req.method === 'GET') {
+    const now = Date.now();
+    const ym = currentYearMonth();
+    const ranked = Object.values(STATE.players)
+      .map(pl => {
+        let time = pl.onlineTime || 0;
+        if (pl.sessionStart && pl.onlineMonth === ym) time += Math.round((now - pl.sessionStart) / 1000);
+        return { username: pl.username, rulerName: pl.rulerName || pl.username, race: pl.race, time };
+      })
+      .filter(x => x.time > 0)
+      .sort((a, b) => b.time - a.time);
+    return send(res, 200, { ranked, month: ym, myUsername: p?.username || null });
+  }
+
   // ── История чата ─────────────────────────────────────────────────
   if (pathname === '/api/chat' && req.method === 'GET') {
     return send(res, 200, { messages: STATE.chat.slice(-100) });
@@ -1115,6 +1130,12 @@ server.on('upgrade', (req, socket) => {
   if (sid && STATE.sessions[sid]) {
     username = STATE.sessions[sid];
     wsClients.set(username, client);
+    const wp = STATE.players[username];
+    if (wp) {
+      const ym = currentYearMonth();
+      if (wp.onlineMonth !== ym) { wp.onlineTime = 0; wp.onlineMonth = ym; }
+      wp.sessionStart = Date.now();
+    }
   }
 
   client.onMessage = raw => {
@@ -1136,7 +1157,14 @@ server.on('upgrade', (req, socket) => {
   };
 
   client.onClose = () => {
-    if (username) wsClients.delete(username);
+    if (username) {
+      const wp = STATE.players[username];
+      if (wp && wp.sessionStart) {
+        wp.onlineTime = (wp.onlineTime || 0) + Math.round((Date.now() - wp.sessionStart) / 1000);
+        delete wp.sessionStart;
+      }
+      wsClients.delete(username);
+    }
   };
 });
 
@@ -1171,6 +1199,37 @@ setInterval(() => {
 }, 30 * 60 * 1000);
 // Первый спавн при старте
 setTimeout(() => { G.spawnCaravan(STATE.world); saveState(); }, 5000);
+
+// ── ЕЖЕМЕСЯЧНЫЙ РЕЙТИНГ ОНЛАЙН ──────────────────────────────────────
+function currentYearMonth() { const d = new Date(); return d.getFullYear() * 100 + (d.getMonth() + 1); }
+
+function checkMonthlyOnlineAward() {
+  const ym = currentYearMonth();
+  if (STATE.lastMonthlyAward === ym) return;
+  const ranked = Object.values(STATE.players)
+    .filter(p => (p.onlineTime || 0) > 0)
+    .sort((a, b) => (b.onlineTime || 0) - (a.onlineTime || 0));
+  const prizes = [300, 200, 100];
+  ranked.slice(0, 3).forEach((p, i) => {
+    const gold = prizes[i];
+    p.res.gold = Math.min(p.resMax?.gold || 99999, (p.res.gold || 0) + gold);
+    if (!p.mail) p.mail = [];
+    const hours = Math.round((p.onlineTime || 0) / 360) / 10;
+    p.mail.push({ from: 'Администрация', text: `🏅 Поздравляем! По итогам месяца вы заняли ${i+1} место в рейтинге онлайна (${hours}ч) и получаете ${gold}🪙!`, time: Date.now(), read: false });
+    push(p.username, { type: 'state', player: serializePlayer(p) });
+  });
+  for (const p of Object.values(STATE.players)) {
+    p.onlineTime = 0;
+    p.onlineMonth = ym;
+    if (p.sessionStart) p.sessionStart = Date.now();
+  }
+  STATE.lastMonthlyAward = ym;
+  saveState();
+  console.log(`[monthly] Онлайн-рейтинг ${ym}: наград ${Math.min(3, ranked.length)}`);
+}
+
+setInterval(checkMonthlyOnlineAward, 60 * 60 * 1000);
+setTimeout(checkMonthlyOnlineAward, 15000);
 
 // ── ЗАПУСК ───────────────────────────────────────────────────────────
 loadState();

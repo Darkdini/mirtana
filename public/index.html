@@ -872,7 +872,7 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
 <!-- 7-вкладочная нижняя панель (в меню-режиме) -->
 <div id="cabinet-bar">
   <button class="cb-tab active" data-cab="cabinet"><span class="ci">👑</span>КАБИНЕТ</button>
-  <button class="cb-tab" data-cab="locations"><span class="ci">🗺</span>ЛОКАЦИИ</button>
+  <button class="cb-tab" data-cab="success"><span class="ci">🏅</span>УСПЕХ</button>
   <button class="cb-tab" data-cab="alliance"><span class="ci">⚔</span>АЛЬЯНС</button>
   <button class="cb-tab" data-cab="mail"><span class="ci">✉</span>ПОЧТА</button>
   <button class="cb-tab" data-cab="info"><span class="ci">⚙</span>НАСТРОЙКИ</button>
@@ -3230,6 +3230,48 @@ async function showRatingModal(){
   }catch(e){con.innerHTML=`<p style="color:#ff8080;text-align:center;">${e.message}</p>`;}
 }
 
+// ── ОНЛАЙН-ЛИДЕРБОРД ───────────────────────────────────
+async function showOnlineLeaderboardModal(){
+  const con=document.createElement('div');
+  con.innerHTML='<p style="text-align:center;color:#a89070;font-size:12px;">Загрузка...</p>';
+  const bg=modal({title:'🟢 Онлайн-рейтинг',body:con});
+  try{
+    const d=await api('/api/online-leaderboard');
+    const me=S.player?.username;
+    const myRank=(d.ranked.findIndex(p=>p.username===me)+1)||null;
+    const monthName=['','Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'][d.month%100]||'';
+    function fmtTime(sec){
+      if(sec<60)return sec+'с';
+      if(sec<3600)return Math.floor(sec/60)+'м '+String(sec%60).padStart(2,'0')+'с';
+      const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);
+      return h+'ч '+(m?String(m).padStart(2,'0')+'м':'');
+    }
+    let html=`<div style="font-size:12px;color:#a89070;text-align:center;margin-bottom:10px;">
+      Месяц: <b style="color:var(--gold2);">${monthName}</b>
+      ${myRank?`· Ваше место: <b style="color:var(--gold2);font-size:16px;">#${myRank}</b>`:''}
+      <div style="font-size:11px;margin-top:4px;color:#a89070;">🥇 300🪙 · 🥈 200🪙 · 🥉 100🪙 — по итогам месяца</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;">`;
+    if(!d.ranked.length){html+='<p style="text-align:center;color:#a89070;padding:20px;">Нет данных</p>';}
+    d.ranked.forEach((p,i)=>{
+      const isMe=p.username===me;
+      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;
+        background:${isMe?'rgba(212,162,54,.15)':'rgba(0,0,0,.25)'};
+        border:1px solid ${isMe?'var(--gold2)':'var(--gold3)'};border-radius:5px;">
+        <span style="font-size:16px;width:26px;text-align:center;flex-shrink:0;">${medal}</span>
+        <span style="font-size:18px;">${RACE_G[p.race]||'👤'}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:bold;color:${isMe?'var(--gold2)':'#e0d0b0'};font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escH(p.rulerName)}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;color:var(--gold2);font-weight:bold;font-size:14px;">🕐 ${fmtTime(p.time)}</div>
+      </div>`;
+    });
+    html+='</div>';
+    con.innerHTML=html;
+  }catch(e){con.innerHTML=`<p style="color:#ff8080;text-align:center;">${e.message}</p>`;}
+}
+
 // ── ЧАТ ────────────────────────────────────────────────
 function fmtCT(t){const d=new Date(t);return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
 function appendChat(msg,prepend=false){
@@ -3543,7 +3585,7 @@ function showCabinet(startTab){
     // Красный заголовок
     const hdr=document.createElement('div');
     hdr.style.cssText='background:linear-gradient(180deg,#c83030,#8b0000);color:#fff;font-weight:bold;font-size:15px;padding:10px;text-align:center;border-bottom:2px solid #f0c040;flex-shrink:0;';
-    const tabNames={cabinet:'Кабинет',locations:'Локации',alliance:'Альянс',mail:'Почта',games:'Игры',info:'Настройки',rating:'Рейтинг'};
+    const tabNames={cabinet:'Кабинет',success:'Успех',alliance:'Альянс',mail:'Почта',games:'Игры',info:'Настройки',rating:'Рейтинг'};
     hdr.textContent=tabNames[tab]||tab;
     bg.appendChild(hdr);
     // Контент
@@ -3586,15 +3628,22 @@ function showCabinet(startTab){
       items.forEach(([,n,fn])=>{
         [...body.querySelectorAll('[data-act]')].find(el=>el.dataset.act===n)?.addEventListener('click',()=>{cbtn.click();fn();});
       });
-    } else if(tab==='locations'){
-      const locs=[['🏰','Замок','castle'],['🌾','Земли','lands'],['🌍','Мир','world']];
-      body.innerHTML='<div style="padding:0;">'+locs.map(([i,n,l])=>`
-        <div style="display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid rgba(160,120,40,.25);cursor:pointer;background:${LOC===l?'rgba(220,160,40,.2)':'rgba(255,255,255,.4)'};" data-loc="${l}">
+    } else if(tab==='success'){
+      const successItems=[['🟢','Онлайн','online','Рейтинг времени онлайна за месяц']];
+      body.innerHTML='<div style="padding:0;">'+successItems.map(([i,n,k,desc])=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid rgba(160,120,40,.25);cursor:pointer;background:rgba(255,255,255,.4);" data-sk="${k}">
           <span style="font-size:22px;width:28px;text-align:center;">${i}</span>
-          <span style="font-size:14px;color:#3a1a08;font-weight:bold;">${n}</span>
-          ${LOC===l?'<span style="margin-left:auto;color:#c8a030;font-weight:bold;">● Текущая</span>':'<span style="margin-left:auto;color:#8a6020;font-size:16px;">›</span>'}
+          <div>
+            <div style="font-size:14px;color:#3a1a08;font-weight:bold;">${n}</div>
+            <div style="font-size:11px;color:#7a5020;">${desc}</div>
+          </div>
+          <span style="margin-left:auto;color:#8a6020;font-size:16px;">›</span>
         </div>`).join('')+'</div>';
-      body.querySelectorAll('[data-loc]').forEach(el=>el.onclick=()=>{cbtn.click();setLoc(el.dataset.loc);});
+      body.querySelectorAll('[data-sk]').forEach(el=>{
+        el.onclick=()=>{
+          if(el.dataset.sk==='online'){cbtn.click();showOnlineLeaderboardModal();}
+        };
+      });
     } else if(tab==='alliance'){
       setTimeout(()=>{cbtn.onclick();showAllianceModal();},0);
     } else if(tab==='mail'){
