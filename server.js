@@ -876,11 +876,6 @@ async function router(req, res) {
     p.passwordSalt = salt;
     p.passwordHash = hashPw(newPassword, salt);
     saveState();
-    if (p.email) {
-      sendEmail(p.email, '🔑 Смена пароля — СРЕДНЕВЕКОВЬЕ',
-        `Здравствуйте, ${p.rulerName || p.username}!\n\nВаш пароль был успешно изменён.\nНовый пароль: ${newPassword}\n\nЕсли это сделали не вы — немедленно свяжитесь с администратором.\n\n— Администрация СРЕДНЕВЕКОВЬЯ`
-      );
-    }
     return send(res, 200, { ok: true });
   }
 
