@@ -3196,9 +3196,9 @@ async function showRatingModal(){
     d.top.sort((a,b)=>(b.rating||0)-(a.rating||0));
     const me=S.player.username;
     const myRank=(d.top.findIndex(p=>p.username===me)+1)||'?';
-    let html=`<div style="font-size:12px;color:#a89070;text-align:center;margin-bottom:10px;">
-      Твоё место: <b style="color:var(--gold2);font-size:16px;">#${myRank}</b>
-      из <b>${d.total||d.top.length}</b> игроков
+    let html=`<div style="font-size:12px;color:#5a3a10;text-align:center;margin-bottom:10px;">
+      Твоё место: <b style="color:#8a0000;font-size:16px;">#${myRank}</b>
+      из <b style="color:#3a1a08;">${d.total||d.top.length}</b> игроков
     </div>
     <div style="display:flex;flex-direction:column;gap:4px;">`;
     d.top.forEach((p,i)=>{
@@ -3206,25 +3206,25 @@ async function showRatingModal(){
       const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
       const {t:rt,c:rc}=ratingTitle(p.rating);
       const avatarHtml=p.photo
-        ?`<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--gold3);flex-shrink:0;">`
-        :`<div style="width:36px;height:36px;border-radius:50%;background:${p.avatarBg||'#3a2a10'};border:2px solid var(--gold3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${p.avatar||RACE_G[p.race]||'👤'}</div>`;
+        ?`<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #9a6820;flex-shrink:0;">`
+        :`<div style="width:36px;height:36px;border-radius:50%;background:${p.avatarBg||'#3a2a10'};border:2px solid #9a6820;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${p.avatar||RACE_G[p.race]||'👤'}</div>`;
       html+=`<div style="display:flex;align-items:center;gap:8px;padding:8px;
-        background:${isMeR?'rgba(212,162,54,.15)':'rgba(0,0,0,.3)'};
-        border:1px solid ${isMeR?'var(--gold2)':'var(--gold3)'};border-radius:5px;">
+        background:${isMeR?'rgba(180,100,0,.18)':'rgba(80,40,0,.12)'};
+        border:1px solid ${isMeR?'#b87820':'#9a6820'};border-radius:5px;">
         <span style="font-size:16px;width:24px;text-align:center;flex-shrink:0;">${medal}</span>
         ${avatarHtml}
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:bold;color:${isMeR?'var(--gold2)':'#e0d0b0'};font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.kingdom}</div>
-          <div style="font-size:10px;color:${rc};">${rt}</div>
+          <div style="font-weight:bold;color:${isMeR?'#8a4000':'#2a1005'};font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.kingdom}</div>
+          <div style="font-size:10px;color:${rc==='#a0c080'?'#3a7020':rc==='#e0d0b0'?'#5a3a10':rc};">${rt}</div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
-          <div style="font-weight:bold;color:var(--gold2);font-size:14px;">${fmtN(p.rating)}</div>
-          <div style="font-size:10px;color:#a0c080;">⭐${fmtN(p.reputation||0)}</div>
-          <div style="font-size:10px;color:#a09060;">⚔${p.armySize}</div>
+          <div style="font-weight:bold;color:#7a3800;font-size:14px;">${fmtN(p.rating)}</div>
+          <div style="font-size:10px;color:#3a6010;">⭐${fmtN(p.reputation||0)}</div>
+          <div style="font-size:10px;color:#5a3a10;">⚔${p.armySize}</div>
         </div>
       </div>`;
     });
-    if(!d.top.length) html+='<p style="text-align:center;color:#a89070;padding:20px;">Ещё нет игроков</p>';
+    if(!d.top.length) html+='<p style="text-align:center;color:#5a3a10;padding:20px;">Ещё нет игроков</p>';
     html+='</div>';
     con.innerHTML=html;
   }catch(e){con.innerHTML=`<p style="color:#ff8080;text-align:center;">${e.message}</p>`;}
