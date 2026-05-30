@@ -962,6 +962,20 @@ async function router(req, res) {
     return send(res, 200, { ranked, month: ym, myUsername: p?.username || null });
   }
 
+  // ── Репутация-лидерборд ───────────────────────────────────────────
+  if (pathname === '/api/rep-leaderboard' && req.method === 'GET') {
+    const ym = currentYearMonth();
+    const ranked = Object.values(STATE.players)
+      .map(pl => {
+        const start = (pl.repMonth === ym) ? (pl.repMonthStart || 0) : (pl.repMonthStart ?? pl.reputation ?? 0);
+        const gain = Math.max(0, (pl.reputation || 0) - start);
+        return { username: pl.username, rulerName: pl.rulerName || pl.username, race: pl.race, gain, total: pl.reputation || 0 };
+      })
+      .filter(x => x.gain > 0)
+      .sort((a, b) => b.gain - a.gain);
+    return send(res, 200, { ranked, month: ym, myUsername: p?.username || null });
+  }
+
   // ── История чата ─────────────────────────────────────────────────
   if (pathname === '/api/chat' && req.method === 'GET') {
     return send(res, 200, { messages: STATE.chat.slice(-100) });
@@ -1203,29 +1217,50 @@ setTimeout(() => { G.spawnCaravan(STATE.world); saveState(); }, 5000);
 // ── ЕЖЕМЕСЯЧНЫЙ РЕЙТИНГ ОНЛАЙН ──────────────────────────────────────
 function currentYearMonth() { const d = new Date(); return d.getFullYear() * 100 + (d.getMonth() + 1); }
 
+function giveMonthlyGold(p, gold, place, category, extra) {
+  p.res.gold = Math.min(p.resMax?.gold || 99999, (p.res.gold || 0) + gold);
+  if (!p.mail) p.mail = [];
+  p.mail.push({ from: 'Администрация', text: `🏅 Поздравляем! По итогам месяца вы заняли ${place} место в рейтинге «${category}» (${extra}) и получаете ${gold}🪙!`, time: Date.now(), read: false });
+  push(p.username, { type: 'state', player: serializePlayer(p) });
+}
+
 function checkMonthlyOnlineAward() {
   const ym = currentYearMonth();
   if (STATE.lastMonthlyAward === ym) return;
-  const ranked = Object.values(STATE.players)
+
+  // ── Онлайн топ-3: 300/200/100 ──
+  const onlineRanked = Object.values(STATE.players)
     .filter(p => (p.onlineTime || 0) > 0)
     .sort((a, b) => (b.onlineTime || 0) - (a.onlineTime || 0));
-  const prizes = [300, 200, 100];
-  ranked.slice(0, 3).forEach((p, i) => {
-    const gold = prizes[i];
-    p.res.gold = Math.min(p.resMax?.gold || 99999, (p.res.gold || 0) + gold);
-    if (!p.mail) p.mail = [];
+  [300, 200, 100].forEach((gold, i) => {
+    const p = onlineRanked[i];
+    if (!p) return;
     const hours = Math.round((p.onlineTime || 0) / 360) / 10;
-    p.mail.push({ from: 'Администрация', text: `🏅 Поздравляем! По итогам месяца вы заняли ${i+1} место в рейтинге онлайна (${hours}ч) и получаете ${gold}🪙!`, time: Date.now(), read: false });
-    push(p.username, { type: 'state', player: serializePlayer(p) });
+    giveMonthlyGold(p, gold, i + 1, 'Онлайн', `${hours}ч`);
   });
+
+  // ── Репутация топ-3: 400/300/200 ──
+  const repRanked = Object.values(STATE.players)
+    .map(p => ({ p, gain: (p.reputation || 0) - (p.repMonthStart || 0) }))
+    .filter(x => x.gain > 0)
+    .sort((a, b) => b.gain - a.gain);
+  [400, 300, 200].forEach((gold, i) => {
+    const x = repRanked[i];
+    if (!x) return;
+    giveMonthlyGold(x.p, gold, i + 1, 'Репутация', `+${x.gain}⭐`);
+  });
+
+  // ── Сброс счётчиков ──
   for (const p of Object.values(STATE.players)) {
     p.onlineTime = 0;
     p.onlineMonth = ym;
     if (p.sessionStart) p.sessionStart = Date.now();
+    p.repMonthStart = p.reputation || 0;
+    p.repMonth = ym;
   }
   STATE.lastMonthlyAward = ym;
   saveState();
-  console.log(`[monthly] Онлайн-рейтинг ${ym}: наград ${Math.min(3, ranked.length)}`);
+  console.log(`[monthly] Награды за месяц ${ym}: онлайн ${Math.min(3, onlineRanked.length)}, реп ${Math.min(3, repRanked.length)}`);
 }
 
 setInterval(checkMonthlyOnlineAward, 60 * 60 * 1000);

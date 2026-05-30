@@ -3272,6 +3272,43 @@ async function showOnlineLeaderboardModal(){
   }catch(e){con.innerHTML=`<p style="color:#ff8080;text-align:center;">${e.message}</p>`;}
 }
 
+// ── РЕПУТАЦИЯ-ЛИДЕРБОРД ─────────────────────────────────
+async function showRepLeaderboardModal(){
+  const con=document.createElement('div');
+  con.innerHTML='<p style="text-align:center;color:#a89070;font-size:12px;">Загрузка...</p>';
+  const bg=modal({title:'⭐ Репутация — месяц',body:con});
+  try{
+    const d=await api('/api/rep-leaderboard');
+    const me=S.player?.username;
+    const myRank=(d.ranked.findIndex(p=>p.username===me)+1)||null;
+    const monthName=['','Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'][d.month%100]||'';
+    let html=`<div style="font-size:12px;color:#5a3a10;text-align:center;margin-bottom:10px;">
+      Месяц: <b style="color:#8a4800;">${monthName}</b>
+      ${myRank?`· Ваше место: <b style="color:#8a0000;font-size:16px;">#${myRank}</b>`:''}
+      <div style="font-size:11px;margin-top:4px;color:#5a3a10;">🥇 400🪙 · 🥈 300🪙 · 🥉 200🪙 — по итогам месяца</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;">`;
+    if(!d.ranked.length){html+='<p style="text-align:center;color:#5a3a10;padding:20px;">Нет данных</p>';}
+    d.ranked.forEach((p,i)=>{
+      const isMe=p.username===me;
+      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;
+        background:${isMe?'rgba(180,100,0,.18)':'rgba(80,40,0,.12)'};
+        border:1px solid ${isMe?'#b87820':'#9a6820'};border-radius:5px;">
+        <span style="font-size:16px;width:26px;text-align:center;flex-shrink:0;">${medal}</span>
+        <span style="font-size:18px;">${RACE_G[p.race]||'👤'}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:bold;color:${isMe?'#8a4000':'#2a1005'};font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escH(p.rulerName)}</div>
+          <div style="font-size:10px;color:#5a3a10;">Всего: ${fmtN(p.total)}⭐</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;color:#5a2800;font-weight:bold;font-size:14px;">+${fmtN(p.gain)}⭐</div>
+      </div>`;
+    });
+    html+='</div>';
+    con.innerHTML=html;
+  }catch(e){con.innerHTML=`<p style="color:#ff8080;text-align:center;">${e.message}</p>`;}
+}
+
 // ── ЧАТ ────────────────────────────────────────────────
 function fmtCT(t){const d=new Date(t);return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
 function appendChat(msg,prepend=false){
@@ -3629,7 +3666,10 @@ function showCabinet(startTab){
         [...body.querySelectorAll('[data-act]')].find(el=>el.dataset.act===n)?.addEventListener('click',()=>{cbtn.click();fn();});
       });
     } else if(tab==='success'){
-      const successItems=[['🟢','Онлайн','online','Рейтинг времени онлайна за месяц']];
+      const successItems=[
+        ['🟢','Онлайн','online','Рейтинг времени онлайна за месяц · 🥇300 🥈200 🥉100🪙'],
+        ['⭐','Репутация','rep','Кто больше поднял репутации за месяц · 🥇400 🥈300 🥉200🪙'],
+      ];
       body.innerHTML='<div style="padding:0;">'+successItems.map(([i,n,k,desc])=>`
         <div style="display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid rgba(160,120,40,.25);cursor:pointer;background:rgba(255,255,255,.4);" data-sk="${k}">
           <span style="font-size:22px;width:28px;text-align:center;">${i}</span>
@@ -3642,6 +3682,7 @@ function showCabinet(startTab){
       body.querySelectorAll('[data-sk]').forEach(el=>{
         el.onclick=()=>{
           if(el.dataset.sk==='online'){cbtn.click();showOnlineLeaderboardModal();}
+          else if(el.dataset.sk==='rep'){cbtn.click();showRepLeaderboardModal();}
         };
       });
     } else if(tab==='alliance'){
