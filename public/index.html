@@ -1970,14 +1970,14 @@ function showWorldModal(c){
       bd=`<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;">
         <div style="font-size:48px;line-height:1;flex-shrink:0;">🏯</div>
         <div>
-          <div style="font-weight:bold;font-size:14px;color:#3a1a08;">Замок ${c.player}</div>
+          <div style="font-weight:bold;font-size:14px;color:#3a1a08;">Замок ${wp.rulerName||c.player}</div>
           <div style="color:#7a5020;font-size:12px;">X: ${c.col}  Y: ${c.row}</div>
           <div style="color:#7a5020;font-size:12px;">Рейтинг: 🏛 ${wp.rating||0}</div>
           <div style="color:#7a5020;font-size:12px;">Ратуша: 🏰 Ур.${wp.castleLevel||'?'}</div>
         </div>
       </div>
       <div style="color:#5a3010;font-size:13px;margin-bottom:12px;">
-        Игрок: <b>${c.player}${alliTag}</b><br>
+        Игрок: <b>${wp.rulerName||c.player}${alliTag}</b><br>
         Раса: <b>${raceG} ${RACES[c.race]?.name||'?'}</b>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;">
@@ -2011,7 +2011,7 @@ function showWorldModal(c){
           else if(act==='trade')showMarketModal();
           else if(act==='war')showAttackModal(c);
           else if(act==='spy')showSpyModal(c.player);
-          else if(act==='bookmark')toast(`📌 Замок ${c.player} запомнен  X:${c.col} Y:${c.row}`,'ok');
+          else if(act==='bookmark')toast(`📌 Замок ${wp.rulerName||c.player} запомнен  X:${c.col} Y:${c.row}`,'ok');
         };
       });
       return;
