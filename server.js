@@ -473,7 +473,7 @@ async function router(req, res) {
 
   if (pathname === '/api/register' && req.method === 'POST') {
     if (checkRateLimit(req.socket.remoteAddress, 5)) return send(res, 429, { error: 'Слишком много попыток. Подождите минуту.' });
-    const { username, password, race, kingdom, rulerName } = await readBody(req);
+    const { username, password, race, kingdom, rulerName, email } = await readBody(req);
     if (!username || username.length < 3)  return send(res, 400, { error: 'Логин минимум 3 символа' });
     if (!password || password.length < 4)  return send(res, 400, { error: 'Пароль минимум 4 символа' });
     if (!G.RACES[race])                    return send(res, 400, { error: 'Неверная раса' });
@@ -481,10 +481,16 @@ async function router(req, res) {
     if (!rulerName || rulerName.length < 2) return send(res, 400, { error: 'Имя правителя минимум 2 символа' });
     const rulerTaken = Object.values(STATE.players).some(p => (p.rulerName||p.username).toLowerCase() === rulerName.toLowerCase());
     if (rulerTaken) return send(res, 400, { error: 'Имя правителя уже занято' });
-    if (STATE.players[username])           return send(res, 400, { error: 'Имя занято' });
+    if (STATE.players[username]) return send(res, 400, { error: 'Имя занято' });
+    const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (cleanEmail && !emailRx.test(cleanEmail)) return send(res, 400, { error: 'Неверный формат email' });
+    if (cleanEmail && Object.values(STATE.players).some(p => p.email === cleanEmail))
+      return send(res, 400, { error: 'Этот email уже используется' });
     const player = G.createPlayer(race, kingdom);
     player.username = username;
     player.rulerName = rulerName;
+    if (cleanEmail) player.email = cleanEmail;
     const salt = newSalt();
     player.passwordSalt = salt;
     player.passwordHash = hashPw(password, salt);
@@ -493,6 +499,11 @@ async function router(req, res) {
     const sid = newSid();
     STATE.sessions[sid] = username;
     saveState();
+    if (cleanEmail) {
+      sendEmail(cleanEmail, '👑 Добро пожаловать в СРЕДНЕВЕКОВЬЕ!',
+        `Здравствуйте, ${rulerName}!\n\nВаш аккаунт успешно создан.\nЛогин: ${username}\n\nХраните эти данные в надёжном месте.\n\n— Администрация СРЕДНЕВЕКОВЬЯ`
+      );
+    }
     return send(res, 200, { ok:true, username, kingdom }, { 'Set-Cookie': `sid=${sid}; Path=/; HttpOnly; Max-Age=2592000` });
   }
 

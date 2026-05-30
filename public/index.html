@@ -760,6 +760,11 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
         <span class="inp-icon">🔑</span>
         <input type="password" id="reP" data-i18n-ph="phPassNew" placeholder="Придумай пароль" maxlength="40" autocomplete="new-password">
       </div>
+      <h3>Email <span style="font-size:10px;color:#a08060;font-weight:normal;">(необязательно — для восстановления пароля)</span></h3>
+      <div class="inp-wrap">
+        <span class="inp-icon">📧</span>
+        <input type="email" id="reEmail" placeholder="example@gmail.com" maxlength="100" autocomplete="email">
+      </div>
       <h3 data-i18n="labelKingdom">Королевство</h3>
       <div class="inp-wrap">
         <span class="inp-icon">🏰</span>
@@ -3657,7 +3662,7 @@ function initAuth(){
     if(!selRace){$('#reE').textContent=LANGS[LANG].errNoRace;return;}
     if(parseInt($('#captcha-a').value)!==captchaAns){$('#reE').textContent=LANGS[LANG].errCaptcha;newCaptcha();return;}
     try{
-      await api('/api/register',{method:'POST',body:{username:$('#reU').value.trim(),rulerName:$('#reRuler').value.trim(),password:$('#reP').value,race:selRace,kingdom:$('#reK').value.trim()}});
+      await api('/api/register',{method:'POST',body:{username:$('#reU').value.trim(),rulerName:$('#reRuler').value.trim(),password:$('#reP').value,race:selRace,kingdom:$('#reK').value.trim(),email:($('#reEmail').value||'').trim()}});
       await enterGame();
     }catch(e){$('#reE').textContent=e.message;}
   };
