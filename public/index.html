@@ -2296,11 +2296,12 @@ async function showPlayerProfile(name){
 function showRepGiftModal(targetName){
   const isSelf=!targetName||targetName===S?.player?.username;
   const title=isSelf?'⭐ Прокачать репутацию':'⭐ Подарить репутацию';
+  const displayTarget=S.worldPlayers?.[targetName]?.rulerName||targetName;
   const con=document.createElement('div');
   con.innerHTML=`
     <div style="text-align:center;margin-bottom:12px;">
       <div style="font-size:13px;color:#3a1a08;margin-bottom:4px;">
-        ${isSelf?'Трать золото — получай репутацию':'Трать своё золото — репутацию получит <b>'+escH(targetName)+'</b>'}
+        ${isSelf?'Трать золото — получай репутацию':'Трать своё золото — репутацию получит <b>'+escH(displayTarget)+'</b>'}
       </div>
       <div style="font-size:12px;color:#7a4010;margin-bottom:12px;">💰 1 золото = ⭐ 3 репутации</div>
       <div style="display:flex;gap:6px;justify-content:center;margin-bottom:12px;">
