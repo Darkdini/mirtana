@@ -727,6 +727,17 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
         <span class="inp-icon">🔑</span>
         <input type="password" id="liP" data-i18n-ph="phPass" placeholder="Твой пароль" autocomplete="current-password">
       </div>
+      <div id="li-captcha" style="display:none;margin-bottom:8px;">
+        <div style="font-size:12px;color:#c8a030;margin-bottom:6px;text-align:center;">
+          🔒 Подтвердите, что вы не робот
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
+          <span id="li-captcha-q" style="font-size:16px;font-weight:bold;color:#f5d060;background:rgba(0,0,0,.4);border:1px solid #9a6e22;border-radius:6px;padding:6px 14px;letter-spacing:2px;"></span>
+          <span style="color:#c8a030;font-size:14px;">= ?</span>
+          <input id="li-captcha-a" type="number" min="0" max="18" placeholder="0"
+            style="width:64px;background:rgba(0,0,0,.5);border:1px solid #9a6e22;border-radius:6px;color:#f5d060;font-size:16px;padding:6px 10px;font-family:inherit;outline:none;text-align:center;">
+        </div>
+      </div>
       <div class="err" id="liE"></div>
       <button class="btn-g" id="liBtn" data-i18n="btnLogin">⚔ ВОЙТИ В КОРОЛЕВСТВО</button>
     </div>
@@ -1138,7 +1149,7 @@ async function api(path,opts={}){
     headers:{'Content-Type':'application/json'},...opts,
     body:opts.body?JSON.stringify(opts.body):undefined});
   const d=await r.json().catch(()=>({}));
-  if(!r.ok)throw new Error(d.error||'HTTP '+r.status);
+  if(!r.ok){const err=new Error(d.error||'HTTP '+r.status);err.captchaRequired=d.captchaRequired||false;throw err;}
   return d;
 }
 async function refreshState(){
@@ -3611,10 +3622,29 @@ function initAuth(){
     rp.querySelectorAll('.rcard').forEach(x=>x.classList.remove('sel'));
     c.classList.add('sel');selRace=c.dataset.race;
   };
+  let liCaptchaId=null;
+  async function loadLoginCaptcha(){
+    try{
+      const d=await api('/api/captcha');
+      liCaptchaId=d.id;
+      $('#li-captcha-q').textContent=d.question;
+      $('#li-captcha-a').value='';
+      $('#li-captcha').style.display='block';
+    }catch{}
+  }
   $('#liBtn').onclick=async()=>{
     $('#liE').textContent='';
-    try{await api('/api/login',{method:'POST',body:{username:$('#liU').value.trim(),password:$('#liP').value}});await enterGame();}
-    catch(e){$('#liE').textContent=e.message;}
+    const body={username:$('#liU').value.trim(),password:$('#liP').value};
+    if(liCaptchaId){body.captchaId=liCaptchaId;body.captchaAnswer=parseInt($('#li-captcha-a').value)||0;}
+    try{
+      await api('/api/login',{method:'POST',body});
+      await enterGame();
+    }catch(e){
+      $('#liE').textContent=e.message;
+      if(e.captchaRequired){
+        await loadLoginCaptcha();
+      }
+    }
   };
   $('#reBtn').onclick=async()=>{
     $('#reE').textContent='';

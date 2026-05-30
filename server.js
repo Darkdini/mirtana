@@ -355,6 +355,30 @@ setInterval(() => {
   for (const [k, v] of loginAttempts) if (now > v.resetAt) loginAttempts.delete(k);
 }, 60000);
 
+// ── КАПЧА ────────────────────────────────────────────────────────────
+const loginFailures = new Map(); // ip -> { count, resetAt }
+const captchaStore  = new Map(); // id  -> { answer, expires }
+
+function trackLoginFail(ip) {
+  const now = Date.now();
+  let e = loginFailures.get(ip) || { count:0, resetAt: now + 15*60*1000 };
+  if (now > e.resetAt) e = { count:0, resetAt: now + 15*60*1000 };
+  e.count++;
+  loginFailures.set(ip, e);
+  return e.count;
+}
+function resetLoginFail(ip) { loginFailures.delete(ip); }
+function getLoginFails(ip) {
+  const e = loginFailures.get(ip);
+  if (!e || Date.now() > e.resetAt) return 0;
+  return e.count;
+}
+setInterval(() => {
+  const now = Date.now();
+  for (const [k,v] of loginFailures) if (now > v.resetAt) loginFailures.delete(k);
+  for (const [k,v] of captchaStore)  if (now > v.expires)  captchaStore.delete(k);
+}, 60000);
+
 function push(username, msg) {
   wsClients.get(username)?.send(JSON.stringify(msg));
 }
@@ -435,13 +459,39 @@ async function router(req, res) {
     return send(res, 200, { ok:true, username, kingdom }, { 'Set-Cookie': `sid=${sid}; Path=/; HttpOnly; Max-Age=2592000` });
   }
 
+  // ── Капча ────────────────────────────────────────────────────────
+  if (pathname === '/api/captcha' && req.method === 'GET') {
+    const a = Math.floor(Math.random() * 9) + 1;
+    const b = Math.floor(Math.random() * 9) + 1;
+    const id = crypto.randomBytes(8).toString('hex');
+    captchaStore.set(id, { answer: a + b, expires: Date.now() + 5 * 60 * 1000 });
+    return send(res, 200, { id, question: `${a} + ${b}` });
+  }
+
   // ── Логин ────────────────────────────────────────────────────────
   if (pathname === '/api/login' && req.method === 'POST') {
     if (checkRateLimit(req.socket.remoteAddress)) return send(res, 429, { error: 'Слишком много попыток. Подождите минуту.' });
-    const { username, password } = await readBody(req);
+    const ip = req.socket.remoteAddress;
+    const body = await readBody(req);
+    const { username, password, captchaId, captchaAnswer } = body;
+    const fails = getLoginFails(ip);
+
+    if (fails >= 3) {
+      const cap = captchaId && captchaStore.get(captchaId);
+      if (!cap || Date.now() > cap.expires || parseInt(captchaAnswer) !== cap.answer) {
+        if (captchaId) captchaStore.delete(captchaId);
+        return send(res, 401, { error: cap ? '❌ Неверный ответ капчи' : '🔒 Требуется капча', captchaRequired: true });
+      }
+      captchaStore.delete(captchaId);
+    }
+
     const player = STATE.players[username];
-    if (!player || player.passwordHash !== hashPw(password, player.passwordSalt)) return send(res, 401, { error: 'Неверный логин или пароль' });
+    if (!player || player.passwordHash !== hashPw(password, player.passwordSalt)) {
+      const count = trackLoginFail(ip);
+      return send(res, 401, { error: 'Неверный логин или пароль', captchaRequired: count >= 3 });
+    }
     if (player.banned) return send(res, 403, { error: '⛔ Ваш аккаунт заблокирован администратором.' });
+    resetLoginFail(ip);
     const sid = newSid();
     STATE.sessions[sid] = username;
     saveState();
