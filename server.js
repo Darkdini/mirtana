@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const os     = require('os');
 const WS     = require('./ws');
 const G      = require('./game');
+const nodemailer = require('nodemailer');
 
 const PORT       = parseInt(process.env.PORT || '7777', 10);
 const STATE_FILE = process.env.STATE_PATH || path.join(__dirname, 'state.json');
@@ -16,10 +17,45 @@ const PUBLIC     = path.join(__dirname, 'public');
 
 // ── TELEGRAM BOT ─────────────────────────────────────────────────────
 let BOT_CFG = { botToken:'', botUsername:'', webhookUrl:'' };
+let SMTP_CFG = { host:'smtp.gmail.com', port:587, user:'', pass:'', from:'' };
 try {
   const cfgPath = path.join(__dirname, 'config.json');
-  if (fs.existsSync(cfgPath)) BOT_CFG = { ...BOT_CFG, ...JSON.parse(fs.readFileSync(cfgPath, 'utf8')) };
+  if (fs.existsSync(cfgPath)) {
+    const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+    BOT_CFG  = { ...BOT_CFG,  ...cfg };
+    if (cfg.smtp) SMTP_CFG = { ...SMTP_CFG, ...cfg.smtp };
+  }
 } catch {}
+
+// ── ОТПРАВКА EMAIL ───────────────────────────────────────────────────
+let mailer = null;
+function getMailer() {
+  if (mailer) return mailer;
+  if (!SMTP_CFG.user || !SMTP_CFG.pass) return null;
+  mailer = nodemailer.createTransport({
+    host: SMTP_CFG.host,
+    port: SMTP_CFG.port,
+    secure: SMTP_CFG.port === 465,
+    auth: { user: SMTP_CFG.user, pass: SMTP_CFG.pass },
+  });
+  return mailer;
+}
+
+async function sendEmail(to, subject, text) {
+  const t = getMailer();
+  if (!t || !to) return false;
+  try {
+    await t.sendMail({
+      from: SMTP_CFG.from || `СРЕДНЕВЕКОВЬЕ <${SMTP_CFG.user}>`,
+      to, subject, text,
+    });
+    return true;
+  } catch (e) {
+    console.error('[mail]', e.message);
+    mailer = null; // сброс при ошибке
+    return false;
+  }
+}
 
 // Пакеты пополнения: [stars, gold, label]
 const GOLD_PACKS = [
@@ -316,6 +352,7 @@ function serializePlayer(p) {
     isModerator:     p.isModerator  || false,
     banned:          p.banned       || false,
     chatBanned:      p.chatBanned   || false,
+    email:           p.email        || null,
     loyalty:         p.loyalty       ?? 100,
     oases:           p.oases         || [],
     protectedUntil:  p.protectedUntil || 0,
@@ -828,7 +865,46 @@ async function router(req, res) {
     p.passwordSalt = salt;
     p.passwordHash = hashPw(newPassword, salt);
     saveState();
+    if (p.email) {
+      sendEmail(p.email, '🔑 Смена пароля — СРЕДНЕВЕКОВЬЕ',
+        `Здравствуйте, ${p.rulerName || p.username}!\n\nВаш пароль был успешно изменён.\nНовый пароль: ${newPassword}\n\nЕсли это сделали не вы — немедленно свяжитесь с администратором.\n\n— Администрация СРЕДНЕВЕКОВЬЯ`
+      );
+    }
     return send(res, 200, { ok: true });
+  }
+
+  // ── Привязка email ───────────────────────────────────────────────
+  if (pathname === '/api/set-email' && req.method === 'POST') {
+    const { email, password } = await readBody(req);
+    if (!email || !password) return send(res, 400, { error: 'Заполни все поля' });
+    if (hashPw(password, p.passwordSalt) !== p.passwordHash)
+      return send(res, 403, { error: 'Неверный пароль' });
+    const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRx.test(email)) return send(res, 400, { error: 'Неверный формат email' });
+    const taken = Object.values(STATE.players).some(x => x.username !== p.username && x.email === email.toLowerCase());
+    if (taken) return send(res, 400, { error: 'Этот email уже привязан к другому аккаунту' });
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    p.emailPending  = email.toLowerCase();
+    p.emailCode     = code;
+    p.emailCodeExp  = Date.now() + 15 * 60 * 1000;
+    saveState();
+    const sent = await sendEmail(email, '📧 Подтверждение email — СРЕДНЕВЕКОВЬЕ',
+      `Здравствуйте, ${p.rulerName || p.username}!\n\nКод подтверждения для привязки email: ${code}\n\nКод действителен 15 минут.\n\n— Администрация СРЕДНЕВЕКОВЬЯ`
+    );
+    if (!sent) return send(res, 500, { error: 'Не удалось отправить письмо. Проверьте настройки SMTP.' });
+    return send(res, 200, { ok: true });
+  }
+
+  if (pathname === '/api/verify-email' && req.method === 'POST') {
+    const { code } = await readBody(req);
+    if (!p.emailPending || !p.emailCode) return send(res, 400, { error: 'Нет ожидающего подтверждения' });
+    if (Date.now() > p.emailCodeExp) return send(res, 400, { error: 'Код истёк, запросите новый' });
+    if (code !== p.emailCode) return send(res, 400, { error: 'Неверный код' });
+    p.email = p.emailPending;
+    delete p.emailPending; delete p.emailCode; delete p.emailCodeExp;
+    saveState();
+    push(p.username, { type: 'state', player: serializePlayer(p) });
+    return send(res, 200, { ok: true, email: p.email });
   }
 
   // ── Смена ника ──────────────────────────────────────────────────

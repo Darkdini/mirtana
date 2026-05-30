@@ -3730,6 +3730,59 @@ function updateWorldCoords(){
   el.textContent=`X: ${Math.max(0,col)}  Y: ${Math.max(0,row)}`;
 }
 
+// ── Привязка email ────────────────────────────────────────
+function showSetEmailModal(){
+  const current=S.player?.email;
+  const con=document.createElement('div');
+  con.innerHTML=`
+    ${current?`<div style="text-align:center;margin-bottom:12px;font-size:13px;color:#5a3a10;">Текущий email: <b style="color:#3a1a08;">${escH(current)}</b></div>`:''}
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;color:#5a3a10;margin-bottom:4px;">Email</div>
+      <input id="se-email" type="email" placeholder="example@gmail.com" maxlength="100" value="${escH(current||'')}"
+        style="width:100%;background:rgba(0,0,0,.3);border:1px solid #9a7020;color:#3a1a08;padding:8px 10px;border-radius:6px;font-family:inherit;font-size:13px;outline:none;box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;color:#5a3a10;margin-bottom:4px;">Пароль (подтверждение)</div>
+      <input id="se-pass" type="password" placeholder="Ваш пароль" maxlength="60"
+        style="width:100%;background:rgba(0,0,0,.3);border:1px solid #9a7020;color:#3a1a08;padding:8px 10px;border-radius:6px;font-family:inherit;font-size:13px;outline:none;box-sizing:border-box;">
+    </div>
+    <div id="se-code-wrap" style="display:none;margin-bottom:10px;">
+      <div style="font-size:12px;color:#5a3a10;margin-bottom:6px;text-align:center;">📧 Введите код из письма</div>
+      <input id="se-code" type="text" maxlength="6" placeholder="000000"
+        style="width:100%;background:rgba(0,0,0,.3);border:1px solid #9a7020;color:#3a1a08;padding:8px 10px;border-radius:6px;font-family:inherit;font-size:18px;outline:none;box-sizing:border-box;text-align:center;letter-spacing:6px;">
+    </div>
+    <div id="se-err" style="color:#c04030;font-size:12px;margin-top:4px;text-align:center;"></div>`;
+  let codeSent=false;
+  const bg=modal({title:'📧 Привязка email',body:con,actions:[{label:'Далее',kind:'gold',handler:async()=>{
+    const err=con.querySelector('#se-err');
+    err.textContent='';
+    if(!codeSent){
+      const email=(con.querySelector('#se-email').value||'').trim();
+      const pass=con.querySelector('#se-pass').value||'';
+      if(!email||!pass){err.textContent='Заполни все поля';return;}
+      try{
+        await api('/api/set-email',{method:'POST',body:{email,password:pass}});
+        codeSent=true;
+        con.querySelector('#se-code-wrap').style.display='block';
+        con.querySelector('#se-email').disabled=true;
+        con.querySelector('#se-pass').style.display='none';
+        con.querySelector('#se-pass').previousElementSibling.style.display='none';
+        err.style.color='#3a7020';
+        err.textContent='✓ Код отправлен на '+email;
+      }catch(e){err.style.color='#c04030';err.textContent=e.message;}
+    } else {
+      const code=(con.querySelector('#se-code').value||'').trim();
+      if(!code){err.textContent='Введи код';return;}
+      try{
+        await api('/api/verify-email',{method:'POST',body:{code}});
+        await refreshState();
+        bg.remove();
+        toast('📧 Email успешно привязан','ok');
+      }catch(e){err.style.color='#c04030';err.textContent=e.message;}
+    }
+  },close:false}]});
+}
+
 // ── Кабинет (7-вкладочное меню) ──────────────────────────
 let _cabBg=null;
 function showChangePasswordModal(){
@@ -3879,9 +3932,11 @@ function showCabinet(startTab){
     } else if(tab==='rating'){
       setTimeout(()=>{cbtn.click();showRatingModal();},0);
     } else if(tab==='info'){
+      const emailLabel=S.player?.email?`📧 Email: ${S.player.email}`:'📧 Привязать email';
       const settingsItems=[
         ['🔑','Сменить пароль',showChangePasswordModal],
         ['✏','Сменить ник (200 🪙)',showChangeUsernameModal],
+        ['📧',emailLabel,showSetEmailModal],
       ];
       body.innerHTML=`<div style="padding:0;">
         ${settingsItems.map(([i,n])=>`
