@@ -3,10 +3,10 @@
 
 // ─── РАСЫ ───────────────────────────────────────────────────────────
 const RACES = {
-  human: { name: 'Люди',  bonus: 'Железо +20%', color: '#c8a060' },
-  elf:   { name: 'Эльфы', bonus: 'Дерево +20%', color: '#60c860' },
-  dwarv: { name: 'Гномы', bonus: 'Камень +20%', color: '#a0a0c0' },
-  orc:   { name: 'Орки',  bonus: 'Атака ×2, защита слабее', color: '#60a060' },
+  human: { name: 'Люди',  bonus: 'Железо +20%', color: '#c8a060', atkBonus:0, defBonus:0.08, castleDefBonus:0.08 },
+  elf:   { name: 'Эльфы', bonus: 'Дерево +20%', color: '#60c860', fieldAtkBonus:0.15, marchSpeedBonus:0.15 },
+  dwarv: { name: 'Гномы', bonus: 'Камень +20%', color: '#a0a0c0', defBonus:0.12, trapBonus:0.25 },
+  orc:   { name: 'Орки',  bonus: 'Атака ×1.6, защита −25%', color: '#60a060', atkMult:1.6, defPenalty:0.25 },
 };
 
 const RES       = ['gold','wood','stone','food','iron','people'];
@@ -74,40 +74,40 @@ const LAND_BUILDINGS = {
 // ─── ЮНИТЫ ──────────────────────────────────────────────────────────
 const UNITS = {
   // Люди
-  human_swordman:  { name:'Мечник',    race:'human',img:'units/human/swordman.png',  simg:'smallunits/human/swordman.png',  atk:30, def:35, hp:40, speed:18,carry:60, upkeep:2,building:'barracks', trainTime:60, reqLvl:1,cost:{wood:50,iron:80,food:30},people:1 },
-  human_javelineer:{ name:'Копейщик',  race:'human',img:'units/human/javelineer.png',simg:'smallunits/human/javelineer.png',atk:20, def:50, hp:35, speed:22,carry:50, upkeep:2,building:'barracks', trainTime:50, reqLvl:1,cost:{wood:80,iron:30,food:30},people:1 },
-  human_scout:     { name:'Разведчик', race:'human',img:'units/human/scout.png',     simg:'smallunits/human/scout.png',     atk:15, def:15, hp:20, speed:8, carry:30, upkeep:1,building:'barracks', trainTime:40, reqLvl:1,cost:{wood:40,iron:20,food:20},people:1 },
-  human_knight:    { name:'Рыцарь',    race:'human',img:'units/human/knight.png',    simg:'smallunits/human/knight.png',    atk:80, def:60, hp:80, speed:8, carry:100,upkeep:5,building:'stables',  trainTime:200,reqLvl:1,cost:{wood:60,iron:140,food:80},people:1 },
-  human_paladin:   { name:'Паладин',   race:'human',img:'units/human/paladin.png',   simg:'smallunits/human/paladin.png',   atk:90, def:80, hp:100,speed:10,carry:80, upkeep:6,building:'stables',  trainTime:280,reqLvl:3,cost:{wood:80,iron:160,food:100},people:1 },
-  human_mage:      { name:'Маг',       race:'human',img:'units/human/mage.png',      simg:'smallunits/human/mage.png',      atk:90, def:20, hp:35, speed:12,carry:30, upkeep:4,building:'magscool', trainTime:240,reqLvl:1,cost:{wood:30,iron:30,food:60},people:1 },
-  human_general:   { name:'Генерал',   race:'human',img:'units/human/general.png',   simg:'smallunits/human/general.png',   atk:150,def:120,hp:200,speed:12,carry:150,upkeep:10,building:'university',trainTime:600,reqLvl:5,cost:{wood:200,iron:300,food:200},people:1 },
+  human_swordman:  { name:'Мечник',    race:'human',img:'units/human/swordman.png',  simg:'smallunits/human/swordman.png',  atk:32, def:38, hp:45, speed:18,carry:60, upkeep:2,building:'barracks', trainTime:60, reqLvl:1,cost:{wood:50,iron:80,food:30},people:1, kind:'infantry' },
+  human_javelineer:{ name:'Копейщик',  race:'human',img:'units/human/javelineer.png',simg:'smallunits/human/javelineer.png',atk:20, def:50, hp:35, speed:22,carry:50, upkeep:2,building:'barracks', trainTime:50, reqLvl:1,cost:{wood:80,iron:30,food:30},people:1, kind:'infantry' },
+  human_scout:     { name:'Разведчик', race:'human',img:'units/human/scout.png',     simg:'smallunits/human/scout.png',     atk:15, def:15, hp:20, speed:8, carry:30, upkeep:1,building:'barracks', trainTime:40, reqLvl:1,cost:{wood:40,iron:20,food:20},people:1, kind:'scout' },
+  human_knight:    { name:'Рыцарь',    race:'human',img:'units/human/knight.png',    simg:'smallunits/human/knight.png',    atk:75, def:62, hp:85, speed:8, carry:100,upkeep:5,building:'stables',  trainTime:200,reqLvl:1,cost:{wood:60,iron:140,food:80},people:1, kind:'cavalry' },
+  human_paladin:   { name:'Паладин',   race:'human',img:'units/human/paladin.png',   simg:'smallunits/human/paladin.png',   atk:90, def:80, hp:100,speed:10,carry:80, upkeep:6,building:'stables',  trainTime:280,reqLvl:3,cost:{wood:80,iron:160,food:100},people:1, kind:'cavalry' },
+  human_mage:      { name:'Маг',       race:'human',img:'units/human/mage.png',      simg:'smallunits/human/mage.png',      atk:90, def:20, hp:35, speed:12,carry:30, upkeep:4,building:'magscool', trainTime:240,reqLvl:1,cost:{wood:30,iron:30,food:60},people:1, kind:'caster' },
+  human_general:   { name:'Генерал',   race:'human',img:'units/human/general.png',   simg:'smallunits/human/general.png',   atk:150,def:130,hp:210,speed:12,carry:150,upkeep:10,building:'university',trainTime:600,reqLvl:5,cost:{wood:200,iron:300,food:200},people:1, kind:'infantry' },
   // Эльфы
-  elf_fighter:     { name:'Воин',      race:'elf',  img:'units/elf/fighter.png',     simg:'smallunits/elf/fighter.png',     atk:25, def:30, hp:35, speed:16,carry:50, upkeep:2,building:'barracks', trainTime:55, reqLvl:1,cost:{wood:60,iron:50,food:30},people:1 },
-  elf_archer:      { name:'Лучник',    race:'elf',  img:'units/elf/archer.png',      simg:'smallunits/elf/archer.png',      atk:50, def:15, hp:25, speed:14,carry:40, upkeep:2,building:'barracks', trainTime:75, reqLvl:1,cost:{wood:80,iron:20,food:30},people:1 },
-  elf_scout:       { name:'Разведчик', race:'elf',  img:'units/elf/scout.png',       simg:'smallunits/elf/scout.png',       atk:18, def:18, hp:22, speed:7, carry:35, upkeep:1,building:'barracks', trainTime:38, reqLvl:1,cost:{wood:50,iron:15,food:20},people:1 },
-  elf_kenaur:      { name:'Кентавр',   race:'elf',  img:'units/elf/kenaur.png',      simg:'smallunits/elf/kenaur.png',      atk:70, def:55, hp:75, speed:7, carry:90, upkeep:5,building:'stables',  trainTime:190,reqLvl:1,cost:{wood:100,iron:60,food:80},people:1 },
-  elf_edinorog:    { name:'Единорог',  race:'elf',  img:'units/elf/edinorog.png',    simg:'smallunits/elf/edinorog.png',    atk:80, def:70, hp:90, speed:8, carry:80, upkeep:6,building:'stables',  trainTime:250,reqLvl:3,cost:{wood:120,iron:40,food:100},people:1 },
-  elf_ent:         { name:'Энт',       race:'elf',  img:'units/elf/ent.png',         simg:'smallunits/elf/ent.png',         atk:100,def:120,hp:150,speed:25,carry:120,upkeep:7,building:'magscool', trainTime:350,reqLvl:1,cost:{wood:200,iron:0,food:100},people:1 },
-  elf_create:      { name:'Созидатель',race:'elf',  img:'units/elf/create.png',      simg:'smallunits/elf/create.png',      atk:85, def:25, hp:40, speed:11,carry:35, upkeep:4,building:'magscool', trainTime:230,reqLvl:1,cost:{wood:80,iron:40,food:80},people:1 },
-  elf_general:     { name:'Генерал',   race:'elf',  img:'units/elf/general.png',     simg:'smallunits/elf/general.png',     atk:140,def:110,hp:180,speed:11,carry:140,upkeep:9,building:'university',trainTime:580,reqLvl:5,cost:{wood:200,iron:200,food:200},people:1 },
+  elf_fighter:     { name:'Воин',      race:'elf',  img:'units/elf/fighter.png',     simg:'smallunits/elf/fighter.png',     atk:28, def:32, hp:38, speed:16,carry:50, upkeep:2,building:'barracks', trainTime:55, reqLvl:1,cost:{wood:60,iron:50,food:30},people:1, kind:'infantry' },
+  elf_archer:      { name:'Лучник',    race:'elf',  img:'units/elf/archer.png',      simg:'smallunits/elf/archer.png',      atk:52, def:15, hp:25, speed:14,carry:40, upkeep:2,building:'barracks', trainTime:75, reqLvl:1,cost:{wood:80,iron:20,food:30},people:1, kind:'ranged' },
+  elf_scout:       { name:'Разведчик', race:'elf',  img:'units/elf/scout.png',       simg:'smallunits/elf/scout.png',       atk:18, def:18, hp:22, speed:7, carry:35, upkeep:1,building:'barracks', trainTime:38, reqLvl:1,cost:{wood:50,iron:15,food:20},people:1, kind:'scout' },
+  elf_kenaur:      { name:'Кентавр',   race:'elf',  img:'units/elf/kenaur.png',      simg:'smallunits/elf/kenaur.png',      atk:70, def:55, hp:75, speed:12,carry:90, upkeep:5,building:'stables',  trainTime:190,reqLvl:1,cost:{wood:100,iron:60,food:80},people:1, kind:'cavalry' },
+  elf_edinorog:    { name:'Единорог',  race:'elf',  img:'units/elf/edinorog.png',    simg:'smallunits/elf/edinorog.png',    atk:80, def:70, hp:90, speed:8, carry:80, upkeep:6,building:'stables',  trainTime:250,reqLvl:3,cost:{wood:120,iron:40,food:100},people:1, kind:'cavalry' },
+  elf_ent:         { name:'Энт',       race:'elf',  img:'units/elf/ent.png',         simg:'smallunits/elf/ent.png',         atk:100,def:120,hp:150,speed:9, carry:120,upkeep:7,building:'magscool', trainTime:350,reqLvl:1,cost:{wood:200,iron:0,food:100},people:1, kind:'caster' },
+  elf_create:      { name:'Созидатель',race:'elf',  img:'units/elf/create.png',      simg:'smallunits/elf/create.png',      atk:85, def:25, hp:40, speed:11,carry:35, upkeep:4,building:'magscool', trainTime:230,reqLvl:1,cost:{wood:80,iron:40,food:80},people:1, kind:'caster' },
+  elf_general:     { name:'Генерал',   race:'elf',  img:'units/elf/general.png',     simg:'smallunits/elf/general.png',     atk:150,def:125,hp:195,speed:11,carry:140,upkeep:9,building:'university',trainTime:580,reqLvl:5,cost:{wood:200,iron:200,food:200},people:1, kind:'infantry' },
   // Гномы
-  dwarv_fighter:   { name:'Воин',      race:'dwarv',img:'units/dwarv/fighter.png',   simg:'smallunits/dwarv/fighter.png',   atk:35, def:45, hp:50, speed:20,carry:70, upkeep:3,building:'barracks', trainTime:65, reqLvl:1,cost:{wood:40,iron:100,food:30},people:1 },
-  dwarv_defender:  { name:'Защитник',  race:'dwarv',img:'units/dwarv/defender.png',  simg:'smallunits/dwarv/defender.png',  atk:20, def:70, hp:60, speed:25,carry:60, upkeep:3,building:'barracks', trainTime:70, reqLvl:1,cost:{wood:30,iron:120,food:30},people:1 },
-  dwarv_arbalet:   { name:'Арбалетчик',race:'dwarv',img:'units/dwarv/arbalet.png',   simg:'smallunits/dwarv/arbalet.png',   atk:55, def:20, hp:30, speed:16,carry:45, upkeep:2,building:'barracks', trainTime:85, reqLvl:2,cost:{wood:60,iron:80,food:30},people:1 },
-  dwarv_revolver:  { name:'Пушкарь',   race:'dwarv',img:'units/dwarv/revolver.png',  simg:'smallunits/dwarv/revolver.png',  atk:100,def:30, hp:45, speed:20,carry:50, upkeep:4,building:'stables',  trainTime:220,reqLvl:1,cost:{wood:60,iron:180,food:60},people:1 },
-  dwarv_gryphon:   { name:'Грифон',    race:'dwarv',img:'units/dwarv/gryphon.png',   simg:'smallunits/dwarv/gryphon.png',   atk:90, def:65, hp:85, speed:9, carry:95, upkeep:6,building:'stables',  trainTime:260,reqLvl:3,cost:{wood:80,iron:120,food:100},people:1 },
-  dwarv_yeti:      { name:'Йети',      race:'dwarv',img:'units/dwarv/yeti.png',      simg:'smallunits/dwarv/yeti.png',      atk:110,def:100,hp:130,speed:22,carry:110,upkeep:7,building:'magscool', trainTime:320,reqLvl:1,cost:{wood:100,iron:60,food:120},people:1 },
-  dwarv_elder:     { name:'Старейшина',race:'dwarv',img:'units/dwarv/elder.png',     simg:'smallunits/dwarv/elder.png',     atk:80, def:40, hp:50, speed:14,carry:40, upkeep:4,building:'magscool', trainTime:210,reqLvl:1,cost:{wood:60,iron:60,food:80},people:1 },
-  dwarv_general:   { name:'Генерал',   race:'dwarv',img:'units/dwarv/general.png',   simg:'smallunits/dwarv/general.png',   atk:160,def:130,hp:210,speed:13,carry:160,upkeep:10,building:'university',trainTime:620,reqLvl:5,cost:{wood:200,iron:350,food:200},people:1 },
+  dwarv_fighter:   { name:'Воин',      race:'dwarv',img:'units/dwarv/fighter.png',   simg:'smallunits/dwarv/fighter.png',   atk:35, def:45, hp:50, speed:20,carry:70, upkeep:3,building:'barracks', trainTime:65, reqLvl:1,cost:{wood:40,iron:100,food:30},people:1, kind:'infantry' },
+  dwarv_defender:  { name:'Защитник',  race:'dwarv',img:'units/dwarv/defender.png',  simg:'smallunits/dwarv/defender.png',  atk:20, def:70, hp:60, speed:10,carry:60, upkeep:3,building:'barracks', trainTime:70, reqLvl:1,cost:{wood:30,iron:120,food:30},people:1, kind:'infantry' },
+  dwarv_arbalet:   { name:'Арбалетчик',race:'dwarv',img:'units/dwarv/arbalet.png',   simg:'smallunits/dwarv/arbalet.png',   atk:55, def:20, hp:30, speed:16,carry:45, upkeep:2,building:'barracks', trainTime:85, reqLvl:2,cost:{wood:60,iron:80,food:30},people:1, kind:'ranged' },
+  dwarv_revolver:  { name:'Пушкарь',   race:'dwarv',img:'units/dwarv/revolver.png',  simg:'smallunits/dwarv/revolver.png',  atk:100,def:30, hp:45, speed:8, carry:50, upkeep:4,building:'stables',  trainTime:220,reqLvl:1,cost:{wood:60,iron:180,food:60},people:1, kind:'cavalry' },
+  dwarv_gryphon:   { name:'Грифон',    race:'dwarv',img:'units/dwarv/gryphon.png',   simg:'smallunits/dwarv/gryphon.png',   atk:90, def:65, hp:85, speed:9, carry:95, upkeep:6,building:'stables',  trainTime:260,reqLvl:3,cost:{wood:80,iron:120,food:100},people:1, kind:'cavalry' },
+  dwarv_yeti:      { name:'Йети',      race:'dwarv',img:'units/dwarv/yeti.png',      simg:'smallunits/dwarv/yeti.png',      atk:110,def:100,hp:130,speed:10,carry:110,upkeep:7,building:'magscool', trainTime:320,reqLvl:1,cost:{wood:100,iron:60,food:120},people:1, kind:'caster' },
+  dwarv_elder:     { name:'Старейшина',race:'dwarv',img:'units/dwarv/elder.png',     simg:'smallunits/dwarv/elder.png',     atk:80, def:40, hp:50, speed:14,carry:40, upkeep:4,building:'magscool', trainTime:210,reqLvl:1,cost:{wood:60,iron:60,food:80},people:1, kind:'caster' },
+  dwarv_general:   { name:'Генерал',   race:'dwarv',img:'units/dwarv/general.png',   simg:'smallunits/dwarv/general.png',   atk:155,def:130,hp:210,speed:13,carry:160,upkeep:10,building:'university',trainTime:620,reqLvl:5,cost:{wood:200,iron:350,food:200},people:1, kind:'infantry' },
   // Орки — агрессивная раса: атака ×2, защита слабее
-  orc_marauder:  { name:'Мародёр',    race:'orc',  img:'units/unical/shadow.png',    simg:'smallunits/unical/shadow.png',   atk:40, def:10, hp:30, speed:11,carry:101,upkeep:2,building:'barracks', trainTime:45, reqLvl:1,cost:{wood:30,iron:60,food:20},people:1 },
-  orc_brawler:   { name:'Бугай',      race:'orc',  img:'units/unical/giant.png',     simg:'smallunits/unical/giant.png',    atk:50, def:15, hp:35, speed:4, carry:60, upkeep:3,building:'barracks', trainTime:70, reqLvl:3,cost:{wood:40,iron:80,food:30},people:1 },
-  orc_scout:     { name:'Загонщик',   race:'orc',  img:'units/unical/oko.png',       simg:'smallunits/unical/oko.png',      atk:20, def:10, hp:20, speed:15,carry:40, upkeep:1,building:'barracks', trainTime:35, reqLvl:1,cost:{wood:30,iron:20,food:15},people:1 },
-  orc_tyrant:    { name:'Тиран',      race:'orc',  img:'units/unical/valkiriya.png', simg:'smallunits/unical/valkiriya.png',atk:120,def:25, hp:60, speed:7, carry:80, upkeep:6,building:'stables',  trainTime:240,reqLvl:3,cost:{wood:80,iron:160,food:80},people:1 },
-  orc_catapult:  { name:'Катапульта', race:'orc',  img:'units/unical/katapulta.png', simg:'smallunits/unical/katapulta.png',atk:200,def:5,  hp:40, speed:3, carry:10, upkeep:8,building:'workshop', trainTime:400,reqLvl:1,cost:{wood:300,iron:150,food:50},people:2 },
-  orc_ram:       { name:'Таран',      race:'orc',  img:'units/unical/taran.png',     simg:'smallunits/unical/taran.png',    atk:150,def:10, hp:50, speed:4, carry:20, upkeep:6,building:'workshop', trainTime:350,reqLvl:1,cost:{wood:250,iron:100,food:40},people:2 },
-  orc_shaman:    { name:'Шаман',      race:'orc',  img:'units/dwarv/elder.png',      simg:'smallunits/dwarv/elder.png',     atk:130,def:30, hp:80, speed:6, carry:50, upkeep:8,building:'magscool', trainTime:450,reqLvl:1,cost:{wood:100,iron:100,food:150},people:1 },
-  orc_general:   { name:'Генерал',    race:'orc',  img:'units/dwarv/general.png',    simg:'smallunits/dwarv/general.png',   atk:300,def:80, hp:250,speed:8, carry:200,upkeep:12,building:'university',trainTime:700,reqLvl:5,cost:{wood:250,iron:400,food:250},people:1 },
+  orc_marauder:  { name:'Мародёр',    race:'orc',  img:'units/unical/shadow.png',    simg:'smallunits/unical/shadow.png',   atk:40, def:10, hp:30, speed:11,carry:101,upkeep:2,building:'barracks', trainTime:45, reqLvl:1,cost:{wood:30,iron:60,food:20},people:1, kind:'infantry' },
+  orc_brawler:   { name:'Бугай',      race:'orc',  img:'units/unical/giant.png',     simg:'smallunits/unical/giant.png',    atk:50, def:15, hp:35, speed:8, carry:60, upkeep:3,building:'barracks', trainTime:70, reqLvl:3,cost:{wood:40,iron:80,food:30},people:1, kind:'infantry' },
+  orc_scout:     { name:'Загонщик',   race:'orc',  img:'units/unical/oko.png',       simg:'smallunits/unical/oko.png',      atk:20, def:10, hp:20, speed:15,carry:40, upkeep:1,building:'barracks', trainTime:35, reqLvl:1,cost:{wood:30,iron:20,food:15},people:1, kind:'scout' },
+  orc_tyrant:    { name:'Тиран',      race:'orc',  img:'units/unical/valkiriya.png', simg:'smallunits/unical/valkiriya.png',atk:100,def:25, hp:60, speed:7, carry:80, upkeep:6,building:'stables',  trainTime:240,reqLvl:3,cost:{wood:80,iron:160,food:80},people:1, kind:'cavalry' },
+  orc_catapult:  { name:'Катапульта', race:'orc',  img:'units/unical/katapulta.png', simg:'smallunits/unical/katapulta.png',atk:140,def:5,  hp:40, speed:3, carry:10, upkeep:8,building:'workshop', trainTime:400,reqLvl:1,cost:{wood:300,iron:150,food:50},people:2, kind:'siege' },
+  orc_ram:       { name:'Таран',      race:'orc',  img:'units/unical/taran.png',     simg:'smallunits/unical/taran.png',    atk:110,def:10, hp:50, speed:4, carry:20, upkeep:6,building:'workshop', trainTime:350,reqLvl:1,cost:{wood:250,iron:100,food:40},people:2, kind:'siege' },
+  orc_shaman:    { name:'Шаман',      race:'orc',  img:'units/dwarv/elder.png',      simg:'smallunits/dwarv/elder.png',     atk:110,def:30, hp:80, speed:6, carry:50, upkeep:8,building:'magscool', trainTime:450,reqLvl:1,cost:{wood:100,iron:100,food:150},people:1, kind:'caster' },
+  orc_general:   { name:'Генерал',    race:'orc',  img:'units/dwarv/general.png',    simg:'smallunits/dwarv/general.png',   atk:165,def:100,hp:215,speed:8, carry:200,upkeep:12,building:'university',trainTime:700,reqLvl:5,cost:{wood:250,iron:400,food:250},people:1, kind:'infantry' },
 };
 
 // ─── ТЕХНОЛОГИИ ─────────────────────────────────────────────────────
@@ -122,6 +122,9 @@ const TECHS = {
   architecture: { name:'Архитектура',      cat:'inf',  req:{ castle:4 },      cost:{ gold:500,  stone:400, wood:300     }, effect:'Время строительства -20%'     },
   cartography:  { name:'Картография',      cat:'dip',  req:{ expedition:1 },  cost:{ gold:400,  wood:100                }, effect:'Радар мира +5'                },
   espionage:    { name:'Шпионаж',          cat:'dip',  req:{ resident:2 },    cost:{ gold:600,  iron:200               }, effect:'Разведка +50%'                },
+  armor_forging: { name:'Броня',          cat:'mil',  req:{ smithy:3 },    cost:{ gold:600,  iron:400, stone:200 }, effect:'Защита войск +12%' },
+  battle_drill:  { name:'Боевая выправка',cat:'mil',  req:{ barracks:3 },  cost:{ gold:500,  wood:200, food:300  }, effect:'Потери −10% в любом бою' },
+  sapper_corps:  { name:'Корпус сапёров', cat:'mil',  req:{ trap:3 },      cost:{ gold:700,  iron:300, stone:200 }, effect:'Ловушки +50%, работают против осадных' },
 };
 
 // ─── АРТЕФАКТЫ ──────────────────────────────────────────────────────
