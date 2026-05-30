@@ -976,6 +976,21 @@ async function router(req, res) {
     return send(res, 200, { ranked, month: ym, myUsername: p?.username || null });
   }
 
+  // ── Развитие-лидерборд ────────────────────────────────────────────
+  if (pathname === '/api/dev-leaderboard' && req.method === 'GET') {
+    const ym = currentYearMonth();
+    const ranked = Object.values(STATE.players)
+      .map(pl => {
+        const cur = G.calcRating(pl);
+        const start = (pl.ratingMonth === ym) ? (pl.ratingMonthStart ?? cur) : (pl.ratingMonthStart ?? cur);
+        const gain = Math.max(0, cur - start);
+        return { username: pl.username, rulerName: pl.rulerName || pl.username, race: pl.race, gain, total: cur };
+      })
+      .filter(x => x.gain > 0)
+      .sort((a, b) => b.gain - a.gain);
+    return send(res, 200, { ranked, month: ym, myUsername: p?.username || null });
+  }
+
   // ── История чата ─────────────────────────────────────────────────
   if (pathname === '/api/chat' && req.method === 'GET') {
     return send(res, 200, { messages: STATE.chat.slice(-100) });
@@ -1250,6 +1265,17 @@ function checkMonthlyOnlineAward() {
     giveMonthlyGold(x.p, gold, i + 1, 'Репутация', `+${x.gain}⭐`);
   });
 
+  // ── Развитие топ-3: 300/200/100 ──
+  const devRanked = Object.values(STATE.players)
+    .map(p => ({ p, gain: Math.max(0, G.calcRating(p) - (p.ratingMonthStart || 0)) }))
+    .filter(x => x.gain > 0)
+    .sort((a, b) => b.gain - a.gain);
+  [300, 200, 100].forEach((gold, i) => {
+    const x = devRanked[i];
+    if (!x) return;
+    giveMonthlyGold(x.p, gold, i + 1, 'Развитие', `+${x.gain} рейтинга`);
+  });
+
   // ── Сброс счётчиков ──
   for (const p of Object.values(STATE.players)) {
     p.onlineTime = 0;
@@ -1257,6 +1283,8 @@ function checkMonthlyOnlineAward() {
     if (p.sessionStart) p.sessionStart = Date.now();
     p.repMonthStart = p.reputation || 0;
     p.repMonth = ym;
+    p.ratingMonthStart = G.calcRating(p);
+    p.ratingMonth = ym;
   }
   STATE.lastMonthlyAward = ym;
   saveState();
