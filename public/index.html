@@ -3246,25 +3246,25 @@ async function showOnlineLeaderboardModal(){
       const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);
       return h+'ч '+(m?String(m).padStart(2,'0')+'м':'');
     }
-    let html=`<div style="font-size:12px;color:#a89070;text-align:center;margin-bottom:10px;">
-      Месяц: <b style="color:var(--gold2);">${monthName}</b>
-      ${myRank?`· Ваше место: <b style="color:var(--gold2);font-size:16px;">#${myRank}</b>`:''}
-      <div style="font-size:11px;margin-top:4px;color:#a89070;">🥇 300🪙 · 🥈 200🪙 · 🥉 100🪙 — по итогам месяца</div>
+    let html=`<div style="font-size:12px;color:#5a3a10;text-align:center;margin-bottom:10px;">
+      Месяц: <b style="color:#8a4800;">${monthName}</b>
+      ${myRank?`· Ваше место: <b style="color:#8a0000;font-size:16px;">#${myRank}</b>`:''}
+      <div style="font-size:11px;margin-top:4px;color:#5a3a10;">🥇 300🪙 · 🥈 200🪙 · 🥉 100🪙 — по итогам месяца</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:4px;">`;
-    if(!d.ranked.length){html+='<p style="text-align:center;color:#a89070;padding:20px;">Нет данных</p>';}
+    if(!d.ranked.length){html+='<p style="text-align:center;color:#5a3a10;padding:20px;">Нет данных</p>';}
     d.ranked.forEach((p,i)=>{
       const isMe=p.username===me;
       const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
       html+=`<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;
-        background:${isMe?'rgba(212,162,54,.15)':'rgba(0,0,0,.25)'};
-        border:1px solid ${isMe?'var(--gold2)':'var(--gold3)'};border-radius:5px;">
+        background:${isMe?'rgba(180,100,0,.18)':'rgba(80,40,0,.12)'};
+        border:1px solid ${isMe?'#b87820':'#9a6820'};border-radius:5px;">
         <span style="font-size:16px;width:26px;text-align:center;flex-shrink:0;">${medal}</span>
         <span style="font-size:18px;">${RACE_G[p.race]||'👤'}</span>
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:bold;color:${isMe?'var(--gold2)':'#e0d0b0'};font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escH(p.rulerName)}</div>
+          <div style="font-weight:bold;color:${isMe?'#8a4000':'#2a1005'};font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escH(p.rulerName)}</div>
         </div>
-        <div style="text-align:right;flex-shrink:0;color:var(--gold2);font-weight:bold;font-size:14px;">🕐 ${fmtTime(p.time)}</div>
+        <div style="text-align:right;flex-shrink:0;color:#5a2800;font-weight:bold;font-size:14px;">🕐 ${fmtTime(p.time)}</div>
       </div>`;
     });
     html+='</div>';
