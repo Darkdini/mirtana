@@ -3467,7 +3467,8 @@ function appendChat(msg,prepend=false){
   if(msg.system)el.innerHTML=`<span>${escH(msg.text||'')}</span>`;
   else{
     const dn=msg.kingdom||msg.username;
-    el.innerHTML=`<div class="ch"><span class="cr">${RACE_G[msg.race]||'👤'}</span><span class="cn">${escH(dn)}</span><span class="ct">${fmtCT(msg.t)}</span></div><div class="cx">${escH(msg.text)}</div>`;
+    el.innerHTML=`<div class="ch"><span class="cr">${RACE_G[msg.race]||'👤'}</span><span class="cn" data-u="${escH(msg.username)}" style="cursor:pointer;">${escH(dn)}</span><span class="ct">${fmtCT(msg.t)}</span></div><div class="cx">${escH(msg.text)}</div>`;
+    if(!mine) el.querySelector('.cn').onclick=()=>showPlayerProfile(msg.username);
   }
   if(prepend)msgs.insertBefore(el,msgs.firstChild);
   else msgs.appendChild(el);
