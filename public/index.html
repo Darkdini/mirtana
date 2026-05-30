@@ -717,10 +717,10 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
     </div>
     <!-- Вход -->
     <div class="auth-body" id="aLogin">
-      <h3 data-i18n="labelUser">Правитель</h3>
+      <h3>Логин</h3>
       <div class="inp-wrap">
-        <span class="inp-icon">⚔</span>
-        <input type="text" id="liU" data-i18n-ph="phUser" placeholder="Имя правителя" autocomplete="username">
+        <span class="inp-icon">🔒</span>
+        <input type="text" id="liU" placeholder="Ваш логин" autocomplete="username">
       </div>
       <h3 data-i18n="labelPass">Пароль</h3>
       <div class="inp-wrap">
@@ -733,10 +733,16 @@ button{font-family:inherit;background:none;border:0;color:inherit;cursor:pointer
     <!-- Регистрация -->
     <div class="auth-body" id="aReg" style="display:none;">
       <div class="reg-welcome" data-i18n="regWelcome">Правитель, укажи свои данные<br>и выбери народ для управления!</div>
-      <h3 data-i18n="labelUser">Правитель</h3>
+      <h3>Логин</h3>
+      <div class="inp-wrap">
+        <span class="inp-icon">🔒</span>
+        <input type="text" id="reU" placeholder="Придумайте логин" maxlength="20" autocomplete="username">
+      </div>
+      <div style="font-size:10px;color:#a08060;margin:-4px 0 8px 4px;">Только для входа, другим не виден</div>
+      <h3>Правитель</h3>
       <div class="inp-wrap">
         <span class="inp-icon">⚔</span>
-        <input type="text" id="reU" data-i18n-ph="phUser" placeholder="Имя правителя" maxlength="20" autocomplete="username">
+        <input type="text" id="reRuler" placeholder="Имя на карте мира" maxlength="20">
       </div>
       <h3 data-i18n="labelPass">Пароль</h3>
       <div class="inp-wrap">
@@ -1606,7 +1612,7 @@ function drawWorldHex(){
       if(c.owner){
         const isMe=c.owner===S.player.username;
         ctx.fillStyle='rgba(0,0,0,.75)';
-        const ow=isMe?'МОЙ':c.owner.slice(0,4);
+        const ow=isMe?'МОЙ':(S.worldPlayers?.[c.owner]?.rulerName||c.owner).slice(0,4);
         const tw=ctx.measureText(ow).width+6;
         ctx.fillRect(cx2-tw/2,cy2+R*0.45,tw,11);
         ctx.fillStyle=isMe?'#5cff7a':'#ffcc60';
@@ -2035,7 +2041,8 @@ function showWorldModal(c){
     else actions.push({label:'Нет войск',disabled:true,handler:()=>{}});
   }else if(c.type==='oasis'){
     const myOasis=(S.player.oases||[]).some(o=>o.col===c.col&&o.row===c.row);
-    const owned=c.owner?`<p>Владелец: <b style="color:${c.owner===S.player.username?'#5cff7a':'#ffc060'}">${c.owner}</b></p>`:'<p style="color:#a0c090;">Бесхозный — захватите!</p>';
+    const _ownerDisplay=S.worldPlayers?.[c.owner]?.rulerName||c.owner;
+    const owned=c.owner?`<p>Владелец: <b style="color:${c.owner===S.player.username?'#5cff7a':'#ffc060'}">${escH(_ownerDisplay)}</b></p>`:'<p style="color:#a0c090;">Бесхозный — захватите!</p>';
     title=`🌿 Оазис ${RES_L[c.resource]||''}`;
     bd=`${owned}
         <p>Захват даёт: <b>+25% ${RES_L[c.resource]||''}</b> постоянно</p>
@@ -2268,7 +2275,7 @@ async function showPlayerProfile(name){
         ${avi}
         <p style="text-align:center;font-size:18px;font-weight:bold;color:var(--gold2);margin-bottom:10px;">${escH(d.kingdom)}</p>
         <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;">
-          <p>Правитель: <b>${escH(d.username)}</b></p>
+          <p>Правитель: <b>${escH(d.rulerName||d.username)}</b></p>
           <p>Народ: <b>${RACES[d.race]?.name||d.race}</b> ${RACE_G[d.race]||''}</p>
           ${alliLine}
           <p>Уровень замка: <b style="color:var(--gold);">Ур.${d.castleLevel}</b></p>
@@ -2937,7 +2944,8 @@ function showProfileModal(username){
       <!-- Инфо -->
       <div style="flex:1;">
         <div style="font-size:18px;font-weight:bold;color:var(--gold2);">${p.kingdom}</div>
-        <div style="font-size:12px;color:#a89070;">@${p.username}</div>
+        <div style="font-size:13px;color:#d4b880;font-weight:bold;">⚔ ${escH(p.rulerName||p.username)}</div>
+        <div style="font-size:11px;color:#7a6050;">Логин: ${p.username}</div>
         <div style="font-size:13px;color:#e0d0b0;margin-top:4px;">${RACES[p.race]?.name} ${RACE_G[p.race]||''}</div>
         <div style="margin-top:6px;font-size:14px;font-weight:bold;color:${rankColor};">${rankTitle}</div>
         ${p.isAdmin?`<div style="margin-top:5px;display:inline-block;background:rgba(60,0,0,.7);border:1px solid #c03030;border-radius:4px;padding:2px 10px;font-size:11px;color:#ff9090;font-weight:bold;letter-spacing:1px;">⚙ АДМИНИСТРАТОР</div>`:''}
@@ -3365,7 +3373,7 @@ function initAuth(){
     if(!selRace){$('#reE').textContent=LANGS[LANG].errNoRace;return;}
     if(parseInt($('#captcha-a').value)!==captchaAns){$('#reE').textContent=LANGS[LANG].errCaptcha;newCaptcha();return;}
     try{
-      await api('/api/register',{method:'POST',body:{username:$('#reU').value.trim(),password:$('#reP').value,race:selRace,kingdom:$('#reK').value.trim()}});
+      await api('/api/register',{method:'POST',body:{username:$('#reU').value.trim(),rulerName:$('#reRuler').value.trim(),password:$('#reP').value,race:selRace,kingdom:$('#reK').value.trim()}});
       await enterGame();
     }catch(e){$('#reE').textContent=e.message;}
   };

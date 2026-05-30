@@ -311,6 +311,7 @@ function serializePlayer(p) {
     avatar:          p.avatar   || null,
     avatarBg:        p.avatarBg || null,
     photo:           p.photo    || null,
+    rulerName:       p.rulerName || p.username,
     isAdmin:         ADMINS.has(p.username),
     loyalty:         p.loyalty       ?? 100,
     oases:           p.oases         || [],
@@ -405,14 +406,18 @@ async function router(req, res) {
 
   if (pathname === '/api/register' && req.method === 'POST') {
     if (checkRateLimit(req.socket.remoteAddress, 5)) return send(res, 429, { error: 'Слишком много попыток. Подождите минуту.' });
-    const { username, password, race, kingdom } = await readBody(req);
+    const { username, password, race, kingdom, rulerName } = await readBody(req);
     if (!username || username.length < 3)  return send(res, 400, { error: 'Логин минимум 3 символа' });
     if (!password || password.length < 4)  return send(res, 400, { error: 'Пароль минимум 4 символа' });
     if (!G.RACES[race])                    return send(res, 400, { error: 'Неверная раса' });
     if (!kingdom || kingdom.length < 2)    return send(res, 400, { error: 'Название королевства минимум 2 символа' });
+    if (!rulerName || rulerName.length < 2) return send(res, 400, { error: 'Имя правителя минимум 2 символа' });
+    const rulerTaken = Object.values(STATE.players).some(p => (p.rulerName||p.username).toLowerCase() === rulerName.toLowerCase());
+    if (rulerTaken) return send(res, 400, { error: 'Имя правителя уже занято' });
     if (STATE.players[username])           return send(res, 400, { error: 'Имя занято' });
     const player = G.createPlayer(race, kingdom);
     player.username = username;
+    player.rulerName = rulerName;
     const salt = newSalt();
     player.passwordSalt = salt;
     player.passwordHash = hashPw(password, salt);
@@ -456,7 +461,7 @@ async function router(req, res) {
       if (c.type === 'player' && c.player && STATE.players[c.player]) {
         const pp = STATE.players[c.player];
         const pa = pp.allianceId && STATE.alliances?.[pp.allianceId];
-        worldPlayers[c.player] = { allianceId: pp.allianceId || null, allianceTag: pa?.tag || null, protectedUntil: pp.protectedUntil || 0 };
+        worldPlayers[c.player] = { allianceId: pp.allianceId || null, allianceTag: pa?.tag || null, protectedUntil: pp.protectedUntil || 0, rulerName: pp.rulerName || pp.username };
       }
     }
     return send(res, 200, {
@@ -624,6 +629,7 @@ async function router(req, res) {
     },0);
     return send(res, 200, {
       username:    tp.username,
+      rulerName:   tp.rulerName || tp.username,
       kingdom:     tp.kingdom || tp.username,
       race:        tp.race,
       avatar:      tp.avatar || null,
